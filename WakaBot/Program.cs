@@ -102,13 +102,22 @@ public class WakaBot
             return;
         }
 
-        using WakaContext context = new();
+        if (!await WakaTime.UserExists(options[2])) 
+        {
+            await msg.Channel.SendMessageAsync($"Invalid user {options[2]}, ensure your username is correct.");
+            return;
+        }
 
+        if (!await WakaTime.StatsAvaible(options[2])) 
+        {
+            await msg.Channel.SendMessageAsync($"Stats not avaible for {options[2]}, ensure `Display languages, editors, os, categories publicly.` is selected in profile.");
+            return;
+        }
+        
+        using WakaContext context = new();
 
         context.Add(new User() { DiscordId = msg.MentionedUsers.First().Id, WakaName = options[2] });
         context.SaveChanges();
-
-
 
         await msg.Channel.SendMessageAsync($"User {msg.MentionedUsers.FirstOrDefault()!.Mention} register as {options[2]}");
     }
