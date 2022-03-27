@@ -62,7 +62,7 @@ public class WakaBot
     private async void GetUsers(SocketMessage msg)
     {
         using WakaContext context = new();
-        
+
         // Format users in table
 
         string column = "+".PadRight(27, '-') + "+".PadRight(27, '-') + "+\n";
@@ -104,8 +104,11 @@ public class WakaBot
 
         using WakaContext context = new();
 
+
         context.Add(new User() { DiscordId = msg.MentionedUsers.First().Id, WakaName = options[2] });
         context.SaveChanges();
+
+
 
         await msg.Channel.SendMessageAsync($"User {msg.MentionedUsers.FirstOrDefault()!.Mention} register as {options[2]}");
     }
