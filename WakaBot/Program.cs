@@ -51,6 +51,8 @@ public class WakaBot
             case "users":
                 GetUsers(msg);
                 break;
+            case "ranking":
+                break;
             default:
                 msg.Channel.SendMessageAsync("Invalid command");
                 break;
@@ -84,7 +86,7 @@ public class WakaBot
         await msg.Channel.SendMessageAsync(output);
     }
 
-    private async void RegisterUser(SocketMessage msg)
+    private async Task RegisterUser(SocketMessage msg)
     {
         var options = msg.Content.Split(" ");
 
@@ -102,17 +104,27 @@ public class WakaBot
             return;
         }
 
-        if (!await WakaTime.UserExists(options[2])) 
-        {
+        var errors = await WakaTime.ValidateRegistration(options[2]);
+
+        if (errors.HasFlag(WakaTime.RegistrationErrors.UserNotFound))
+        { 
             await msg.Channel.SendMessageAsync($"Invalid user {options[2]}, ensure your username is correct.");
             return;
         }
 
-        if (!await WakaTime.StatsAvaible(options[2])) 
-        {
-            await msg.Channel.SendMessageAsync($"Stats not avaible for {options[2]}, ensure `Display languages, editors, os, categories publicly.` is selected in profile.");
-            return;
+        if (errors.HasFlag(WakaTime.RegistrationErrors.StatsNotFound))
+        { 
+            await msg.Channel.SendMessageAsync($"Stats not avaible for {options[2]}," +
+                $" ensure `Display languages, editors, os, categories publicly.` is selected in profile.");
         }
+
+        if (errors.HasFlag(WakaTime.RegistrationErrors.TimeNotFound))
+        { 
+            await msg.Channel.SendMessageAsync($"Coding time not avable for {options[2]}," +
+                " ensure `Display code time publicly` is selected in profile.");
+        }
+
+        if (!errors.Equals(WakaTime.RegistrationErrors.None)) return;
         
         using WakaContext context = new();
 
