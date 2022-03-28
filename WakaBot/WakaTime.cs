@@ -42,4 +42,12 @@ public class WakaTime
 
         return errors;
     }
+
+    public static async Task<dynamic> GetStatsAsync(string username)
+    {
+        var httpClient = new HttpClient();
+        var response = await httpClient.GetAsync($"{BaseUrl}/users/{username}/stats");
+
+        return JObject.Parse(await response.Content.ReadAsStringAsync());
+    }
 }

@@ -1,5 +1,6 @@
 ﻿using Discord;
 using Discord.WebSocket;
+using System.Linq;
 using WakaBot.Data;
 using WakaBot.Models;
 
@@ -32,36 +33,35 @@ public class WakaBot
         return Task.CompletedTask;
     }
 
-    private Task CommandHandler(SocketMessage msg)
+    private async Task CommandHandler(SocketMessage msg)
     {
-        if (!msg.Content.StartsWith('~')) return Task.CompletedTask;
+        if (!msg.Content.StartsWith('~')) return;
 
-        if (msg.Author.IsBot) return Task.CompletedTask;
+        if (msg.Author.IsBot) return;
 
         string message = msg.Content.Substring(1).ToLower().Split(" ")[0];
 
         switch (message)
         {
             case "ping":
-                msg.Channel.SendMessageAsync("pong");
+                await msg.Channel.SendMessageAsync("pong");
                 break;
             case "register":
-                RegisterUser(msg);
+                await RegisterUser(msg);
                 break;
             case "users":
-                GetUsers(msg);
+                await GetUsers(msg);
                 break;
             case "ranking":
+                await GetRanking(msg);
                 break;
             default:
-                msg.Channel.SendMessageAsync("Invalid command");
+                await msg.Channel.SendMessageAsync("Invalid command");
                 break;
         }
-
-        return Task.CompletedTask;
     }
 
-    private async void GetUsers(SocketMessage msg)
+    private async Task GetUsers(SocketMessage msg)
     {
         using WakaContext context = new();
 
@@ -132,5 +132,29 @@ public class WakaBot
         context.SaveChanges();
 
         await msg.Channel.SendMessageAsync($"User {msg.MentionedUsers.FirstOrDefault()!.Mention} register as {options[2]}");
+    }
+
+    private static async Task GetRanking(SocketMessage msg)
+    {
+        using WakaContext context = new();
+
+        var users = context.Users.ToList();
+        List<Task<dynamic>> stats = new List<Task<dynamic>>();
+
+        foreach (var user in users) 
+        {
+            stats.Add(WakaTime.GetStatsAsync(user.WakaName));
+        }
+        dynamic[] userStats = await Task.WhenAll(stats);
+
+        userStats = userStats.OrderByDescending(stat => stat.data.total_seconds).ToArray();
+        String output = String.Empty;
+
+        foreach (var stat in userStats)
+        {
+            output += $"**{stat.data.username}**\n";
+            output += $"\t {stat.data.human_readable_total}\n";
+        }
+        await msg.Channel.SendMessageAsync(output);
     }
 }
