@@ -1,8 +1,10 @@
 ﻿using Discord;
 using Discord.WebSocket;
-using System.Linq;
+using Discord.Interactions;
 using WakaBot.Data;
 using WakaBot.Models;
+using Microsoft.Extensions.DependencyInjection;
+using WakaBot.Services;
 
 namespace WakaBot;
 
@@ -11,18 +13,23 @@ public class WakaBot
     public static Task Main(string[] args) => new WakaBot().MainAsync();
 
     private DiscordSocketClient? _client;
+    private InteractionService? _interactionService;
 
     public async Task MainAsync()
     {
-        _client = new DiscordSocketClient();
+        using var services = ConfigureServices();
+        _client = services.GetRequiredService<DiscordSocketClient>();
+        _interactionService = services.GetRequiredService<InteractionService>();
 
-        _client.MessageReceived += CommandHandler;
         _client.Log += Log;
+        _client.Ready += ClientReady;
 
         var token = File.ReadAllText("token.txt");
 
         await _client.LoginAsync(TokenType.Bot, token);
         await _client.StartAsync();
+
+        await services.GetRequiredService<CommandHandler>().InitializeAsync();
 
         await Task.Delay(-1);
     }
@@ -107,25 +114,25 @@ public class WakaBot
         var errors = await WakaTime.ValidateRegistration(options[2]);
 
         if (errors.HasFlag(WakaTime.RegistrationErrors.UserNotFound))
-        { 
+        {
             await msg.Channel.SendMessageAsync($"Invalid user {options[2]}, ensure your username is correct.");
             return;
         }
 
         if (errors.HasFlag(WakaTime.RegistrationErrors.StatsNotFound))
-        { 
+        {
             await msg.Channel.SendMessageAsync($"Stats not avaible for {options[2]}," +
                 $" ensure `Display languages, editors, os, categories publicly.` is selected in profile.");
         }
 
         if (errors.HasFlag(WakaTime.RegistrationErrors.TimeNotFound))
-        { 
+        {
             await msg.Channel.SendMessageAsync($"Coding time not avable for {options[2]}," +
                 " ensure `Display code time publicly` is selected in profile.");
         }
 
         if (!errors.Equals(WakaTime.RegistrationErrors.None)) return;
-        
+
         using WakaContext context = new();
 
         context.Add(new User() { DiscordId = msg.MentionedUsers.First().Id, WakaName = options[2] });
@@ -141,7 +148,7 @@ public class WakaBot
         var users = context.Users.ToList();
         List<Task<dynamic>> stats = new List<Task<dynamic>>();
 
-        foreach (var user in users) 
+        foreach (var user in users)
         {
             stats.Add(WakaTime.GetStatsAsync(user.WakaName));
         }
@@ -156,5 +163,19 @@ public class WakaBot
             output += $"\t {stat.data.human_readable_total}\n";
         }
         await msg.Channel.SendMessageAsync(output);
+    }
+
+    private async Task ClientReady()
+    {
+        await _interactionService.RegisterCommandsToGuildAsync(753255439403319326);
+    }
+
+    private ServiceProvider ConfigureServices()
+    {
+        return new ServiceCollection()
+            .AddSingleton<DiscordSocketClient>()
+            .AddSingleton(x => new InteractionService(x.GetRequiredService<DiscordSocketClient>()))
+            .AddSingleton<CommandHandler>()
+            .BuildServiceProvider();
     }
 }
