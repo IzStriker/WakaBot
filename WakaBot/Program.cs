@@ -40,33 +40,6 @@ public class WakaBot
         return Task.CompletedTask;
     }
 
-    private async Task CommandHandler(SocketMessage msg)
-    {
-        if (!msg.Content.StartsWith('~')) return;
-
-        if (msg.Author.IsBot) return;
-
-        string message = msg.Content.Substring(1).ToLower().Split(" ")[0];
-
-        switch (message)
-        {
-            case "ping":
-                await msg.Channel.SendMessageAsync("pong");
-                break;
-            case "register":
-                await RegisterUser(msg);
-                break;
-            case "users":
-                await GetUsers(msg);
-                break;
-            case "ranking":
-                await GetRanking(msg);
-                break;
-            default:
-                await msg.Channel.SendMessageAsync("Invalid command");
-                break;
-        }
-    }
 
     private async Task GetUsers(SocketMessage msg)
     {
@@ -93,53 +66,6 @@ public class WakaBot
         await msg.Channel.SendMessageAsync(output);
     }
 
-    private async Task RegisterUser(SocketMessage msg)
-    {
-        var options = msg.Content.Split(" ");
-
-        if (msg.MentionedUsers == null) return;
-
-        if (options.Length != 3)
-        {
-            await msg.Channel.SendMessageAsync("Use format: `~register [@user] [wakaname]`");
-            return;
-        }
-
-        if (msg.MentionedUsers.Count < 1)
-        {
-            await msg.Channel.SendMessageAsync("No User mentioned");
-            return;
-        }
-
-        var errors = await WakaTime.ValidateRegistration(options[2]);
-
-        if (errors.HasFlag(WakaTime.RegistrationErrors.UserNotFound))
-        {
-            await msg.Channel.SendMessageAsync($"Invalid user {options[2]}, ensure your username is correct.");
-            return;
-        }
-
-        if (errors.HasFlag(WakaTime.RegistrationErrors.StatsNotFound))
-        {
-            await msg.Channel.SendMessageAsync($"Stats not avaible for {options[2]}," +
-                $" ensure `Display languages, editors, os, categories publicly.` is selected in profile.");
-        }
-
-        if (errors.HasFlag(WakaTime.RegistrationErrors.TimeNotFound))
-        {
-            await msg.Channel.SendMessageAsync($"Coding time not avable for {options[2]}," +
-                " ensure `Display code time publicly` is selected in profile.");
-        }
-
-        if (!errors.Equals(WakaTime.RegistrationErrors.None)) return;
-
-        using WakaContext context = new();
-
-        context.Add(new User() { DiscordId = msg.MentionedUsers.First().Id, WakaName = options[2] });
-        context.SaveChanges();
-
-        await msg.Channel.SendMessageAsync($"User {msg.MentionedUsers.FirstOrDefault()!.Mention} register as {options[2]}");
-    }
 
     private static async Task GetRanking(SocketMessage msg)
     {
