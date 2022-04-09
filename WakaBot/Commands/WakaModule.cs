@@ -82,4 +82,30 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
             Description = $"User {discordUser.Mention} register as {wakaUser}"
         }.Build());
     }
+
+    [SlashCommand("wakausers", "Get list of registered users")]
+    public async Task Users()
+    {
+        using WakaContext context = new();
+
+        var fields = new List<EmbedFieldBuilder>();
+
+        foreach (User user in context.Users.ToList())
+        {
+            var disUser = Context.Guild.GetUser(user.DiscordId).Nickname;
+
+            fields.Add(new EmbedFieldBuilder()
+            {
+                Name = disUser,
+                Value = $"{user.WakaName} (WakaTime)"
+            });
+        }
+
+        await RespondAsync(embed: new EmbedBuilder()
+        {
+            Title = "Registered users",
+            Color = Color.Purple,
+            Fields = fields
+        }.Build());
+    }
 }

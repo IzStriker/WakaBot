@@ -40,33 +40,6 @@ public class WakaBot
         return Task.CompletedTask;
     }
 
-
-    private async Task GetUsers(SocketMessage msg)
-    {
-        using WakaContext context = new();
-
-        // Format users in table
-
-        string column = "+".PadRight(27, '-') + "+".PadRight(27, '-') + "+\n";
-
-        string output = "```\n";
-        output += column;
-        output += String.Format("| {0,-25}| {1,-25}|\n", "User", "WakaName");
-        output += column;
-
-
-        foreach (User user in context.Users.ToList())
-        {
-            var dUser = _client!.GetUser(user.DiscordId).Username;
-            output += $"| {dUser,-25}| {user.WakaName,-25}|\n";
-        }
-
-        output += column;
-        output += "```";
-        await msg.Channel.SendMessageAsync(output);
-    }
-
-
     private static async Task GetRanking(SocketMessage msg)
     {
         using WakaContext context = new();
