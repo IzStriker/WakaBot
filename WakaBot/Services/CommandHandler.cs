@@ -23,8 +23,43 @@ public class CommandHandler
         await _interaction.AddModulesAsync(Assembly.GetEntryAssembly(), _services);
 
         _client.InteractionCreated += HandleInteraction;
+        _interaction.SlashCommandExecuted += SlashCommandExecuted;
+        _interaction.ContextCommandExecuted += ContextCommandExecuted;
+        _interaction.ComponentCommandExecuted += ComponentCommandExecuted;
     }
 
+    private Task ComponentCommandExecuted(ComponentCommandInfo arg1, Discord.IInteractionContext arg2, IResult arg3)
+    {
+        if (!arg3.IsSuccess)
+        {
+            Console.WriteLine(arg3.Error);
+            Console.WriteLine(arg3.ErrorReason);
+        }
+
+        return Task.CompletedTask;
+    }
+
+    private Task ContextCommandExecuted(ContextCommandInfo arg1, Discord.IInteractionContext arg2, IResult arg3)
+    {
+        if (!arg3.IsSuccess)
+        {
+            Console.WriteLine(arg3.Error);
+            Console.WriteLine(arg3.ErrorReason);
+        }
+
+        return Task.CompletedTask;
+    }
+
+    private Task SlashCommandExecuted(SlashCommandInfo arg1, Discord.IInteractionContext arg2, IResult arg3)
+    {
+        if (!arg3.IsSuccess)
+        {
+            Console.WriteLine(arg3.Error);
+            Console.WriteLine(arg3.ErrorReason);
+        }
+
+        return Task.CompletedTask;
+    }
     private async Task HandleInteraction(SocketInteraction arg)
     {
         try

@@ -94,7 +94,7 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
 
         foreach (User user in context.Users.ToList())
         {
-            var disUser = Context.Guild.GetUser(user.DiscordId).Nickname;
+            var disUser = Context.Guild.GetUser(user.DiscordId).DisplayName;
 
             fields.Add(new EmbedFieldBuilder()
             {

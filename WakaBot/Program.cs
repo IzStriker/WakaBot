@@ -3,6 +3,7 @@ using Discord.WebSocket;
 using Discord.Interactions;
 using Microsoft.Extensions.DependencyInjection;
 using WakaBot.Services;
+using Discord.Commands;
 
 namespace WakaBot;
 
@@ -32,16 +33,24 @@ public class WakaBot
         await Task.Delay(-1);
     }
 
-    private Task Log(LogMessage msg)
+    private Task Log(LogMessage message)
     {
-        Console.WriteLine(msg.ToString());
+        if (message.Exception is CommandException cmdException)
+        {
+            Console.WriteLine($"[Command/{message.Severity}] {cmdException.Command.Aliases.First()}"
+                + $" failed to execute in {cmdException.Context.Channel}.");
+            Console.WriteLine(cmdException);
+        }
+        else
+            Console.WriteLine($"[General/{message.Severity}] {message}");
+
         return Task.CompletedTask;
     }
 
     private async Task ClientReady()
     {
         // Huawei Comp
-        await _interactionService.RegisterCommandsToGuildAsync(753255439403319326);
+        //await _interactionService.RegisterCommandsToGuildAsync(753255439403319326);
 
         // homework > /dev/urandom
         await _interactionService.RegisterCommandsToGuildAsync(771735942981615616);
