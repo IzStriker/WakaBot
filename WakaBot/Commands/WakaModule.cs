@@ -83,6 +83,7 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
         }.Build());
     }
 
+
     [SlashCommand("wakausers", "Get list of registered users")]
     public async Task Users()
     {
@@ -97,7 +98,7 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
             fields.Add(new EmbedFieldBuilder()
             {
                 Name = disUser,
-                Value = $"{user.WakaName} (WakaTime)"
+                Value = $"[{user.WakaName}](https://wakatime.com/@{user.WakaName})"
             });
         }
 
