@@ -14,6 +14,12 @@ public class WakaBot
     private DiscordSocketClient? _client;
     private InteractionService? _interactionService;
 
+    private readonly DiscordSocketConfig _socketConfig = new()
+    {
+        GatewayIntents = GatewayIntents.All,
+        AlwaysDownloadUsers = true,
+    };
+
     public async Task MainAsync()
     {
         using var services = ConfigureServices();
@@ -63,6 +69,7 @@ public class WakaBot
             .AddSingleton<DiscordSocketClient>()
             .AddSingleton(x => new InteractionService(x.GetRequiredService<DiscordSocketClient>()))
             .AddSingleton<CommandHandler>()
+            .AddSingleton(_socketConfig)
             .BuildServiceProvider();
     }
 }

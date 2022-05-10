@@ -11,6 +11,7 @@ public class CommandHandler
     private readonly InteractionService _interaction;
     private readonly IServiceProvider _services;
 
+
     public CommandHandler(DiscordSocketClient client, InteractionService interaction, IServiceProvider services)
     {
         _client = client;
@@ -23,6 +24,7 @@ public class CommandHandler
         await _interaction.AddModulesAsync(Assembly.GetEntryAssembly(), _services);
 
         _client.InteractionCreated += HandleInteraction;
+
         _interaction.SlashCommandExecuted += SlashCommandExecuted;
         _interaction.ContextCommandExecuted += ContextCommandExecuted;
         _interaction.ComponentCommandExecuted += ComponentCommandExecuted;
@@ -32,7 +34,6 @@ public class CommandHandler
     {
         if (!arg3.IsSuccess)
         {
-            Console.WriteLine(arg3.Error);
             Console.WriteLine(arg3.ErrorReason);
         }
 
@@ -43,8 +44,8 @@ public class CommandHandler
     {
         if (!arg3.IsSuccess)
         {
-            Console.WriteLine(arg3.Error);
             Console.WriteLine(arg3.ErrorReason);
+
         }
 
         return Task.CompletedTask;
@@ -54,7 +55,6 @@ public class CommandHandler
     {
         if (!arg3.IsSuccess)
         {
-            Console.WriteLine(arg3.Error);
             Console.WriteLine(arg3.ErrorReason);
         }
 
