@@ -109,4 +109,40 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
             Fields = fields
         }.Build());
     }
+
+    [SlashCommand("wakarank", "Get rank of programming time.")]
+    public async Task Rank()
+    {
+        using WakaContext context = new();
+
+        var users = context.Users.ToList();
+        List<Task<dynamic>> stats = new List<Task<dynamic>>();
+
+        foreach (var user in users)
+        {
+            stats.Add(WakaTime.GetStatsAsync(user.WakaName));
+        }
+        dynamic[] userStats = await Task.WhenAll(stats);
+
+        userStats = userStats.OrderByDescending(stat => stat.data.total_seconds).ToArray();
+
+        var fields = new List<EmbedFieldBuilder>();
+
+        foreach (var stat in userStats)
+        {
+            fields.Add(new EmbedFieldBuilder()
+            {
+                Name = stat.data.username,
+                Value = stat.data.human_readable_total
+            });
+
+        }
+
+        await RespondAsync(embed: new EmbedBuilder()
+        {
+            Title = "User Ranking",
+            Color = Color.Purple,
+            Fields = fields
+        }.Build());
+    }
 }
