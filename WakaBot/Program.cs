@@ -40,7 +40,12 @@ public class WakaBot
 
     private async Task ClientReady()
     {
+        // Huawei Comp
         await _interactionService.RegisterCommandsToGuildAsync(753255439403319326);
+
+        // homework > /dev/urandom
+        await _interactionService.RegisterCommandsToGuildAsync(771735942981615616);
+
     }
 
     private ServiceProvider ConfigureServices()

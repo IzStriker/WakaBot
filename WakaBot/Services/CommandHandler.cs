@@ -34,7 +34,8 @@ public class CommandHandler
         }
         catch (Exception e)
         {
-            Console.WriteLine(e);
+            Console.WriteLine("Error");
+            Console.WriteLine(e.Message);
 
             if (arg.Type == InteractionType.ApplicationCommand)
             {

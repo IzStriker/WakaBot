@@ -2,6 +2,7 @@ using Discord;
 using Discord.Interactions;
 using WakaBot.Data;
 using WakaBot.Models;
+using Newtonsoft.Json.Linq;
 
 namespace WakaBot.Commands;
 
@@ -128,12 +129,26 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
 
         var fields = new List<EmbedFieldBuilder>();
 
+
         foreach (var stat in userStats)
         {
+            string range = "\nIn " + Convert.ToString(stat.data.range).Replace("_", " ");
+            string languages = "\nTop languages: ";
+
+            // Force C# to treat JSON list as JArray instead of JObject
+            var lanList = JArray.Parse(Convert.ToString(stat.data.languages));
+
+            // Print to 6 languages
+            for (int i = 0; i < lanList.Count && i < 6; i++)
+            {
+                languages += $"{lanList[i].name} {lanList[i].percent}%";
+                if (i < 5 && i < lanList.Count - 1) languages += ", ";
+            }
+
             fields.Add(new EmbedFieldBuilder()
             {
                 Name = stat.data.username,
-                Value = stat.data.human_readable_total
+                Value = stat.data.human_readable_total + range + languages
             });
 
         }
