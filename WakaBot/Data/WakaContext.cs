@@ -1,5 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.Extensions.Configuration;
 using WakaBot.Models;
 
 namespace WakaBot.Data
@@ -8,10 +8,19 @@ namespace WakaBot.Data
     {
 
         public DbSet<User> Users { get; set; }
-
+        private IConfiguration _configuration;
+        public WakaContext()
+        {
+            _configuration = new ConfigurationBuilder()
+                .SetBasePath(Directory.GetCurrentDirectory())
+                .AddJsonFile("appsettings.json", optional: false)
+                .Build();
+        }
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            string path = Path.Join(Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().GetName().CodeBase).Substring(6), "waka.db");
+            string path = Path.Join(
+                _configuration["dBPath"] ?? Directory.GetCurrentDirectory(),
+                 _configuration["dBFileName"] ?? "waka.db");
             optionsBuilder.UseSqlite($"Data Source={path}");
 
         }
