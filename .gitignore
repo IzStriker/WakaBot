@@ -366,3 +366,8 @@ FodyWeavers.xsd
 
 # Configuration file containting sensitive data
 appsettings.json
+
+# sqlite files
+*.db
+*.db-shm
+*.db-wal
