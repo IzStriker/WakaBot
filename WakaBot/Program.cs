@@ -4,6 +4,7 @@ using Discord.Interactions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Configuration;
 using WakaBot.Services;
+using WakaBot.Graphs;
 
 
 namespace WakaBot;
@@ -53,6 +54,7 @@ public class WakaBot
             .AddSingleton<CommandHandler>()
             .AddSingleton(_socketConfig)
             .AddSingleton<IConfiguration>(_configuration!)
+            .AddSingleton(x => new GraphGenerator(_configuration!["imageDirectoryPath"]))
             .BuildServiceProvider();
     }
 }

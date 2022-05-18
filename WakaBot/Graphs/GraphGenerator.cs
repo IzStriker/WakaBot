@@ -5,12 +5,17 @@ namespace WakaBot.Graphs;
 
 public class GraphGenerator
 {
-    private static readonly int Width = 650;
-    private static readonly int Height = 650;
-    private static readonly float FontScaler = 2.0f;
-    private static readonly string ImageDirectory = "Images";
+    private readonly int Width = 650;
+    private readonly int Height = 650;
+    private readonly float FontScaler = 2.0f;
+    private string _imageDirectory = "Images";
 
-    public static string GeneratePie(DataPoint<double>[] dataPoints, string filename)
+    public GraphGenerator(string imageDirectory)
+    {
+        _imageDirectory = imageDirectory ?? "Images";
+    }
+
+    public string GeneratePie(DataPoint<double>[] dataPoints, string filename)
     {
         Rectangle rect = new Rectangle(12, 12, Width - 24, Height - 24);
 
@@ -39,8 +44,8 @@ public class GraphGenerator
         // Adjust graph to fit size
         pane.AxisChange();
 
-        var path = Path.Join(ImageDirectory, filename);
-        Directory.CreateDirectory(ImageDirectory);
+        var path = Path.Join(_imageDirectory, filename);
+        Directory.CreateDirectory(_imageDirectory);
 
         pane.GetImage().Save(path, System.Drawing.Imaging.ImageFormat.Png);
         return path;

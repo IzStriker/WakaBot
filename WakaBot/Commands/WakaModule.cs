@@ -10,6 +10,13 @@ namespace WakaBot.Commands;
 public class WakaModule : InteractionModuleBase<SocketInteractionContext>
 {
 
+    private readonly GraphGenerator _graphGenerator;
+
+    public WakaModule(GraphGenerator graphGenerator)
+    {
+        _graphGenerator = graphGenerator;
+    }
+
     [SlashCommand("wakaping", "Recieve a pong")]
     public async Task Ping()
     {
@@ -183,7 +190,7 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
         }
 
         var filename = $"rank-{DateTime.Now.ToString("ddMMyyyy-HHmmss")}.png";
-        var path = GraphGenerator.GeneratePie(points.ToArray(), filename);
+        var path = _graphGenerator.GeneratePie(points.ToArray(), filename);
 
         await Context.Channel.SendFileAsync(path, embed: new EmbedBuilder()
         {
