@@ -7,9 +7,10 @@ public class GraphGenerator
 {
     private static readonly int Width = 650;
     private static readonly int Height = 650;
-    private static readonly float FontScaler = 3.0f;
+    private static readonly float FontScaler = 2.0f;
+    private static readonly string ImageDirectory = "Images";
 
-    public static Bitmap GeneratePie(DataPoint<double>[] dataPoints)
+    public static string GeneratePie(DataPoint<double>[] dataPoints, string filename)
     {
         Rectangle rect = new Rectangle(12, 12, Width - 24, Height - 24);
 
@@ -37,7 +38,11 @@ public class GraphGenerator
 
         // Adjust graph to fit size
         pane.AxisChange();
-        pane.GetImage().Save("test.png", System.Drawing.Imaging.ImageFormat.Png);
-        return pane.GetImage();
+
+        var path = Path.Join(ImageDirectory, filename);
+        Directory.CreateDirectory(ImageDirectory);
+
+        pane.GetImage().Save(path, System.Drawing.Imaging.ImageFormat.Png);
+        return path;
     }
 }
