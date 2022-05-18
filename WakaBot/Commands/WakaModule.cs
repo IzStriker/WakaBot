@@ -2,6 +2,7 @@ using Discord;
 using Discord.Interactions;
 using WakaBot.Data;
 using WakaBot.Models;
+using WakaBot.Graphs;
 using Newtonsoft.Json.Linq;
 
 namespace WakaBot.Commands;
@@ -9,13 +10,20 @@ namespace WakaBot.Commands;
 public class WakaModule : InteractionModuleBase<SocketInteractionContext>
 {
 
+    private readonly GraphGenerator _graphGenerator;
+
+    public WakaModule(GraphGenerator graphGenerator)
+    {
+        _graphGenerator = graphGenerator;
+    }
+
     [SlashCommand("wakaping", "Recieve a pong")]
     public async Task Ping()
     {
         var embed = new EmbedBuilder()
         {
             Title = "wakapong!",
-            Color = Color.LightGrey,
+            Color = Discord.Color.LightGrey,
         };
         await RespondAsync(embed: embed.Build());
     }
@@ -154,6 +162,7 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
 
         var fields = new List<EmbedFieldBuilder>();
 
+        List<DataPoint<double>> points = new List<DataPoint<double>>();
 
         foreach (var stat in userStats)
         {
@@ -176,14 +185,19 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
                 Value = stat.data.human_readable_total + range + languages
             });
 
+            // Store data point for pie chart
+            points.Add(new DataPoint<double>(Convert.ToString(stat.data.username), Convert.ToDouble(stat.data.total_seconds)));
         }
 
+        var filename = $"rank-{DateTime.Now.ToString("ddMMyyyy-HHmmss")}.png";
+        var path = _graphGenerator.GeneratePie(points.ToArray(), filename);
 
-        await Context.Channel.SendMessageAsync(embed: new EmbedBuilder()
+        await Context.Channel.SendFileAsync(path, embed: new EmbedBuilder()
         {
             Title = "User Ranking",
             Color = Color.Purple,
-            Fields = fields
+            Fields = fields,
+            ImageUrl = $"attachment://{path}"
         }.Build());
 
         // Remove hold tight message
