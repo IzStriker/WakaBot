@@ -189,15 +189,15 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
             points.Add(new DataPoint<double>(Convert.ToString(stat.data.username), Convert.ToDouble(stat.data.total_seconds)));
         }
 
-        var filename = $"rank-{DateTime.Now.ToString("ddMMyyyy-HHmmss")}.png";
-        var path = _graphGenerator.GeneratePie(points.ToArray(), filename);
+        MemoryStream graph = new MemoryStream();
+        _graphGenerator.GeneratePie(points.ToArray(), graph);
 
-        await Context.Channel.SendFileAsync(path, embed: new EmbedBuilder()
+        await Context.Channel.SendFileAsync(graph, "graph.png", embed: new EmbedBuilder()
         {
             Title = "User Ranking",
             Color = Color.Purple,
             Fields = fields,
-            ImageUrl = $"attachment://{path}"
+            ImageUrl = $"attachment://graph.png"
         }.Build());
 
         // Remove hold tight message
@@ -296,15 +296,16 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
             Value = editors
         });
 
-        var filename = $"profile-{DateTime.Now.ToString("ddMMyyyy-HHmmss")}.png";
-        var path = _graphGenerator.GeneratePie(points.ToArray(), filename);
+        MemoryStream graph = new MemoryStream();
+        _graphGenerator.GeneratePie(points.ToArray(), graph);
 
         await DeleteOriginalResponseAsync();
-        await Context.Channel.SendFileAsync(path, embed: new EmbedBuilder()
+        await Context.Channel.SendFileAsync(graph, "graph.png", embed: new EmbedBuilder()
         {
             Title = discordUser.Username,
             Color = Color.Purple,
-            Fields = fields
+            Fields = fields,
+            ImageUrl = $"attachment://graph.png"
         }.Build());
     }
 }
