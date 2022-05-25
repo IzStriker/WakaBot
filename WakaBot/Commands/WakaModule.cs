@@ -3,6 +3,7 @@ using Discord.Interactions;
 using WakaBot.Data;
 using WakaBot.Models;
 using WakaBot.Graphs;
+using WakaBot.Extensions;
 using Newtonsoft.Json.Linq;
 
 namespace WakaBot.Commands;
@@ -170,14 +171,15 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
             string languages = "\nTop languages: ";
 
             // Force C# to treat dynamic object as JArray instead of JObject
-            var lanList = JArray.Parse(Convert.ToString(stat.data.languages));
+            JArray lanList = JArray.Parse(Convert.ToString(stat.data.languages));
 
-            // Print top 6 languages
-            for (int i = 0; i < lanList.Count && i < 6; i++)
+            languages += lanList.ConcatForEach(6, (token, last) =>
             {
-                languages += $"{lanList[i].name} {lanList[i].percent}%";
-                if (i < 5 && i < lanList.Count - 1) languages += ", ";
-            }
+                string result = $"{token.name} {token.percent}%";
+                return result += last
+                    ? ""
+                    : ", ";
+            });
 
             fields.Add(new EmbedFieldBuilder()
             {
@@ -208,9 +210,6 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
     public async Task Profile(IUser discordUser)
     {
         var fields = new List<EmbedFieldBuilder>();
-        string languages = string.Empty;
-        string editors = string.Empty;
-        string os = string.Empty;
         var context = new WakaContext();
 
         var user = context.Users.FirstOrDefault(user => user.DiscordId == discordUser.Id);
@@ -248,15 +247,14 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
         });
 
         // Force C# to treat dynamic object as JArray instead of JObject
-        var lanList = JArray.Parse(Convert.ToString(stats.data.languages));
+        JArray lanList = JArray.Parse(Convert.ToString(stats.data.languages));
         List<DataPoint<double>> points = new List<DataPoint<double>>();
 
-        for (int i = 0; i < lanList.Count; i++)
+        var languages = lanList.ConcatForEach((token, last) =>
         {
-            points.Add(new DataPoint<double>(Convert.ToString(lanList[i].name), Convert.ToDouble(lanList[i].total_seconds)));
-            languages += $"{lanList[i].name} {lanList[i].percent}%";
-            if (i < lanList.Count - 1) languages += ", ";
-        }
+            points.Add(new DataPoint<double>(Convert.ToString(token.name), Convert.ToDouble(token.total_seconds)));
+            return $"{token.name} {token.percent}%" + (last ? "" : ", ");
+        });
 
         fields.Add(new EmbedFieldBuilder()
         {
@@ -265,13 +263,10 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
         });
 
         // Force C# to treat dynamic object as JArray instead of JObject
-        var editorList = JArray.Parse(Convert.ToString(stats.data.editors));
+        JArray editorList = JArray.Parse(Convert.ToString(stats.data.editors));
 
-        for (int i = 0; i < editorList.Count; i++)
-        {
-            editors += $"{editorList[i].name} {editorList[i].percent}%";
-            if (i < editorList.Count - 1) editors += ", ";
-        }
+        var editors = editorList.ConcatForEach((token, last) =>
+            $"{token.name} {token.percent}%" + (last ? "" : ", "));
 
         fields.Add(new EmbedFieldBuilder()
         {
@@ -281,18 +276,16 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
 
 
         // Force C# to treat dynamic object as JArray instead of JObject
-        var osList = JArray.Parse(Convert.ToString(stats.data.editors));
+        JArray osList = JArray.Parse(Convert.ToString(stats.data.operating_systems));
 
-        for (int i = 0; i < osList.Count; i++)
-        {
-            os += $"{osList[i].name} {osList[i].percent}%";
-            if (i < osList.Count - 1) os += ", ";
-        }
+        var os = osList.ConcatForEach((token, last) =>
+            $"{token.name} {token.percent}%" + (last ? "" : ", "));
+
 
         fields.Add(new EmbedFieldBuilder()
         {
-            Name = "Editors",
-            Value = editors
+            Name = "Operating Systems",
+            Value = os
         });
 
         using MemoryStream graph = new MemoryStream();
