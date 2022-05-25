@@ -174,12 +174,7 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
             JArray lanList = JArray.Parse(Convert.ToString(stat.data.languages));
 
             languages += lanList.ConcatForEach(6, (token, last) =>
-            {
-                string result = $"{token.name} {token.percent}%";
-                return result += last
-                    ? ""
-                    : ", ";
-            });
+                $"{token.name} {token.percent}%" + (last ? "" : ", "));
 
             fields.Add(new EmbedFieldBuilder()
             {
