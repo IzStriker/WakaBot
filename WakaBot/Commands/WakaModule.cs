@@ -197,7 +197,6 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
             Title = "User Ranking",
             Color = Color.Purple,
             Fields = fields,
-            ImageUrl = $"attachment://graph.png"
         }.Build());
 
         // Remove hold tight message
@@ -305,7 +304,6 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
             Title = discordUser.Username,
             Color = Color.Purple,
             Fields = fields,
-            ImageUrl = $"attachment://graph.png"
         }.Build());
     }
 }
