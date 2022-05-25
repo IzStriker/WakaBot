@@ -204,4 +204,107 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
         await DeleteOriginalResponseAsync();
 
     }
+
+    [SlashCommand("wakaprofile", "Get profile for specific WakaTime user")]
+    public async Task Profile(IUser discordUser)
+    {
+        var fields = new List<EmbedFieldBuilder>();
+        string languages = string.Empty;
+        string editors = string.Empty;
+        string os = string.Empty;
+        var context = new WakaContext();
+
+        var user = context.Users.FirstOrDefault(user => user.DiscordId == discordUser.Id);
+
+        if (user == null)
+        {
+            await RespondAsync(embed: new EmbedBuilder()
+            {
+                Title = "Error",
+                Color = Color.Red,
+                Description = $"{discordUser.Mention} isn't registered with WakaBot."
+            }.Build());
+            return;
+        }
+
+        await RespondAsync(embed: new EmbedBuilder()
+        {
+            Title = "Just pulling the profile data.",
+            Color = Color.Orange,
+            Description = "Hang on"
+        }.Build());
+
+        var stats = await WakaTime.GetStatsAsync(user.WakaName);
+
+        fields.Add(new EmbedFieldBuilder()
+        {
+            Name = "Programming time",
+            Value = $"{stats.data.human_readable_total} {stats.data.human_readable_range}"
+        });
+
+        fields.Add(new EmbedFieldBuilder()
+        {
+            Name = "Daily average",
+            Value = stats.data.human_readable_daily_average
+        });
+
+        // Force C# to treat dynamic object as JArray instead of JObject
+        var lanList = JArray.Parse(Convert.ToString(stats.data.languages));
+        List<DataPoint<double>> points = new List<DataPoint<double>>();
+
+        for (int i = 0; i < lanList.Count; i++)
+        {
+            points.Add(new DataPoint<double>(Convert.ToString(lanList[i].name), Convert.ToDouble(lanList[i].total_seconds)));
+            languages += $"{lanList[i].name} {lanList[i].percent}%";
+            if (i < lanList.Count - 1) languages += ", ";
+        }
+
+        fields.Add(new EmbedFieldBuilder()
+        {
+            Name = "Languages",
+            Value = languages
+        });
+
+        // Force C# to treat dynamic object as JArray instead of JObject
+        var editorList = JArray.Parse(Convert.ToString(stats.data.editors));
+
+        for (int i = 0; i < editorList.Count; i++)
+        {
+            editors += $"{editorList[i].name} {editorList[i].percent}%";
+            if (i < editorList.Count - 1) editors += ", ";
+        }
+
+        fields.Add(new EmbedFieldBuilder()
+        {
+            Name = "Editors",
+            Value = editors
+        });
+
+
+        // Force C# to treat dynamic object as JArray instead of JObject
+        var osList = JArray.Parse(Convert.ToString(stats.data.editors));
+
+        for (int i = 0; i < osList.Count; i++)
+        {
+            os += $"{osList[i].name} {osList[i].percent}%";
+            if (i < osList.Count - 1) os += ", ";
+        }
+
+        fields.Add(new EmbedFieldBuilder()
+        {
+            Name = "Editors",
+            Value = editors
+        });
+
+        var filename = $"profile-{DateTime.Now.ToString("ddMMyyyy-HHmmss")}.png";
+        var path = _graphGenerator.GeneratePie(points.ToArray(), filename);
+
+        await DeleteOriginalResponseAsync();
+        await Context.Channel.SendFileAsync(path, embed: new EmbedBuilder()
+        {
+            Title = discordUser.Username,
+            Color = Color.Purple,
+            Fields = fields
+        }.Build());
+    }
 }
