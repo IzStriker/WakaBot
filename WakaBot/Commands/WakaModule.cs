@@ -189,7 +189,7 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
             points.Add(new DataPoint<double>(Convert.ToString(stat.data.username), Convert.ToDouble(stat.data.total_seconds)));
         }
 
-        MemoryStream graph = new MemoryStream();
+        using MemoryStream graph = new MemoryStream();
         _graphGenerator.GeneratePie(points.ToArray(), graph);
 
         await Context.Channel.SendFileAsync(graph, "graph.png", embed: new EmbedBuilder()
@@ -295,7 +295,7 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
             Value = editors
         });
 
-        MemoryStream graph = new MemoryStream();
+        using MemoryStream graph = new MemoryStream();
         _graphGenerator.GeneratePie(points.ToArray(), graph);
 
         await DeleteOriginalResponseAsync();
