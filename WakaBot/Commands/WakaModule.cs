@@ -3,6 +3,7 @@ using Discord.Interactions;
 using WakaBot.Data;
 using WakaBot.Models;
 using WakaBot.Graphs;
+using WakaBot.Extensions;
 using Newtonsoft.Json.Linq;
 
 namespace WakaBot.Commands;
@@ -170,14 +171,10 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
             string languages = "\nTop languages: ";
 
             // Force C# to treat dynamic object as JArray instead of JObject
-            var lanList = JArray.Parse(Convert.ToString(stat.data.languages));
+            JArray lanList = JArray.Parse(Convert.ToString(stat.data.languages));
 
-            // Print top 6 languages
-            for (int i = 0; i < lanList.Count && i < 6; i++)
-            {
-                languages += $"{lanList[i].name} {lanList[i].percent}%";
-                if (i < 5 && i < lanList.Count - 1) languages += ", ";
-            }
+            languages += lanList.ConcatForEach(6, (token, last) =>
+                $"{token.name} {token.percent}%" + (last ? "" : ", "));
 
             fields.Add(new EmbedFieldBuilder()
             {
@@ -189,19 +186,112 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
             points.Add(new DataPoint<double>(Convert.ToString(stat.data.username), Convert.ToDouble(stat.data.total_seconds)));
         }
 
-        var filename = $"rank-{DateTime.Now.ToString("ddMMyyyy-HHmmss")}.png";
-        var path = _graphGenerator.GeneratePie(points.ToArray(), filename);
+        using MemoryStream graph = new MemoryStream();
+        _graphGenerator.GeneratePie(points.ToArray(), graph);
 
-        await Context.Channel.SendFileAsync(path, embed: new EmbedBuilder()
+        await Context.Channel.SendFileAsync(graph, "graph.png", embed: new EmbedBuilder()
         {
             Title = "User Ranking",
             Color = Color.Purple,
             Fields = fields,
-            ImageUrl = $"attachment://{path}"
         }.Build());
 
         // Remove hold tight message
         await DeleteOriginalResponseAsync();
 
+    }
+
+    [SlashCommand("wakaprofile", "Get profile for specific WakaTime user")]
+    public async Task Profile(IUser discordUser)
+    {
+        var fields = new List<EmbedFieldBuilder>();
+        var context = new WakaContext();
+
+        var user = context.Users.FirstOrDefault(user => user.DiscordId == discordUser.Id);
+
+        if (user == null)
+        {
+            await RespondAsync(embed: new EmbedBuilder()
+            {
+                Title = "Error",
+                Color = Color.Red,
+                Description = $"{discordUser.Mention} isn't registered with WakaBot."
+            }.Build());
+            return;
+        }
+
+        await RespondAsync(embed: new EmbedBuilder()
+        {
+            Title = "Just pulling the profile data.",
+            Color = Color.Orange,
+            Description = "Hang on"
+        }.Build());
+
+        var stats = await WakaTime.GetStatsAsync(user.WakaName);
+
+        fields.Add(new EmbedFieldBuilder()
+        {
+            Name = "Programming time",
+            Value = $"{stats.data.human_readable_total} {stats.data.human_readable_range}"
+        });
+
+        fields.Add(new EmbedFieldBuilder()
+        {
+            Name = "Daily average",
+            Value = stats.data.human_readable_daily_average
+        });
+
+        // Force C# to treat dynamic object as JArray instead of JObject
+        JArray lanList = JArray.Parse(Convert.ToString(stats.data.languages));
+        List<DataPoint<double>> points = new List<DataPoint<double>>();
+
+        var languages = lanList.ConcatForEach((token, last) =>
+        {
+            points.Add(new DataPoint<double>(Convert.ToString(token.name), Convert.ToDouble(token.total_seconds)));
+            return $"{token.name} {token.percent}%" + (last ? "" : ", ");
+        });
+
+        fields.Add(new EmbedFieldBuilder()
+        {
+            Name = "Languages",
+            Value = languages
+        });
+
+        // Force C# to treat dynamic object as JArray instead of JObject
+        JArray editorList = JArray.Parse(Convert.ToString(stats.data.editors));
+
+        var editors = editorList.ConcatForEach((token, last) =>
+            $"{token.name} {token.percent}%" + (last ? "" : ", "));
+
+        fields.Add(new EmbedFieldBuilder()
+        {
+            Name = "Editors",
+            Value = editors
+        });
+
+
+        // Force C# to treat dynamic object as JArray instead of JObject
+        JArray osList = JArray.Parse(Convert.ToString(stats.data.operating_systems));
+
+        var os = osList.ConcatForEach((token, last) =>
+            $"{token.name} {token.percent}%" + (last ? "" : ", "));
+
+
+        fields.Add(new EmbedFieldBuilder()
+        {
+            Name = "Operating Systems",
+            Value = os
+        });
+
+        using MemoryStream graph = new MemoryStream();
+        _graphGenerator.GeneratePie(points.ToArray(), graph);
+
+        await DeleteOriginalResponseAsync();
+        await Context.Channel.SendFileAsync(graph, "graph.png", embed: new EmbedBuilder()
+        {
+            Title = discordUser.Username,
+            Color = Color.Purple,
+            Fields = fields,
+        }.Build());
     }
 }

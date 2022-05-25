@@ -54,7 +54,7 @@ public class WakaBot
             .AddSingleton<CommandHandler>()
             .AddSingleton(_socketConfig)
             .AddSingleton<IConfiguration>(_configuration!)
-            .AddSingleton(x => new GraphGenerator(_configuration!["imageDirectoryPath"]))
+            .AddSingleton(x => new GraphGenerator())
             .BuildServiceProvider();
     }
 }
