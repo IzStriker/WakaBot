@@ -186,10 +186,10 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
             points.Add(new DataPoint<double>(Convert.ToString(stat.data.username), Convert.ToDouble(stat.data.total_seconds)));
         }
 
-        using MemoryStream graph = new MemoryStream();
-        _graphGenerator.GeneratePie(points.ToArray(), graph);
 
-        await Context.Channel.SendFileAsync(graph, "graph.png", embed: new EmbedBuilder()
+        byte[] image = _graphGenerator.GeneratePie(points.ToArray());
+
+        await Context.Channel.SendFileAsync(new MemoryStream(image), "graph.png", embed: new EmbedBuilder()
         {
             Title = "User Ranking",
             Color = Color.Purple,
@@ -283,15 +283,14 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
             Value = os
         });
 
-        using MemoryStream graph = new MemoryStream();
-        _graphGenerator.GeneratePie(points.ToArray(), graph);
+        byte[] image = _graphGenerator.GeneratePie(points.ToArray());
 
         await DeleteOriginalResponseAsync();
-        await Context.Channel.SendFileAsync(graph, "graph.png", embed: new EmbedBuilder()
+        await Context.Channel.SendFileAsync(new MemoryStream(image), "graph.png", embed: new EmbedBuilder()
         {
             Title = discordUser.Username,
             Color = Color.Purple,
-            Fields = fields,
+            Fields = fields
         }.Build());
     }
 }

@@ -1,5 +1,7 @@
-using ZedGraph;
-using System.Drawing;
+using QuickChart;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using System.Net;
 
 namespace WakaBot.Graphs;
 
@@ -7,38 +9,82 @@ public class GraphGenerator
 {
     private readonly int Width = 650;
     private readonly int Height = 650;
-    private readonly float FontScaler = 2.0f;
+    private Dictionary<string, Dictionary<string, string>> _colourMap;
 
-    public void GeneratePie(DataPoint<double>[] dataPoints, MemoryStream stream)
+    public GraphGenerator()
     {
-        Rectangle rect = new Rectangle(12, 12, Width - 24, Height - 24);
+        string path = Path.Join(Directory.GetCurrentDirectory(),
+            "github-colors", "colors.json");
+        this._colourMap = JsonConvert.DeserializeObject<Dictionary<
+                string, Dictionary<string, string>>>(File.ReadAllText(path))!;
+    }
 
-        // Don't want any titles or headings
-        GraphPane pane = new GraphPane(rect, String.Empty, String.Empty, String.Empty);
-        pane.Fill = new Fill(Color.Transparent);
-        pane.Chart.Fill = new Fill(Color.Transparent);
-        pane.Border.Color = Color.Transparent;
-
-        // Draw each slice of the pie
-        Random rand = new Random();
-        foreach (var point in dataPoints)
+    public byte[] GeneratePie(DataPoint<double>[] dataPoints)
+    {
+        Chart chart = new Chart()
         {
-            Random randomGen = new Random();
-            KnownColor[] names = (KnownColor[])Enum.GetValues(typeof(KnownColor));
-            KnownColor randomColorName = names[randomGen.Next(names.Length)];
-            Color randomColor = Color.FromKnownColor(randomColorName);
+            DevicePixelRatio = 10,
+            Width = this.Width,
+            Height = this.Height
+        };
 
-            var slice = pane.AddPieSlice(point.value, randomColor, 0f, point.label);
-            slice.LabelDetail.FontSpec.Size = FontScaler * (Width / 100);
-            slice.LabelType = PieLabelType.Name_Percent;
-            slice.Label.IsVisible = false;
-            slice.Border.Color = Color.White;
+        List<string> colours = new List<string>();
+        foreach (string label in dataPoints.Select(point => point.label))
+        {
+            colours.Add(GetColour(label));
         }
 
-        // Adjust graph to fit size
-        pane.AxisChange();
+        var config = new
+        {
+            type = "outlabeledPie",
+            data = new
+            {
+                labels = dataPoints.Select(point => point.label),
+                datasets = new[]
+                {
+                    new
+                    {
+                        data = dataPoints.Select(point => point.value),
+                        backgroundColor = colours
+                    }
+                }
+            },
+            options = new
+            {
+                plugins = new
+                {
+                    legend = false, // disable legend label box
+                    outlabels = new
+                    {
+                        stretch = 35,
+                        font = new
+                        {
+                            text = "%l %p",
+                            resizeable = true,
+                            minSize = 12,
+                            maxSize = 18
+                        }
+                    }
+                }
+            }
+        };
 
-        pane.GetImage().Save(stream, System.Drawing.Imaging.ImageFormat.Png);
-        stream.Seek(0, SeekOrigin.Begin);
+
+        chart.Config = JsonConvert.SerializeObject(config);
+        using WebClient webClient = new WebClient();
+        var httpClient = new HttpClient();
+
+        return webClient.DownloadData(chart.GetUrl());
+    }
+
+    private string GetColour(string key)
+    {
+        if (_colourMap.ContainsKey(key))
+        {
+            return _colourMap[key]["color"];
+        }
+
+        Random rnd = new Random();
+        return _colourMap.ElementAt(rnd.Next(_colourMap.Count())).Value["color"];
     }
 }
