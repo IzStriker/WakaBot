@@ -1,5 +1,6 @@
 using QuickChart;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System.Net;
 
 namespace WakaBot.Graphs;
@@ -8,6 +9,15 @@ public class GraphGenerator
 {
     private readonly int Width = 650;
     private readonly int Height = 650;
+    private Dictionary<string, Dictionary<string, string>> _colourMap;
+
+    public GraphGenerator()
+    {
+        string path = Path.Join(Directory.GetCurrentDirectory(),
+            "github-colors", "colors.json");
+        this._colourMap = JsonConvert.DeserializeObject<Dictionary<
+                string, Dictionary<string, string>>>(File.ReadAllText(path))!;
+    }
 
     public byte[] GeneratePie(DataPoint<double>[] dataPoints)
     {
@@ -17,6 +27,12 @@ public class GraphGenerator
             Width = this.Width,
             Height = this.Height
         };
+
+        List<string> colours = new List<string>();
+        foreach (string label in dataPoints.Select(point => point.label))
+        {
+            colours.Add(GetColour(label));
+        }
 
         var config = new
         {
@@ -28,7 +44,8 @@ public class GraphGenerator
                 {
                     new
                     {
-                        data = dataPoints.Select(point => point.value)
+                        data = dataPoints.Select(point => point.value),
+                        backgroundColor = colours
                     }
                 }
             },
@@ -58,5 +75,16 @@ public class GraphGenerator
         var httpClient = new HttpClient();
 
         return webClient.DownloadData(chart.GetUrl());
+    }
+
+    private string GetColour(string key)
+    {
+        if (_colourMap.ContainsKey(key))
+        {
+            return _colourMap[key]["color"];
+        }
+
+        Random rnd = new Random();
+        return _colourMap.ElementAt(rnd.Next(_colourMap.Count())).Value["color"];
     }
 }
