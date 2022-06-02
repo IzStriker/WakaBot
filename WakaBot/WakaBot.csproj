@@ -19,6 +19,11 @@
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="6.0.0" />
     <PackageReference Include="QuickChart" Version="2.3.0" />
   </ItemGroup>
+  <ItemGroup> 
+  <Content Include="github-colors\**"> 
+    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory> 
+  </Content> 
+</ItemGroup>
 
 </Project>
  
