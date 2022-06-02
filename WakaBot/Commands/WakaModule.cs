@@ -299,4 +299,41 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
             Fields = fields
         }.Build());
     }
+
+    [SlashCommand("wakaderegister", "Deregister registered wakabot user")]
+    public async Task DeregisterUser(IUser discordUser)
+    {
+        using var context = new WakaContext();
+
+        var user = context.Users.FirstOrDefault(user => user.DiscordId == discordUser.Id);
+
+        if (user == null)
+        {
+            await RespondAsync(embed: new EmbedBuilder
+            {
+                Color = Color.Red,
+                Title = "Error",
+                Description = $"User {discordUser.Username} isn't registered to WakaBot."
+            }.Build());
+            return;
+        }
+
+        await RespondAsync(embed: new EmbedBuilder
+        {
+            Color = Color.Orange,
+            Title = "Hang about",
+            Description = "Removing user from database"
+        }.Build());
+
+        context.Users.Remove(user);
+        context.SaveChanges();
+
+        await DeleteOriginalResponseAsync();
+        await Context.Channel.SendMessageAsync(embed: new EmbedBuilder()
+        {
+            Color = Color.Green,
+            Title = "User Deregistered",
+            Description = $"User {discordUser.Username} Successfully deregistered."
+        }.Build());
+    }
 }

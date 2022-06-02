@@ -74,6 +74,9 @@ public class GraphGenerator
         using WebClient webClient = new WebClient();
         var httpClient = new HttpClient();
 
+        // I prefer image above embed rather than inside,
+        // Discord doesn't allow bot to post images by link.
+        // Therefore the image needs to be downloaded.
         return webClient.DownloadData(chart.GetUrl());
     }
 
