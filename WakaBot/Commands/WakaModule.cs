@@ -151,13 +151,10 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
         using WakaContext context = new();
 
         var users = context.Users.ToList();
-        List<Task<dynamic>> stats = new List<Task<dynamic>>();
 
-        foreach (var user in users)
-        {
-            stats.Add(WakaTime.GetStatsAsync(user.WakaName));
-        }
-        dynamic[] userStats = await Task.WhenAll(stats);
+        var statsTasks = users.Select(user => WakaTime.GetStatsAsync(user.WakaName));
+
+        dynamic[] userStats = await Task.WhenAll(statsTasks);
 
         userStats = userStats.OrderByDescending(stat => stat.data.total_seconds).ToArray();
 
