@@ -26,7 +26,7 @@ public class WakaBot
     public async Task MainAsync()
     {
         _configuration = new ConfigurationBuilder()
-            .SetBasePath(Directory.GetCurrentDirectory())
+            .SetBasePath(AppContext.BaseDirectory)
             .AddEnvironmentVariables()
             .AddJsonFile("appsettings.json", optional: false)
             .Build();
