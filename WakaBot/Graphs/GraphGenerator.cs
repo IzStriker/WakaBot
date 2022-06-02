@@ -13,7 +13,7 @@ public class GraphGenerator
 
     public GraphGenerator()
     {
-        string path = Path.Join(Directory.GetCurrentDirectory(),
+        string path = Path.Join(AppContext.BaseDirectory,
             "github-colors", "colors.json");
         this._colourMap = JsonConvert.DeserializeObject<Dictionary<
                 string, Dictionary<string, string>>>(File.ReadAllText(path))!;
