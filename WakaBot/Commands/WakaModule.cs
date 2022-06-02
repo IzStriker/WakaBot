@@ -161,6 +161,7 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
         var fields = new List<EmbedFieldBuilder>();
 
         List<DataPoint<double>> points = new List<DataPoint<double>>();
+        double totalSeconds = 0;
 
         foreach (var stat in userStats)
         {
@@ -181,7 +182,15 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
 
             // Store data point for pie chart
             points.Add(new DataPoint<double>(Convert.ToString(stat.data.username), Convert.ToDouble(stat.data.total_seconds)));
+
+            totalSeconds += Convert.ToDouble(stat.data.total_seconds);
         }
+
+        fields.Insert(0, new EmbedFieldBuilder()
+        {
+            Name = "Total programming time",
+            Value = $"{(int)totalSeconds / (60 * 60)} hrs {(int)(totalSeconds % (60 * 60)) / 60} mins"
+        });
 
 
         byte[] image = _graphGenerator.GeneratePie(points.ToArray());
