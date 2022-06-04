@@ -3,8 +3,10 @@ using Discord.WebSocket;
 using Discord.Interactions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Configuration;
+using Microsoft.EntityFrameworkCore;
 using WakaBot.Services;
 using WakaBot.Graphs;
+using WakaBot.Data;
 
 
 namespace WakaBot;
@@ -44,10 +46,11 @@ public class WakaBot
         await Task.Delay(-1);
     }
 
-
-
     private ServiceProvider ConfigureServices()
     {
+        string dbPath = Path.Join(_configuration!["dBPath"] ?? AppContext.BaseDirectory,
+                 _configuration["dBFileName"] ?? "waka.db");
+
         return new ServiceCollection()
             .AddSingleton<DiscordSocketClient>()
             .AddSingleton(x => new InteractionService(x.GetRequiredService<DiscordSocketClient>()))
@@ -55,6 +58,7 @@ public class WakaBot
             .AddSingleton(_socketConfig)
             .AddSingleton<IConfiguration>(_configuration!)
             .AddSingleton(x => new GraphGenerator())
+            .AddDbContext<WakaContext>(opt => opt.UseSqlite($"Data Source={dbPath}"))
             .BuildServiceProvider();
     }
 }

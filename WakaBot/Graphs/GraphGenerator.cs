@@ -1,6 +1,5 @@
 using QuickChart;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using System.Net;
 
 namespace WakaBot.Graphs;
