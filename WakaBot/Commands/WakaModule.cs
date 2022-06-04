@@ -12,10 +12,12 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
 {
 
     private readonly GraphGenerator _graphGenerator;
+    private readonly WakaContext _wakaContext;
 
-    public WakaModule(GraphGenerator graphGenerator)
+    public WakaModule(GraphGenerator graphGenerator, WakaContext wakaContext)
     {
         _graphGenerator = graphGenerator;
+        _wakaContext = wakaContext;
     }
 
     [SlashCommand("wakaping", "Recieve a pong")]
@@ -78,9 +80,7 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
             return;
         }
 
-        using WakaContext context = new();
-
-        if (context.Users.Where(x => x.DiscordId == discordUser.Id || x.WakaName == wakaUser).Count() > 0)
+        if (_wakaContext.Users.Where(x => x.DiscordId == discordUser.Id || x.WakaName == wakaUser).Count() > 0)
         {
             await Context.Channel.SendMessageAsync(embed: new EmbedBuilder()
             {
@@ -92,8 +92,8 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
             return;
         }
 
-        context.Add(new User() { DiscordId = discordUser.Id, WakaName = wakaUser });
-        context.SaveChanges();
+        _wakaContext.Add(new User() { DiscordId = discordUser.Id, WakaName = wakaUser });
+        _wakaContext.SaveChanges();
 
         await Context.Channel.SendMessageAsync(embed: new EmbedBuilder()
         {
@@ -108,10 +108,8 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
     [SlashCommand("wakausers", "Get list of registered users")]
     public async Task Users()
     {
-        using WakaContext context = new();
-
         var fields = new List<EmbedFieldBuilder>();
-        var users = context.Users.ToList();
+        var users = _wakaContext.Users.ToList();
         await Context.Guild.DownloadUsersAsync();
         foreach (User user in users)
         {
@@ -148,9 +146,7 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
             Description = "This could take a second."
         }.Build());
 
-        using WakaContext context = new();
-
-        var users = context.Users.ToList();
+        var users = _wakaContext.Users.ToList();
 
         var statsTasks = users.Select(user => WakaTime.GetStatsAsync(user.WakaName));
 
@@ -211,9 +207,8 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
     public async Task Profile(IUser discordUser)
     {
         var fields = new List<EmbedFieldBuilder>();
-        var context = new WakaContext();
 
-        var user = context.Users.FirstOrDefault(user => user.DiscordId == discordUser.Id);
+        var user = _wakaContext.Users.FirstOrDefault(user => user.DiscordId == discordUser.Id);
 
         if (user == null)
         {
@@ -303,9 +298,7 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
     [SlashCommand("wakaderegister", "Deregister registered wakabot user")]
     public async Task DeregisterUser(IUser discordUser)
     {
-        using var context = new WakaContext();
-
-        var user = context.Users.FirstOrDefault(user => user.DiscordId == discordUser.Id);
+        var user = _wakaContext.Users.FirstOrDefault(user => user.DiscordId == discordUser.Id);
 
         if (user == null)
         {
@@ -325,8 +318,8 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
             Description = "Removing user from database"
         }.Build());
 
-        context.Users.Remove(user);
-        context.SaveChanges();
+        _wakaContext.Users.Remove(user);
+        _wakaContext.SaveChanges();
 
         await DeleteOriginalResponseAsync();
         await Context.Channel.SendMessageAsync(embed: new EmbedBuilder()

@@ -3,15 +3,19 @@ using Discord.WebSocket;
 using Discord.Interactions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Configuration;
+using Microsoft.EntityFrameworkCore;
+using CommandLine;
 using WakaBot.Services;
 using WakaBot.Graphs;
+using WakaBot.Data;
+using WakaBot.CommandLine;
 
 
 namespace WakaBot;
 
 public class WakaBot
 {
-    public static Task Main(string[] args) => new WakaBot().MainAsync();
+    public static Task Main(string[] args) => new WakaBot().MainAsync(args);
 
     private DiscordSocketClient? _client;
     private InteractionService? _interactionService;
@@ -23,15 +27,34 @@ public class WakaBot
         AlwaysDownloadUsers = true,
     };
 
-    public async Task MainAsync()
+    public async Task MainAsync(string[] args)
     {
-        _configuration = new ConfigurationBuilder()
-            .SetBasePath(AppContext.BaseDirectory)
-            .AddEnvironmentVariables()
-            .AddJsonFile("appsettings.json", optional: false)
-            .Build();
+
+        try
+        {
+            _configuration = new ConfigurationBuilder()
+                .SetBasePath(AppContext.BaseDirectory)
+                .AddEnvironmentVariables()
+                .AddJsonFile("appsettings.json", optional: false)
+                .Build();
+
+        }
+        catch (FileNotFoundException e)
+        {
+            ConsoleColor originalColor = Console.ForegroundColor;
+
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine(e.Message);
+            Console.ForegroundColor = originalColor;
+            Environment.Exit(1);
+        }
+
 
         using var services = ConfigureServices();
+
+        Parser.Default.ParseArguments<MigrationsCmd>(args)
+            .WithParsed<MigrationsCmd>(cmd => cmd.Execute(services));
+
         _client = services.GetRequiredService<DiscordSocketClient>();
         _interactionService = services.GetRequiredService<InteractionService>();
 
@@ -44,10 +67,11 @@ public class WakaBot
         await Task.Delay(-1);
     }
 
-
-
     private ServiceProvider ConfigureServices()
     {
+        string dbPath = Path.Join(_configuration!["dBPath"] ?? AppContext.BaseDirectory,
+                 _configuration["dBFileName"] ?? "waka.db");
+
         return new ServiceCollection()
             .AddSingleton<DiscordSocketClient>()
             .AddSingleton(x => new InteractionService(x.GetRequiredService<DiscordSocketClient>()))
@@ -55,6 +79,7 @@ public class WakaBot
             .AddSingleton(_socketConfig)
             .AddSingleton<IConfiguration>(_configuration!)
             .AddSingleton(x => new GraphGenerator())
+            .AddDbContext<WakaContext>(opt => opt.UseSqlite($"Data Source={dbPath}"))
             .BuildServiceProvider();
     }
 }
