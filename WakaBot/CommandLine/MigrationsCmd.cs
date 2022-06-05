@@ -8,7 +8,7 @@ namespace WakaBot.CommandLine;
 
 public class MigrationsCmd
 {
-    [Option('m', "--ef-migrate", Required = false, Default = false, HelpText = "Set to run Database Migrations")]
+    [Option('m', "ef-migrate", Required = false, Default = false, HelpText = "Run database migrations")]
     public bool RunMigrations { get; set; }
 
     public void Execute(ServiceProvider services)

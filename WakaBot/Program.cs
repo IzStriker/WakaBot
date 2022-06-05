@@ -53,7 +53,11 @@ public class WakaBot
         using var services = ConfigureServices();
 
         Parser.Default.ParseArguments<MigrationsCmd>(args)
-            .WithParsed<MigrationsCmd>(cmd => cmd.Execute(services));
+            .WithParsed<MigrationsCmd>(cmd => cmd.Execute(services))
+            .WithNotParsed(err =>
+            {
+                Environment.Exit(3);
+            });
 
         _client = services.GetRequiredService<DiscordSocketClient>();
         _interactionService = services.GetRequiredService<InteractionService>();
