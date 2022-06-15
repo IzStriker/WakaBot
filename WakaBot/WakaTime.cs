@@ -1,5 +1,5 @@
 using Newtonsoft.Json.Linq;
-
+using Microsoft.Extensions.Caching.Memory;
 namespace WakaBot;
 
 /// <summary>
@@ -8,6 +8,7 @@ namespace WakaBot;
 public class WakaTime
 {
     const string BaseUrl = "https://wakatime.com/api/v1/";
+    private readonly IMemoryCache _cache;
 
     [Flags]
     public enum RegistrationErrors
@@ -18,12 +19,17 @@ public class WakaTime
         TimeNotFound = 4,
     }
 
+    public WakaTime(IMemoryCache cache)
+    {
+        _cache = cache;
+    }
+
     /// <summary>
     /// Check that a given WakaTime user is valid and has all the correct settings to user the system.
     /// </summary>
     /// <param name="username">Username of user who wishes to register.</param>
     /// <returns>Enum of bit flags of errors.</returns>
-    public static async Task<RegistrationErrors> ValidateRegistration(string username)
+    public async Task<RegistrationErrors> ValidateRegistration(string username)
     {
         RegistrationErrors errors = RegistrationErrors.None;
 
@@ -56,11 +62,26 @@ public class WakaTime
     /// </summary>
     /// <param name="username">User we wish to gets stats for.</param>
     /// <returns>Users stats.</returns>
-    public static async Task<dynamic> GetStatsAsync(string username)
+    public async Task<dynamic> GetStatsAsync(string username)
     {
-        var httpClient = new HttpClient();
-        var response = await httpClient.GetAsync($"{BaseUrl}/users/{username}/stats");
+        using var httpClient = new HttpClient();
+        var stats = await _cache.GetOrCreateAsync(username, async cacheEntry =>
+        {
+            dynamic entry = JObject.Parse(
+                await httpClient.GetStringAsync($"{BaseUrl}/users/{username}/stats"));
 
-        return JObject.Parse(await response.Content.ReadAsStringAsync());
+            if (Convert.ToBoolean(entry.data.is_up_to_date))
+            {
+                cacheEntry.AbsoluteExpirationRelativeToNow = DateTime.Parse("23:59").Subtract(DateTime.Now);
+            }
+            else
+            {
+                // Stats will be refreshed soon
+                cacheEntry.AbsoluteExpiration = DateTimeOffset.Now.AddMinutes(30);
+            }
+            return entry;
+        });
+
+        return stats;
     }
 }
