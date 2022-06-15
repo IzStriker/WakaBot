@@ -1,11 +1,15 @@
 using CommandLine;
 using WakaBot.Data;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.EntityFrameworkCore.Sqlite;
 using Microsoft.EntityFrameworkCore;
 
 namespace WakaBot.CommandLine;
 
+/// <summary>
+/// Handles interactions with Entity Framework Core.
+/// </summary>
+/// Exists so no additional tools for Entity Framework Core 
+/// need to be installed while setting up the bot.
 public class MigrationsCmd
 {
     [Option('m', "ef-migrate", Required = false, Default = false, HelpText = "Run database migrations")]
