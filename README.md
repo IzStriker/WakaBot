@@ -28,7 +28,7 @@ dotnet --info
 ```bash
 # Download bot from discord
 mkdir tmp && cd tmp
-git clone git@github.com:IzStriker/WakaBot.git --recurse-submodules
+git clone git@github.com:IzStriker/WakaBot.git
 # Build Project
 cd WakaBot/WakaBot
 # Try to choose location outside of pulled repository
@@ -46,7 +46,8 @@ In your WakaBot directory you need to create an `appsettings.json` and fill it w
   "token": "required",
   "guildId": "required",
   "dBPath": "optional",
-  "dBFileName": "optional"
+  "dBFileName": "optional",
+  "colourURL": "optional"
 }
 ```
 

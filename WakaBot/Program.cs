@@ -97,7 +97,7 @@ public class WakaBot
             .AddSingleton<CommandHandler>()
             .AddSingleton(_socketConfig)
             .AddSingleton<IConfiguration>(_configuration!)
-            .AddSingleton(x => new GraphGenerator())
+            .AddSingleton(x => new GraphGenerator(_configuration["colourURL"]))
             .AddDbContext<WakaContext>(opt => opt.UseSqlite($"Data Source={dbPath}"))
             .BuildServiceProvider();
     }

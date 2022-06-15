@@ -4,20 +4,40 @@ using System.Net;
 
 namespace WakaBot.Graphs;
 
+/// <summary>
+/// Generate graphs to display in messages.
+/// </summary>
 public class GraphGenerator
 {
     private readonly int Width = 650;
     private readonly int Height = 650;
     private Dictionary<string, Dictionary<string, string>> _colourMap;
 
-    public GraphGenerator()
+
+    /// <summary>
+    /// Creates an instance of GraphGenerator.
+    /// </summary>
+    /// <param name="url">url of github colour repo.</param>
+    public GraphGenerator(string url)
     {
-        string path = Path.Join(AppContext.BaseDirectory,
-            "github-colors", "colors.json");
+        string colourURL = url ?? "https://raw.githubusercontent.com/ozh/github-colors/master/colors.json";
+        using var client = new HttpClient();
+        string data = "";
+
+        // Decided to block as application is dependent of this data.
+        Task.Run(async () =>
+         data = await client.GetStringAsync(colourURL)
+        ).Wait();
+
         this._colourMap = JsonConvert.DeserializeObject<Dictionary<
-                string, Dictionary<string, string>>>(File.ReadAllText(path))!;
+                string, Dictionary<string, string>>>(data)!;
     }
 
+    /// <summary>
+    /// Creates an image of a pie chart.
+    /// </summary>
+    /// <param name="dataPoints">Data used to create the chart.</param>
+    /// <returns></returns>
     public byte[] GeneratePie(DataPoint<double>[] dataPoints)
     {
         Chart chart = new Chart()
@@ -71,7 +91,6 @@ public class GraphGenerator
 
         chart.Config = JsonConvert.SerializeObject(config);
         using WebClient webClient = new WebClient();
-        var httpClient = new HttpClient();
 
         // I prefer image above embed rather than inside,
         // Discord doesn't allow bot to post images by link.
@@ -79,6 +98,12 @@ public class GraphGenerator
         return webClient.DownloadData(chart.GetUrl());
     }
 
+    /// <summary>
+    /// If key is a programming language it picks the colour associated with that language,
+    /// else picks a random colour.  
+    /// </summary>
+    /// <param name="key">Value used to generate colour.</param>
+    /// <returns>hash code of colour.</returns>
     private string GetColour(string key)
     {
         if (_colourMap.ContainsKey(key))
