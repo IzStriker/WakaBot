@@ -1,7 +1,6 @@
 using Discord;
 using Discord.Interactions;
 using WakaBot.Data;
-using WakaBot.Models;
 using WakaBot.Graphs;
 using WakaBot.Extensions;
 using Newtonsoft.Json.Linq;
@@ -63,7 +62,7 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
 
         dynamic[] userStats = await Task.WhenAll(statsTasks);
 
-        userStats = userStats.OrderByDescending(stat => stat.data.total_seconds).ToArray();
+        userStats = userStats.OrderByDescending(stat => stat.data.total_seconds).Take(5).ToArray();
 
         var fields = new List<EmbedFieldBuilder>();
 
@@ -102,16 +101,18 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
 
         byte[] image = _graphGenerator.GeneratePie(points.ToArray());
 
-        await Context.Channel.SendFileAsync(new MemoryStream(image), "graph.png", embed: new EmbedBuilder()
+        var message = await Context.Channel.SendFileAsync(new MemoryStream(image), "graph.png", embed: new EmbedBuilder()
         {
             Title = "User Ranking",
             Color = Color.Purple,
             Fields = fields,
-        }.Build());
+        }.Build(),
+        components: GetPaginationButtons());
+
+        await message.ModifyAsync(msg => msg.Components = GetPaginationButtons(message.Id));
 
         // Remove hold tight message
         await DeleteOriginalResponseAsync();
-
     }
 
     /// <summary>
@@ -209,5 +210,17 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
             Fields = fields
         }.Build());
     }
+
+    private MessageComponent GetPaginationButtons(ulong messageId = 0)
+    {
+        return new ComponentBuilder()
+        /// operations: (page number), (message id)
+        .WithButton("⏮️", $"first:1,{messageId}", disabled: true)
+        .WithButton("◀️", $"previous:1,{messageId}", disabled: true)
+        .WithButton("▶️", $"next:1,{messageId}")
+        .WithButton("⏭️", $"last:1,{messageId}")
+        .Build();
+    }
+
 
 }
