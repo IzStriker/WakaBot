@@ -13,8 +13,15 @@ using WakaBot.CommandLine;
 
 namespace WakaBot;
 
+/// <summary>
+/// Main class for WakaTime Discord bot.
+/// </summary>
 public class WakaBot
 {
+    /// <summary>
+    /// Entry Point for console app.
+    /// </summary>
+    /// <param name="args">Command line arguments</param>
     public static Task Main(string[] args) => new WakaBot().MainAsync(args);
 
     private DiscordSocketClient? _client;
@@ -27,6 +34,10 @@ public class WakaBot
         AlwaysDownloadUsers = true,
     };
 
+    /// <summary>
+    /// Entry point for Discord bot Component of application.
+    /// </summary>
+    /// <param name="args">Command line arguments</param>
     public async Task MainAsync(string[] args)
     {
 
@@ -71,6 +82,10 @@ public class WakaBot
         await Task.Delay(-1);
     }
 
+    /// <summary>
+    /// Creates ServiceProvider required for dependency injection.
+    /// </summary>
+    /// <returns>ServiceProvider of dependency injection objects.</returns>
     private ServiceProvider ConfigureServices()
     {
         string dbPath = Path.Join(_configuration!["dBPath"] ?? AppContext.BaseDirectory,

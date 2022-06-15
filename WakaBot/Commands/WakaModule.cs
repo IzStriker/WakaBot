@@ -8,18 +8,28 @@ using Newtonsoft.Json.Linq;
 
 namespace WakaBot.Commands;
 
+/// <summary>
+/// Specifies what a WakaBot command should do.
+/// </summary>
 public class WakaModule : InteractionModuleBase<SocketInteractionContext>
 {
 
     private readonly GraphGenerator _graphGenerator;
     private readonly WakaContext _wakaContext;
 
+    /// <summary>
+    /// Create an instance of WakaModule.
+    /// </summary>
+    /// <param name="graphGenerator">Instance of graph generator class</param>
+    /// <param name="wakaContext">Instance of database context.</param>/
     public WakaModule(GraphGenerator graphGenerator, WakaContext wakaContext)
     {
         _graphGenerator = graphGenerator;
         _wakaContext = wakaContext;
     }
-
+    /// <summary>
+    /// Checks that bot can respond to messages.
+    /// </summary>
     [SlashCommand("wakaping", "Recieve a pong")]
     public async Task Ping()
     {
@@ -31,7 +41,13 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
         await RespondAsync(embed: embed.Build());
     }
 
-    [SlashCommand("wakaregister", "Register new server member to WakaTime Service")]
+
+    /// <summary>
+    /// Register new server member to Wakabot.
+    /// </summary>
+    /// <param name="discordUser">User to be registered.</param>
+    /// <param name="wakaUser">WakaTime username of user to be registered.</param>
+    [SlashCommand("wakaregister", "Register new server member to WakaBot Service")]
     public async Task RegisterUser(IUser discordUser, String wakaUser)
     {
         await RespondAsync(embed: new EmbedBuilder()
@@ -104,7 +120,9 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
         await DeleteOriginalResponseAsync();
     }
 
-
+    /// <summary>
+    /// Get list or registered users.
+    /// </summary>
     [SlashCommand("wakausers", "Get list of registered users")]
     public async Task Users()
     {
@@ -136,6 +154,10 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
 
     }
 
+    /// <summary>
+    /// Rank all registered WakaBot users by programming time in decreasing order.
+    /// </summary>
+    /// <returns></returns>
     [SlashCommand("wakarank", "Get rank of programming time.")]
     public async Task Rank()
     {
@@ -203,6 +225,10 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
 
     }
 
+    /// <summary>
+    /// Get profile and detailed information about specific WakaBot user.
+    /// </summary>
+    /// <param name="discordUser">Subject Discord user.</param>
     [SlashCommand("wakaprofile", "Get profile for specific WakaTime user")]
     public async Task Profile(IUser discordUser)
     {
@@ -295,6 +321,11 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
         }.Build());
     }
 
+    /// <summary>
+    /// Remove user from WakaBot database.
+    /// </summary>
+    /// <param name="discordUser">User to be removed.</param>
+    /// <returns></returns>
     [SlashCommand("wakaderegister", "Deregister registered wakabot user")]
     public async Task DeregisterUser(IUser discordUser)
     {

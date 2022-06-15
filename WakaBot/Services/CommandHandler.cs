@@ -13,7 +13,13 @@ public class CommandHandler
     private readonly IServiceProvider _services;
     private readonly IConfiguration _configuration;
 
-
+    /// <summary>
+    /// Create new instance of <c>CommandHandler</c> service.
+    /// </summary>
+    /// <param name="client">Instance of discord client.</param>
+    /// <param name="interaction">Instance of discord interaction service</param>
+    /// <param name="services">Dependency injection services</param>
+    /// <param name="configuration">Discord bot configuration</param>
     public CommandHandler(DiscordSocketClient client, InteractionService interaction, IServiceProvider services, IConfiguration configuration)
     {
         _client = client;
@@ -22,6 +28,9 @@ public class CommandHandler
         _configuration = configuration;
     }
 
+    /// <summary>
+    /// Initialises interaction framework and application event listeners.
+    /// </summary>
     public async Task InitializeAsync()
     {
         await _interaction.AddModulesAsync(Assembly.GetEntryAssembly(), _services);
@@ -38,11 +47,19 @@ public class CommandHandler
     }
 
 
-
+    /// <summary>
+    /// Called on one bot is ready to accept commands and registers it to a guild.
+    /// </summary>
     private async Task ClientReady()
     {
         await _interaction!.RegisterCommandsToGuildAsync(_configuration.GetValue<ulong>("guildId"));
     }
+
+    /// <summary>
+    /// Log bot exceptions.
+    /// </summary>
+    /// <param name="message"></param>
+    /// <returns></returns>
     private Task Log(LogMessage message)
     {
         if (message.Exception is Discord.Commands.CommandException cmdException)
@@ -57,6 +74,9 @@ public class CommandHandler
         return Task.CompletedTask;
     }
 
+    /// <summary>
+    /// Logs discord bot's component exceptions.
+    /// </summary>
     private Task ComponentCommandExecuted(ComponentCommandInfo arg1, Discord.IInteractionContext arg2, IResult arg3)
     {
         if (!arg3.IsSuccess)
@@ -67,6 +87,9 @@ public class CommandHandler
         return Task.CompletedTask;
     }
 
+    /// <summary>
+    /// Logs discord bot's context command exceptions.
+    /// </summary>
     private Task ContextCommandExecuted(ContextCommandInfo arg1, Discord.IInteractionContext arg2, IResult arg3)
     {
         if (!arg3.IsSuccess)
@@ -78,6 +101,9 @@ public class CommandHandler
         return Task.CompletedTask;
     }
 
+    /// <summary>
+    /// Logs discord bot's slash command exceptions.
+    /// </summary>
     private Task SlashCommandExecuted(SlashCommandInfo arg1, Discord.IInteractionContext arg2, IResult arg3)
     {
         if (!arg3.IsSuccess)
@@ -87,6 +113,10 @@ public class CommandHandler
 
         return Task.CompletedTask;
     }
+
+    /// <summary>
+    /// Listens for and handles all interactions from clients.
+    /// </summary>
     private async Task HandleInteraction(SocketInteraction arg)
     {
         try

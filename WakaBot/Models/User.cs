@@ -2,7 +2,9 @@
 
 namespace WakaBot.Models
 {
-
+    /// <summary>
+    /// Database representation of user registered to WakaBot.
+    /// </summary>
     public class User
     {
         public int Id { get; set; }
