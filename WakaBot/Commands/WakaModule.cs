@@ -16,16 +16,18 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
 
     private readonly GraphGenerator _graphGenerator;
     private readonly WakaContext _wakaContext;
+    private readonly WakaTime _wakaTime;
 
     /// <summary>
     /// Create an instance of WakaModule.
     /// </summary>
     /// <param name="graphGenerator">Instance of graph generator class</param>
     /// <param name="wakaContext">Instance of database context.</param>/
-    public WakaModule(GraphGenerator graphGenerator, WakaContext wakaContext)
+    public WakaModule(GraphGenerator graphGenerator, WakaContext wakaContext, WakaTime wakaTime)
     {
         _graphGenerator = graphGenerator;
         _wakaContext = wakaContext;
+        _wakaTime = wakaTime;
     }
     /// <summary>
     /// Checks that bot can respond to messages.
@@ -57,7 +59,7 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
             Description = "Should only take a second."
         }.Build());
 
-        var errors = await WakaTime.ValidateRegistration(wakaUser);
+        var errors = await _wakaTime.ValidateRegistration(wakaUser);
 
         if (errors.HasFlag(WakaTime.RegistrationErrors.UserNotFound))
         {
@@ -170,7 +172,7 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
 
         var users = _wakaContext.Users.ToList();
 
-        var statsTasks = users.Select(user => WakaTime.GetStatsAsync(user.WakaName));
+        var statsTasks = users.Select(user => _wakaTime.GetStatsAsync(user.WakaName));
 
         dynamic[] userStats = await Task.WhenAll(statsTasks);
 
@@ -254,7 +256,7 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
             Description = "Hang on"
         }.Build());
 
-        var stats = await WakaTime.GetStatsAsync(user.WakaName);
+        var stats = await _wakaTime.GetStatsAsync(user.WakaName);
 
         fields.Add(new EmbedFieldBuilder()
         {

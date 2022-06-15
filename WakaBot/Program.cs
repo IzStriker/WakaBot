@@ -73,7 +73,6 @@ public class WakaBot
         _client = services.GetRequiredService<DiscordSocketClient>();
         _interactionService = services.GetRequiredService<InteractionService>();
 
-
         await _client.LoginAsync(TokenType.Bot, _configuration["token"]);
         await _client.StartAsync();
 
@@ -99,6 +98,8 @@ public class WakaBot
             .AddSingleton<IConfiguration>(_configuration!)
             .AddSingleton(x => new GraphGenerator(_configuration["colourURL"]))
             .AddDbContext<WakaContext>(opt => opt.UseSqlite($"Data Source={dbPath}"))
+            .AddSingleton<WakaTime>()
+            .AddMemoryCache()
             .BuildServiceProvider();
     }
 }
