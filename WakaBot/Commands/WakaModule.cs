@@ -62,7 +62,7 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
 
         dynamic[] userStats = await Task.WhenAll(statsTasks);
 
-        userStats = userStats.OrderByDescending(stat => stat.data.total_seconds).Take(5).ToArray();
+        userStats = userStats.OrderByDescending(stat => stat.data.total_seconds).ToArray();
 
         var fields = new List<EmbedFieldBuilder>();
 
@@ -105,7 +105,7 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
         {
             Title = "User Ranking",
             Color = Color.Purple,
-            Fields = fields,
+            Fields = fields.Take(5).ToList(),
         }.Build(),
         components: GetPaginationButtons());
 
@@ -215,10 +215,10 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
     {
         return new ComponentBuilder()
         /// operations: (page number), (message id)
-        .WithButton("⏮️", $"first:1,{messageId}", disabled: true)
-        .WithButton("◀️", $"previous:1,{messageId}", disabled: true)
-        .WithButton("▶️", $"next:1,{messageId}")
-        .WithButton("⏭️", $"last:1,{messageId}")
+        .WithButton("⏮️", $"first:0,{messageId}", disabled: true)
+        .WithButton("◀️", $"previous:0,{messageId}", disabled: true)
+        .WithButton("▶️", $"next:0,{messageId}")
+        .WithButton("⏭️", $"last:0,{messageId}")
         .Build();
     }
 
