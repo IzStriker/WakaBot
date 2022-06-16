@@ -222,10 +222,10 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
     {
         return new ComponentBuilder()
         /// operations: (page number), (message id)
-        .WithButton("⏮️", $"first:0,{messageId}", disabled: true)
-        .WithButton("◀️", $"previous:0,{messageId}", disabled: true)
-        .WithButton("▶️", $"next:0,{messageId}", disabled: forwardDisabled)
-        .WithButton("⏭️", $"last:0,{messageId}", disabled: forwardDisabled)
+        .WithButton("⏮️", $"rank-first:0,{messageId}", disabled: true)
+        .WithButton("◀️", $"rank-previous:0,{messageId}", disabled: true)
+        .WithButton("▶️", $"rank-next:0,{messageId}", disabled: forwardDisabled)
+        .WithButton("⏭️", $"rank-last:0,{messageId}", disabled: forwardDisabled)
         .Build();
     }
 

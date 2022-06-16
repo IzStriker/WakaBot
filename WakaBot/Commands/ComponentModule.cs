@@ -24,7 +24,7 @@ public class ComponentModule : InteractionModuleBase<SocketInteractionContext>
             ? config.GetValue<int>("maxUsersPerPage") : 4;
     }
 
-    [ComponentInteraction("first:*,*")]
+    [ComponentInteraction("rank-first:*,*")]
     public async Task RankFirst(int page, ulong messageId)
     {
         await DeferAsync();
@@ -40,7 +40,7 @@ public class ComponentModule : InteractionModuleBase<SocketInteractionContext>
         await UpdatePage(page, messageId, userStats.ToList(), maxPages);
     }
 
-    [ComponentInteraction("previous:*,*")]
+    [ComponentInteraction("rank-previous:*,*")]
     public async Task RankPrevious(int page, ulong messageId)
     {
         await DeferAsync();
@@ -57,7 +57,7 @@ public class ComponentModule : InteractionModuleBase<SocketInteractionContext>
         await UpdatePage(page, messageId, userStats.ToList(), maxPages);
     }
 
-    [ComponentInteraction("next:*,*")]
+    [ComponentInteraction("rank-next:*,*")]
     public async Task RankNext(int page, ulong messageId)
     {
         await DeferAsync();
@@ -74,7 +74,7 @@ public class ComponentModule : InteractionModuleBase<SocketInteractionContext>
         await UpdatePage(page, messageId, userStats.ToList(), maxPages);
     }
 
-    [ComponentInteraction("last:*,*")]
+    [ComponentInteraction("rank-last:*,*")]
     public async Task RankLast(int page, ulong messageId)
     {
         await DeferAsync();
@@ -132,10 +132,10 @@ public class ComponentModule : InteractionModuleBase<SocketInteractionContext>
 
             msg.Components = new ComponentBuilder()
                 /// operations: (page number), (message id)
-                .WithButton("⏮️", $"first:{page},{messageId}", disabled: page <= 0)
-                .WithButton("◀️", $"previous:{page},{messageId}", disabled: page <= 0)
-                .WithButton("▶️", $"next:{page},{messageId}", disabled: page >= maxPages - 1)
-                .WithButton("⏭️", $"last:{page},{messageId}", disabled: page >= maxPages - 1)
+                .WithButton("⏮️", $"rank-first:{page},{messageId}", disabled: page <= 0)
+                .WithButton("◀️", $"rank-previous:{page},{messageId}", disabled: page <= 0)
+                .WithButton("▶️", $"rank-next:{page},{messageId}", disabled: page >= maxPages - 1)
+                .WithButton("⏭️", $"rank-last:{page},{messageId}", disabled: page >= maxPages - 1)
                 .Build();
         });
     }
