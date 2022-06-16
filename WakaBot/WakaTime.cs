@@ -80,7 +80,9 @@ public class WakaTime
             dynamic entry = JObject.Parse(
                 await httpClient.GetStringAsync($"{BaseUrl}/users/{username}/stats"));
 
-            var timeTillExpiration = DateTime.Parse("23:59").Subtract(DateTime.Now);
+            // 3:00 AM tomorrow morning
+            var timeTillExpiration = DateTime.Parse("00:00").AddDays(1)
+                .AddHours(3).Subtract(DateTime.Now);
 
             if (Convert.ToBoolean(entry.data.is_up_to_date))
             {
