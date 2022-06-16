@@ -1,10 +1,10 @@
 using Discord;
 using Discord.Interactions;
 using WakaBot.Data;
-using WakaBot.Models;
 using WakaBot.Graphs;
 using WakaBot.Extensions;
 using Newtonsoft.Json.Linq;
+using Microsoft.Extensions.Configuration;
 
 namespace WakaBot.Commands;
 
@@ -17,17 +17,21 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
     private readonly GraphGenerator _graphGenerator;
     private readonly WakaContext _wakaContext;
     private readonly WakaTime _wakaTime;
+    private readonly int _maxUsersPerPage;
 
     /// <summary>
     /// Create an instance of WakaModule.
     /// </summary>
     /// <param name="graphGenerator">Instance of graph generator class</param>
     /// <param name="wakaContext">Instance of database context.</param>/
-    public WakaModule(GraphGenerator graphGenerator, WakaContext wakaContext, WakaTime wakaTime)
+    public WakaModule(GraphGenerator graphGenerator, WakaContext wakaContext,
+         WakaTime wakaTime, IConfiguration config)
     {
         _graphGenerator = graphGenerator;
         _wakaContext = wakaContext;
         _wakaTime = wakaTime;
+        _maxUsersPerPage = config["maxUsersPerPage"] != null
+            ? config.GetValue<int>("maxUsersPerPage") : 4;
     }
     /// <summary>
     /// Checks that bot can respond to messages.
@@ -70,27 +74,27 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
         List<DataPoint<double>> points = new List<DataPoint<double>>();
         double totalSeconds = 0;
 
-        foreach (var stat in userStats)
+        foreach (var user in userStats.Select((value, index) => new { index, value }))
         {
-            string range = "\nIn " + Convert.ToString(stat.data.range).Replace("_", " ");
+            string range = "\nIn " + Convert.ToString(user.value.data.range).Replace("_", " ");
             string languages = "\nTop languages: ";
 
             // Force C# to treat dynamic object as JArray instead of JObject
-            JArray lanList = JArray.Parse(Convert.ToString(stat.data.languages));
+            JArray lanList = JArray.Parse(Convert.ToString(user.value.data.languages));
 
             languages += lanList.ConcatForEach(6, (token, last) =>
                 $"{token.name} {token.percent}%" + (last ? "" : ", "));
 
             fields.Add(new EmbedFieldBuilder()
             {
-                Name = stat.data.username,
-                Value = stat.data.human_readable_total + range + languages
+                Name = $"#{user.index + 1} - " + user.value.data.username,
+                Value = user.value.data.human_readable_total + range + languages
             });
 
             // Store data point for pie chart
-            points.Add(new DataPoint<double>(Convert.ToString(stat.data.username), Convert.ToDouble(stat.data.total_seconds)));
+            points.Add(new DataPoint<double>(Convert.ToString(user.value.data.username), Convert.ToDouble(user.value.data.total_seconds)));
 
-            totalSeconds += Convert.ToDouble(stat.data.total_seconds);
+            totalSeconds += Convert.ToDouble(user.value.data.total_seconds);
         }
 
         fields.Insert(0, new EmbedFieldBuilder()
@@ -101,17 +105,21 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
 
 
         byte[] image = _graphGenerator.GeneratePie(points.ToArray());
+        int numPages = (int)Math.Ceiling(users.Count / (decimal)_maxUsersPerPage);
 
-        await Context.Channel.SendFileAsync(new MemoryStream(image), "graph.png", embed: new EmbedBuilder()
+        var message = await Context.Channel.SendFileAsync(new MemoryStream(image), "graph.png", embed: new EmbedBuilder()
         {
             Title = "User Ranking",
             Color = Color.Purple,
-            Fields = fields,
-        }.Build());
+            Fields = fields.Take(_maxUsersPerPage).ToList(),
+            Footer = new EmbedFooterBuilder() { Text = $"page 1 of {numPages}" }
+        }.Build(),
+        components: GetPaginationButtons(forwardDisabled: numPages <= 1));
+
+        await message.ModifyAsync(msg => msg.Components = GetPaginationButtons(message.Id, numPages <= 1));
 
         // Remove hold tight message
         await DeleteOriginalResponseAsync();
-
     }
 
     /// <summary>
@@ -209,5 +217,23 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
             Fields = fields
         }.Build());
     }
+
+    /// <summary>
+    /// Create pagination buttons for component. 
+    /// </summary>
+    /// <param name="messageId">Id of message for which buttons are applied to.</param>
+    /// <param name="forwardDisabled">disables next and last button, should be set if only one page.</param>
+    /// <returns>Returns generated buttons.</returns>/
+    private MessageComponent GetPaginationButtons(ulong messageId = 0, bool forwardDisabled = false)
+    {
+        return new ComponentBuilder()
+        /// operations: (page number), (message id)
+        .WithButton("⏮️", $"rank-first:0,{messageId}", disabled: true)
+        .WithButton("◀️", $"rank-previous:0,{messageId}", disabled: true)
+        .WithButton("▶️", $"rank-next:0,{messageId}", disabled: forwardDisabled)
+        .WithButton("⏭️", $"rank-last:0,{messageId}", disabled: forwardDisabled)
+        .Build();
+    }
+
 
 }

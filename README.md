@@ -1,6 +1,6 @@
 # WakaBot
 
-Cross Platform Discord bot for [WakaTime](wakatime.com) programming metrics. Currently can only run in a single discord server at a time.
+Cross Platform Discord bot for [WakaTime](https://wakatime.com) programming metrics. Currently can only run in a single discord server at a time.
 
 ## Features
 
@@ -47,7 +47,8 @@ In your WakaBot directory you need to create an `appsettings.json` and fill it w
   "guildId": "required",
   "dBPath": "optional",
   "dBFileName": "optional",
-  "colourURL": "optional"
+  "colourURL": "optional",
+  "maxUsersPerPage": "optional"
 }
 ```
 
