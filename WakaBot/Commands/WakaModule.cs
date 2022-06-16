@@ -16,6 +16,7 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
     private readonly GraphGenerator _graphGenerator;
     private readonly WakaContext _wakaContext;
     private readonly WakaTime _wakaTime;
+    private readonly int _maxUsersPerPage;
 
     /// <summary>
     /// Create an instance of WakaModule.
@@ -27,6 +28,7 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
         _graphGenerator = graphGenerator;
         _wakaContext = wakaContext;
         _wakaTime = wakaTime;
+        _maxUsersPerPage = 4;
     }
     /// <summary>
     /// Checks that bot can respond to messages.
@@ -69,27 +71,27 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
         List<DataPoint<double>> points = new List<DataPoint<double>>();
         double totalSeconds = 0;
 
-        foreach (var stat in userStats)
+        foreach (var user in userStats.Select((value, index) => new { index, value }))
         {
-            string range = "\nIn " + Convert.ToString(stat.data.range).Replace("_", " ");
+            string range = "\nIn " + Convert.ToString(user.value.data.range).Replace("_", " ");
             string languages = "\nTop languages: ";
 
             // Force C# to treat dynamic object as JArray instead of JObject
-            JArray lanList = JArray.Parse(Convert.ToString(stat.data.languages));
+            JArray lanList = JArray.Parse(Convert.ToString(user.value.data.languages));
 
             languages += lanList.ConcatForEach(6, (token, last) =>
                 $"{token.name} {token.percent}%" + (last ? "" : ", "));
 
             fields.Add(new EmbedFieldBuilder()
             {
-                Name = stat.data.username,
-                Value = stat.data.human_readable_total + range + languages
+                Name = $"#{user.index + 1} - " + user.value.data.username,
+                Value = user.value.data.human_readable_total + range + languages
             });
 
             // Store data point for pie chart
-            points.Add(new DataPoint<double>(Convert.ToString(stat.data.username), Convert.ToDouble(stat.data.total_seconds)));
+            points.Add(new DataPoint<double>(Convert.ToString(user.value.data.username), Convert.ToDouble(user.value.data.total_seconds)));
 
-            totalSeconds += Convert.ToDouble(stat.data.total_seconds);
+            totalSeconds += Convert.ToDouble(user.value.data.total_seconds);
         }
 
         fields.Insert(0, new EmbedFieldBuilder()
@@ -100,12 +102,14 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
 
 
         byte[] image = _graphGenerator.GeneratePie(points.ToArray());
+        int numPages = (int)Math.Ceiling(users.Count / (decimal)_maxUsersPerPage);
 
         var message = await Context.Channel.SendFileAsync(new MemoryStream(image), "graph.png", embed: new EmbedBuilder()
         {
             Title = "User Ranking",
             Color = Color.Purple,
-            Fields = fields.Take(5).ToList(),
+            Fields = fields.Take(_maxUsersPerPage).ToList(),
+            Footer = new EmbedFooterBuilder() { Text = $"page 1 of {numPages}" }
         }.Build(),
         components: GetPaginationButtons());
 
