@@ -1,5 +1,7 @@
 using Newtonsoft.Json.Linq;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Primitives;
+using WakaBot.Data;
 namespace WakaBot;
 
 /// <summary>
@@ -9,6 +11,7 @@ public class WakaTime
 {
     const string BaseUrl = "https://wakatime.com/api/v1/";
     private readonly IMemoryCache _cache;
+    private readonly WakaContext _context;
 
     [Flags]
     public enum RegistrationErrors
@@ -19,9 +22,10 @@ public class WakaTime
         TimeNotFound = 4,
     }
 
-    public WakaTime(IMemoryCache cache)
+    public WakaTime(IMemoryCache cache, WakaContext context)
     {
         _cache = cache;
+        _context = context;
     }
 
     /// <summary>
@@ -70,18 +74,43 @@ public class WakaTime
             dynamic entry = JObject.Parse(
                 await httpClient.GetStringAsync($"{BaseUrl}/users/{username}/stats"));
 
+            var timeTillExpiration = TimeSpan.FromSeconds(20); //DateTime.Parse("23:59").Subtract(DateTime.Now);
             if (Convert.ToBoolean(entry.data.is_up_to_date))
             {
-                cacheEntry.AbsoluteExpirationRelativeToNow = DateTime.Parse("23:59").Subtract(DateTime.Now);
+                cacheEntry.AbsoluteExpirationRelativeToNow = timeTillExpiration;
             }
             else
             {
                 // Stats will be refreshed soon
                 cacheEntry.AbsoluteExpiration = DateTimeOffset.Now.AddMinutes(30);
             }
+
+            // Remove item from cache when expires, instead of when set is next called.
+            cacheEntry.AddExpirationToken(new CancellationChangeToken(
+                new CancellationTokenSource(timeTillExpiration).Token));
+
+            cacheEntry.RegisterPostEvictionCallback(PostEvictionCallBack);
+
             return entry;
         });
 
         return stats;
+    }
+    /// <summary>
+    /// Refreshes all users in the cache or adds them if they're not present.
+    /// </summary>
+    public async Task RefreshAllUsersAsync()
+    {
+        var users = _context.Users.ToList();
+        users.ForEach(user => _cache.Remove(user.WakaName));
+        var statsTasks = users.Select(user => GetStatsAsync(user.WakaName));
+        dynamic[] userStats = await Task.WhenAll(statsTasks);
+
+        Console.WriteLine("All users refreshed.");
+    }
+
+    private void PostEvictionCallBack(object key, object value, EvictionReason resaon, object state)
+    {
+        Console.WriteLine($"{key} cache refreshed");
     }
 }
