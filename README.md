@@ -69,6 +69,7 @@ Requires the following permissions
 - View Channels
 - Send Messages
 - Attach Files
+- Read Message History
 
 ### Execution
 
