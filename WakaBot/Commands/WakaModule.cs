@@ -111,9 +111,9 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
             Fields = fields.Take(_maxUsersPerPage).ToList(),
             Footer = new EmbedFooterBuilder() { Text = $"page 1 of {numPages}" }
         }.Build(),
-        components: GetPaginationButtons());
+        components: GetPaginationButtons(forwardDisabled: numPages <= 1));
 
-        await message.ModifyAsync(msg => msg.Components = GetPaginationButtons(message.Id));
+        await message.ModifyAsync(msg => msg.Components = GetPaginationButtons(message.Id, numPages <= 1));
 
         // Remove hold tight message
         await DeleteOriginalResponseAsync();
@@ -215,14 +215,14 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
         }.Build());
     }
 
-    private MessageComponent GetPaginationButtons(ulong messageId = 0)
+    private MessageComponent GetPaginationButtons(ulong messageId = 0, bool forwardDisabled = false)
     {
         return new ComponentBuilder()
         /// operations: (page number), (message id)
         .WithButton("⏮️", $"first:0,{messageId}", disabled: true)
         .WithButton("◀️", $"previous:0,{messageId}", disabled: true)
-        .WithButton("▶️", $"next:0,{messageId}")
-        .WithButton("⏭️", $"last:0,{messageId}")
+        .WithButton("▶️", $"next:0,{messageId}", disabled: forwardDisabled)
+        .WithButton("⏭️", $"last:0,{messageId}", disabled: forwardDisabled)
         .Build();
     }
 
