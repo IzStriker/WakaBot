@@ -47,7 +47,8 @@ In your WakaBot directory you need to create an `appsettings.json` and fill it w
   "guildId": "required",
   "dBPath": "optional",
   "dBFileName": "optional",
-  "colourURL": "optional"
+  "colourURL": "optional",
+  "maxUsersPerPage": "optional"
 }
 ```
 

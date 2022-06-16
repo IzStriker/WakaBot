@@ -218,6 +218,12 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
         }.Build());
     }
 
+    /// <summary>
+    /// Create pagination buttons for component. 
+    /// </summary>
+    /// <param name="messageId">Id of message for which buttons are applied to.</param>
+    /// <param name="forwardDisabled">disables next and last button, should be set if only one page.</param>
+    /// <returns>Returns generated buttons.</returns>/
     private MessageComponent GetPaginationButtons(ulong messageId = 0, bool forwardDisabled = false)
     {
         return new ComponentBuilder()
