@@ -4,6 +4,8 @@ using WakaBot;
 using WakaBot.Data;
 using WakaBot.Extensions;
 using Newtonsoft.Json.Linq;
+using Microsoft.Extensions.Configuration;
+
 
 namespace Wakabot.Commands;
 
@@ -14,11 +16,12 @@ public class ComponentModule : InteractionModuleBase<SocketInteractionContext>
     private readonly WakaTime _wakaTime;
     private readonly int _maxUsersPerPage;
 
-    public ComponentModule(WakaContext wakaContext, WakaTime wakaTime)
+    public ComponentModule(WakaContext wakaContext, WakaTime wakaTime, IConfiguration config)
     {
         _wakaContext = wakaContext;
         _wakaTime = wakaTime;
-        _maxUsersPerPage = 4;
+        _maxUsersPerPage = config["maxUsersPerPage"] != null
+            ? config.GetValue<int>("maxUsersPerPage") : 4;
     }
 
     [ComponentInteraction("first:*,*")]

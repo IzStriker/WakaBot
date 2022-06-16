@@ -4,6 +4,7 @@ using WakaBot.Data;
 using WakaBot.Graphs;
 using WakaBot.Extensions;
 using Newtonsoft.Json.Linq;
+using Microsoft.Extensions.Configuration;
 
 namespace WakaBot.Commands;
 
@@ -23,12 +24,14 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
     /// </summary>
     /// <param name="graphGenerator">Instance of graph generator class</param>
     /// <param name="wakaContext">Instance of database context.</param>/
-    public WakaModule(GraphGenerator graphGenerator, WakaContext wakaContext, WakaTime wakaTime)
+    public WakaModule(GraphGenerator graphGenerator, WakaContext wakaContext,
+         WakaTime wakaTime, IConfiguration config)
     {
         _graphGenerator = graphGenerator;
         _wakaContext = wakaContext;
         _wakaTime = wakaTime;
-        _maxUsersPerPage = 4;
+        _maxUsersPerPage = config["maxUsersPerPage"] != null
+            ? config.GetValue<int>("maxUsersPerPage") : 4;
     }
     /// <summary>
     /// Checks that bot can respond to messages.
