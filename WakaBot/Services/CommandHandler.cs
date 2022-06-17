@@ -3,6 +3,7 @@ using Discord.Interactions;
 using Discord.WebSocket;
 using System.Reflection;
 using Microsoft.Extensions.Configuration;
+using WakaBot.Data;
 
 namespace WakaBot.Services;
 
@@ -12,6 +13,7 @@ public class CommandHandler
     private readonly InteractionService _interaction;
     private readonly IServiceProvider _services;
     private readonly IConfiguration _configuration;
+    private readonly WakaTime _wakaTime;
 
     /// <summary>
     /// Create new instance of <c>CommandHandler</c> service.
@@ -20,12 +22,14 @@ public class CommandHandler
     /// <param name="interaction">Instance of discord interaction service</param>
     /// <param name="services">Dependency injection services</param>
     /// <param name="configuration">Discord bot configuration</param>
-    public CommandHandler(DiscordSocketClient client, InteractionService interaction, IServiceProvider services, IConfiguration configuration)
+    public CommandHandler(DiscordSocketClient client, InteractionService interaction,
+     IServiceProvider services, IConfiguration configuration, WakaTime wakaTime)
     {
         _client = client;
         _interaction = interaction;
         _services = services;
         _configuration = configuration;
+        _wakaTime = wakaTime;
     }
 
     /// <summary>
@@ -52,7 +56,13 @@ public class CommandHandler
     /// </summary>
     private async Task ClientReady()
     {
+
         await _interaction!.RegisterCommandsToGuildAsync(_configuration.GetValue<ulong>("guildId"));
+        if (_configuration.GetValue<bool>("alwaysCacheUsers"))
+        {
+            await _wakaTime.RefreshAllUsersAsync();
+            Console.WriteLine("All users loaded into cache.");
+        }
     }
 
     /// <summary>

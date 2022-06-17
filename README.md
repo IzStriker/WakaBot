@@ -48,7 +48,8 @@ In your WakaBot directory you need to create an `appsettings.json` and fill it w
   "dBPath": "optional",
   "dBFileName": "optional",
   "colourURL": "optional",
-  "maxUsersPerPage": "optional"
+  "maxUsersPerPage": "optional",
+  "alwaysCacheUsers": "optional"
 }
 ```
 
