@@ -44,7 +44,11 @@ public class CommandHandler
         _client.InteractionCreated += HandleInteraction;
         _client.Ready += ClientReady;
         _client.Log += Log;
-
+        _client.GuildAvailable += (socket) =>
+        {
+            _logger.LogInformation("Joined server {serverName}", socket.Name);
+            return Task.CompletedTask;
+        };
 
         _interaction.SlashCommandExecuted += SlashCommandExecuted;
         _interaction.ContextCommandExecuted += ContextCommandExecuted;
@@ -59,6 +63,8 @@ public class CommandHandler
     private async Task ClientReady()
     {
 
+        _logger.LogInformation("Registered on {serverCount} servers", _client.Guilds.Count);
+        _logger.LogInformation("Connected as {currentUser}", _client.CurrentUser);
         await _interaction!.RegisterCommandsToGuildAsync(_configuration.GetValue<ulong>("guildId"));
         if (_configuration.GetValue<bool>("alwaysCacheUsers"))
         {
