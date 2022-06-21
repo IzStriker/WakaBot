@@ -2,8 +2,6 @@ using Discord;
 using Discord.Interactions;
 using Discord.WebSocket;
 using System.Reflection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Configuration;
 
 namespace WakaBot.Services;
 
@@ -53,7 +51,6 @@ public class CommandHandler
         _interaction.SlashCommandExecuted += SlashCommandExecuted;
         _interaction.ContextCommandExecuted += ContextCommandExecuted;
         _interaction.ComponentCommandExecuted += ComponentCommandExecuted;
-
     }
 
 
@@ -121,7 +118,8 @@ public class CommandHandler
     /// <summary>
     /// Logs discord bot's component exceptions.
     /// </summary>
-    private Task ComponentCommandExecuted(ComponentCommandInfo arg1, Discord.IInteractionContext arg2, IResult arg3)
+    private Task ComponentCommandExecuted(ComponentCommandInfo arg1, Discord.IInteractionContext arg2,
+        Discord.Interactions.IResult arg3)
     {
         if (!arg3.IsSuccess)
         {
@@ -134,7 +132,8 @@ public class CommandHandler
     /// <summary>
     /// Logs discord bot's context command exceptions.
     /// </summary>
-    private Task ContextCommandExecuted(ContextCommandInfo arg1, Discord.IInteractionContext arg2, IResult arg3)
+    private Task ContextCommandExecuted(ContextCommandInfo arg1, Discord.IInteractionContext arg2,
+        Discord.Interactions.IResult arg3)
     {
         if (!arg3.IsSuccess)
         {
@@ -148,7 +147,8 @@ public class CommandHandler
     /// <summary>
     /// Logs discord bot's slash command exceptions.
     /// </summary>
-    private Task SlashCommandExecuted(SlashCommandInfo arg1, Discord.IInteractionContext arg2, IResult arg3)
+    private Task SlashCommandExecuted(SlashCommandInfo arg1, Discord.IInteractionContext arg2,
+        Discord.Interactions.IResult arg3)
     {
         if (!arg3.IsSuccess)
         {

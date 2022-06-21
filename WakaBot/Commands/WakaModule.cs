@@ -4,7 +4,6 @@ using WakaBot.Data;
 using WakaBot.Graphs;
 using WakaBot.Extensions;
 using Newtonsoft.Json.Linq;
-using Microsoft.Extensions.Configuration;
 
 namespace WakaBot.Commands;
 

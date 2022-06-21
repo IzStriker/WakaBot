@@ -1,15 +1,13 @@
 ﻿using Discord;
 using Discord.WebSocket;
 using Discord.Interactions;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Configuration;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 using CommandLine;
 using WakaBot.Services;
 using WakaBot.Graphs;
 using WakaBot.Data;
 using WakaBot.CommandLine;
+using WakaBot.WebApp;
 using Serilog;
 
 namespace WakaBot;
@@ -80,6 +78,11 @@ public class WakaBot
         await _client.StartAsync();
 
         await services.GetRequiredService<CommandHandler>().InitializeAsync();
+        // Initialise WebServer if Enabled.
+        if (_configuration.GetValue<bool>("runWebServer"))
+        {
+            await new Server().StartAsync(services);
+        }
 
         await Task.Delay(-1);
     }
