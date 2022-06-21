@@ -4,12 +4,13 @@ using Discord.Interactions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Configuration;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using CommandLine;
 using WakaBot.Services;
 using WakaBot.Graphs;
 using WakaBot.Data;
 using WakaBot.CommandLine;
-
+using Serilog;
 
 namespace WakaBot;
 
@@ -46,6 +47,7 @@ public class WakaBot
             _configuration = new ConfigurationBuilder()
                 .SetBasePath(AppContext.BaseDirectory)
                 .AddEnvironmentVariables()
+                .AddJsonFile("logconfig.json", optional: false)
                 .AddJsonFile("appsettings.json", optional: false)
                 .Build();
 
@@ -87,8 +89,17 @@ public class WakaBot
     /// <returns>ServiceProvider of dependency injection objects.</returns>
     private ServiceProvider ConfigureServices()
     {
+        // Setup database connection path using default values.
         string dbPath = Path.Join(_configuration!["dBPath"] ?? AppContext.BaseDirectory,
                  _configuration["dBFileName"] ?? "waka.db");
+
+        // Force Serilog to use base app directory instead of current.
+        Environment.CurrentDirectory = AppContext.BaseDirectory;
+
+        // Setup Serilog
+        Log.Logger = new LoggerConfiguration()
+            .ReadFrom.Configuration(_configuration)
+            .CreateLogger();
 
         return new ServiceCollection()
             .AddSingleton<DiscordSocketClient>()
@@ -100,6 +111,7 @@ public class WakaBot
             .AddDbContextFactory<WakaContext>(opt => opt.UseSqlite($"Data Source={dbPath}"))
             .AddScoped<WakaTime>()
             .AddMemoryCache()
+            .AddLogging(config => config.AddSerilog())
             .BuildServiceProvider();
     }
 }
