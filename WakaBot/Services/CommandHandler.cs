@@ -63,7 +63,6 @@ public class CommandHandler
         if (_configuration.GetValue<bool>("alwaysCacheUsers"))
         {
             await _wakaTime.RefreshAllUsersAsync();
-            _logger.LogInformation("All users loaded into cache.");
         }
     }
 
@@ -74,14 +73,41 @@ public class CommandHandler
     /// <returns></returns>
     private Task Log(LogMessage message)
     {
-        if (message.Exception is Discord.Commands.CommandException cmdException)
+        // Taken from https://www.gngrninja.com/code/2019/7/19/c-discord-bot-logging-all-the-things
+        string logText = $": {message.Exception?.ToString() ?? message.Message}";
+        switch (message.Severity.ToString())
         {
-            Console.WriteLine($"[Command/{message.Severity}] {cmdException.Command.Aliases.First()}"
-                + $" failed to execute in {cmdException.Context.Channel}.");
-            Console.WriteLine(cmdException);
+            case "Critical":
+                {
+                    _logger.LogCritical(logText);
+                    break;
+                }
+            case "Warning":
+                {
+                    _logger.LogWarning(logText);
+                    break;
+                }
+            case "Info":
+                {
+                    _logger.LogInformation(logText);
+                    break;
+                }
+            case "Verbose":
+                {
+                    _logger.LogInformation(logText);
+                    break;
+                }
+            case "Debug":
+                {
+                    _logger.LogDebug(logText);
+                    break;
+                }
+            case "Error":
+                {
+                    _logger.LogError(logText);
+                    break;
+                }
         }
-        else
-            Console.WriteLine($"[General/{message.Severity}] {message}");
 
         return Task.CompletedTask;
     }
@@ -93,7 +119,7 @@ public class CommandHandler
     {
         if (!arg3.IsSuccess)
         {
-            Console.WriteLine(arg3.ErrorReason);
+            _logger.LogError(arg3.ErrorReason);
         }
 
         return Task.CompletedTask;
@@ -106,7 +132,7 @@ public class CommandHandler
     {
         if (!arg3.IsSuccess)
         {
-            Console.WriteLine(arg3.ErrorReason);
+            _logger.LogError(arg3.ErrorReason);
 
         }
 
@@ -120,7 +146,7 @@ public class CommandHandler
     {
         if (!arg3.IsSuccess)
         {
-            Console.WriteLine(arg3.ErrorReason);
+            _logger.LogError(arg3.ErrorReason);
         }
 
         return Task.CompletedTask;
@@ -138,8 +164,7 @@ public class CommandHandler
         }
         catch (Exception e)
         {
-            Console.WriteLine("Error");
-            Console.WriteLine(e.Message);
+            _logger.LogError(e, "interaction error");
 
             if (arg.Type == InteractionType.ApplicationCommand)
             {

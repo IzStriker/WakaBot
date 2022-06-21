@@ -69,6 +69,7 @@ public class WakaBot
             .WithParsed<MigrationsCmd>(cmd => cmd.Execute(services))
             .WithNotParsed(err =>
             {
+                // if invalid command line args 
                 Environment.Exit(3);
             });
 

@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Primitives;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using WakaBot.Data;
 
 namespace WakaBot;
@@ -16,6 +17,7 @@ public class WakaTime
     private readonly IMemoryCache _cache;
     private readonly IDbContextFactory<WakaContext> _contextFactory;
     private readonly IConfiguration _config;
+    private readonly ILogger _logger;
 
     [Flags]
     public enum RegistrationErrors
@@ -27,11 +29,12 @@ public class WakaTime
     }
 
     public WakaTime(IMemoryCache cache, IDbContextFactory<WakaContext> factory,
-    IConfiguration config)
+    IConfiguration config, ILogger<WakaTime> logger)
     {
         _cache = cache;
         _contextFactory = factory;
         _config = config;
+        _logger = logger;
     }
 
     /// <summary>
@@ -120,7 +123,7 @@ public class WakaTime
         var statsTasks = users.Select(user => GetStatsAsync(user.WakaName));
         dynamic[] userStats = await Task.WhenAll(statsTasks);
 
-        Console.WriteLine("All users refreshed.");
+        _logger.LogInformation("All users refreshed.");
     }
 
     /// <summary>
@@ -129,6 +132,6 @@ public class WakaTime
     private void PostEvictionCallBack(object key, object value, EvictionReason resaon, object state)
     {
         Task.Run(async () => await GetStatsAsync((string)key)).Wait();
-        Console.WriteLine($"{key} cache refreshed");
+        _logger.LogInformation($"{key} cache refreshed");
     }
 }
