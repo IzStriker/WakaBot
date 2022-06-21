@@ -4,10 +4,9 @@ using WakaBot;
 using WakaBot.Data;
 using WakaBot.Extensions;
 using Newtonsoft.Json.Linq;
-using Microsoft.Extensions.Configuration;
 
 
-namespace Wakabot.Commands;
+namespace WakaBot.Commands;
 
 /// <summary>
 /// Handles interactions with components.
