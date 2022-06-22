@@ -42,10 +42,11 @@ public class ComponentModule : InteractionModuleBase<SocketInteractionContext>
     {
         await DeferAsync();
 
-        int maxPages = (int)Math.Ceiling(_wakaContext.Users.Count() / (decimal)_maxUsersPerPage);
+        var users = _wakaContext.Users.Where(user => user.GuildId == Context.Guild.Id);
+        int maxPages = (int)Math.Ceiling(users.Count() / (decimal)_maxUsersPerPage);
         page = 0;
 
-        var statsTasks = _wakaContext.Users.Select(user => _wakaTime.GetStatsAsync(user.WakaName));
+        var statsTasks = users.Select(user => _wakaTime.GetStatsAsync(user.WakaName));
         dynamic[] userStats = await Task.WhenAll(statsTasks);
 
         userStats = userStats.OrderByDescending(stat => stat.data.total_seconds)
@@ -63,11 +64,12 @@ public class ComponentModule : InteractionModuleBase<SocketInteractionContext>
     {
         await DeferAsync();
 
-        int maxPages = (int)Math.Ceiling(_wakaContext.Users.Count() / (decimal)_maxUsersPerPage);
+        var users = _wakaContext.Users.Where(user => user.GuildId == Context.Guild.Id);
+        int maxPages = (int)Math.Ceiling(users.Count() / (decimal)_maxUsersPerPage);
 
         page--;
 
-        var statsTasks = _wakaContext.Users.Select(user => _wakaTime.GetStatsAsync(user.WakaName));
+        var statsTasks = users.Select(user => _wakaTime.GetStatsAsync(user.WakaName));
         dynamic[] userStats = await Task.WhenAll(statsTasks);
 
         userStats = userStats.OrderByDescending(stat => stat.data.total_seconds)
@@ -84,11 +86,12 @@ public class ComponentModule : InteractionModuleBase<SocketInteractionContext>
     public async Task RankNext(int page, ulong messageId)
     {
         await DeferAsync();
-        int maxPages = (int)Math.Ceiling(_wakaContext.Users.Count() / (decimal)_maxUsersPerPage);
+        var users = _wakaContext.Users.Where(user => user.GuildId == Context.Guild.Id);
+        int maxPages = (int)Math.Ceiling(users.Count() / (decimal)_maxUsersPerPage);
 
         page++;
 
-        var statsTasks = _wakaContext.Users.Select(user => _wakaTime.GetStatsAsync(user.WakaName));
+        var statsTasks = users.Select(user => _wakaTime.GetStatsAsync(user.WakaName));
 
         dynamic[] userStats = await Task.WhenAll(statsTasks);
 
@@ -106,12 +109,12 @@ public class ComponentModule : InteractionModuleBase<SocketInteractionContext>
     public async Task RankLast(int page, ulong messageId)
     {
         await DeferAsync();
-
-        int maxPages = (int)Math.Ceiling(_wakaContext.Users.Count() / (decimal)_maxUsersPerPage);
+        var users = _wakaContext.Users.Where(user => user.GuildId == Context.Guild.Id);
+        int maxPages = (int)Math.Ceiling(users.Count() / (decimal)_maxUsersPerPage);
 
         page = maxPages - 1;
 
-        var statsTasks = _wakaContext.Users.Select(user => _wakaTime.GetStatsAsync(user.WakaName));
+        var statsTasks = users.Select(user => _wakaTime.GetStatsAsync(user.WakaName));
         dynamic[] userStats = await Task.WhenAll(statsTasks);
 
         userStats = userStats.OrderByDescending(stat => stat.data.total_seconds)
@@ -180,7 +183,8 @@ public class ComponentModule : InteractionModuleBase<SocketInteractionContext>
     /// </summary>
     private async Task<string> GetTotalTimeAsync()
     {
-        var statsTasks = _wakaContext.Users.Select(user => _wakaTime.GetStatsAsync(user.WakaName));
+        var statsTasks = _wakaContext.Users.Where(user => user.GuildId == Context.Guild.Id)
+            .Select(user => _wakaTime.GetStatsAsync(user.WakaName));
         dynamic[] userStats = await Task.WhenAll(statsTasks);
 
         int totalSeconds = 0;

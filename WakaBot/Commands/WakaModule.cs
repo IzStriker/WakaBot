@@ -60,7 +60,7 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
             Description = "This could take a second."
         }.Build());
 
-        var users = _wakaContext.Users.ToList();
+        var users = _wakaContext.Users.Where(user => user.GuildId == Context.Guild.Id).ToList();
 
         var statsTasks = users.Select(user => _wakaTime.GetStatsAsync(user.WakaName));
 
@@ -130,7 +130,8 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
     {
         var fields = new List<EmbedFieldBuilder>();
 
-        var user = _wakaContext.Users.FirstOrDefault(user => user.DiscordId == discordUser.Id);
+        var user = _wakaContext.Users.FirstOrDefault(user => user.DiscordId == discordUser.Id
+            && user.GuildId == Context.Guild.Id);
 
         if (user == null)
         {
