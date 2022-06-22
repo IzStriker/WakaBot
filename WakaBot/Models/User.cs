@@ -15,5 +15,7 @@ namespace WakaBot.Models
         [Required]
         public string WakaName { get; set; } = string.Empty;
 
+        [Required]
+        public ulong GuildId { get; set; }
     }
 }

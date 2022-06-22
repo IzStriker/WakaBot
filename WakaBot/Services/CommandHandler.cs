@@ -62,7 +62,17 @@ public class CommandHandler
 
         _logger.LogInformation("Registered on {serverCount} servers", _client.Guilds.Count);
         _logger.LogInformation("Connected as {currentUser}", _client.CurrentUser);
-        await _interaction!.RegisterCommandsToGuildAsync(_configuration.GetValue<ulong>("guildId"));
+
+        if (_configuration["guildId"] != null)
+        {
+            await _interaction!.RegisterCommandsToGuildAsync(_configuration.GetValue<ulong>("guildId"));
+        }
+        else
+        {
+            // Could take up to an hour.
+            await _interaction!.RegisterCommandsGloballyAsync();
+        }
+
         if (_configuration.GetValue<bool>("alwaysCacheUsers"))
         {
             await _wakaTime.RefreshAllUsersAsync();

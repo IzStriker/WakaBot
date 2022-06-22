@@ -12,7 +12,7 @@
       {
         "Name": "File",
         "Args": {
-          "path": "Logs\\wakabot.log",
+          "path": "Logs/wakabot.log",
           "rollingInterval": "Day"
         }
       }

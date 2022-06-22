@@ -80,7 +80,9 @@ public class UserModule : InteractionModuleBase<SocketInteractionContext>
             return;
         }
 
-        if (_wakaContext.Users.Where(x => x.DiscordId == discordUser.Id || x.WakaName == wakaUser).Count() > 0)
+        // Get users in current guild with matching discordId or WakaId
+        if (_wakaContext.Users.Where(x => x.GuildId == Context.Guild.Id &&
+            (x.DiscordId == discordUser.Id || x.WakaName == wakaUser)).Count() > 0)
         {
             await Context.Channel.SendMessageAsync(embed: new EmbedBuilder()
             {
@@ -92,7 +94,7 @@ public class UserModule : InteractionModuleBase<SocketInteractionContext>
             return;
         }
 
-        _wakaContext.Add(new User() { DiscordId = discordUser.Id, WakaName = wakaUser });
+        _wakaContext.Add(new User() { DiscordId = discordUser.Id, WakaName = wakaUser, GuildId = Context.Guild.Id, });
         _wakaContext.SaveChanges();
 
         await Context.Channel.SendMessageAsync(embed: new EmbedBuilder()
@@ -112,7 +114,8 @@ public class UserModule : InteractionModuleBase<SocketInteractionContext>
     [SlashCommand("wakaderegister", "Deregister registered wakabot user")]
     public async Task DeregisterUser(IUser discordUser)
     {
-        var user = _wakaContext.Users.FirstOrDefault(user => user.DiscordId == discordUser.Id);
+        var user = _wakaContext.Users.FirstOrDefault(user => user.DiscordId == discordUser.Id &&
+             user.GuildId == Context.Guild.Id);
 
         if (user == null)
         {
@@ -151,7 +154,7 @@ public class UserModule : InteractionModuleBase<SocketInteractionContext>
     public async Task Users()
     {
         var fields = new List<EmbedFieldBuilder>();
-        var users = _wakaContext.Users.ToList();
+        var users = _wakaContext.Users.Where(user => user.GuildId == Context.Guild.Id).ToList();
         await Context.Guild.DownloadUsersAsync();
         foreach (User user in users)
         {

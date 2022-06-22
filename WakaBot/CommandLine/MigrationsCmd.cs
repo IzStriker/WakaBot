@@ -31,7 +31,9 @@ public class MigrationsCmd
         }
         else
         {
-            if (context!.Database.GetAppliedMigrations().ToList().Count == 0)
+            // Check all database migrations have been run.
+            if (context!.Database.GetAppliedMigrations().ToList().Count !=
+                context!.Database.GetMigrations().ToList().Count)
             {
 
                 logger.LogError("Database migrations must be run before running the application.");
