@@ -4,6 +4,7 @@ using WakaBot.Data;
 using WakaBot.Graphs;
 using WakaBot.Extensions;
 using Newtonsoft.Json.Linq;
+using System.Text;
 
 namespace WakaBot.Commands;
 
@@ -23,14 +24,17 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
     /// </summary>
     /// <param name="graphGenerator">Instance of graph generator class</param>
     /// <param name="wakaContext">Instance of database context.</param>/
-    public WakaModule(GraphGenerator graphGenerator, WakaContext wakaContext,
-         WakaTime wakaTime, IConfiguration config)
+    public WakaModule(
+        GraphGenerator graphGenerator,
+        WakaContext wakaContext,
+        WakaTime wakaTime,
+        IConfiguration config)
     {
         _graphGenerator = graphGenerator;
         _wakaContext = wakaContext;
         _wakaTime = wakaTime;
         _maxUsersPerPage = config["maxUsersPerPage"] != null
-            ? config.GetValue<int>("maxUsersPerPage") : 4;
+            ? config.GetValue<int>("maxUsersPerPage") : 3;
     }
     /// <summary>
     /// Checks that bot can respond to messages.
@@ -84,11 +88,8 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
             languages += lanList.ConcatForEach(6, (token, last) =>
                 $"{token.name} {token.percent}%" + (last ? "" : ", "));
 
-            fields.Add(new EmbedFieldBuilder()
-            {
-                Name = $"#{user.index + 1} - " + user.value.data.username,
-                Value = user.value.data.human_readable_total + range + languages
-            });
+            fields.Add(CreateEmbedField($"#{user.index + 1} - " + user.value.data.username,
+                Convert.ToString(user.value.data.human_readable_total + range + languages)));
 
             // Store data point for pie chart
             points.Add(new DataPoint<double>(Convert.ToString(user.value.data.username), Convert.ToDouble(user.value.data.total_seconds)));
@@ -96,12 +97,8 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
             totalSeconds += Convert.ToDouble(user.value.data.total_seconds);
         }
 
-        fields.Insert(0, new EmbedFieldBuilder()
-        {
-            Name = "Total programming time",
-            Value = $"{(int)totalSeconds / (60 * 60)} hrs {(int)(totalSeconds % (60 * 60)) / 60} mins"
-        });
-
+        fields = fields.Take(_maxUsersPerPage).ToList();
+        fields.Insert(0, CreateEmbedField("Total programming time", $"{(int)totalSeconds / (60 * 60)} hrs {(int)(totalSeconds % (60 * 60)) / 60} mins"));
 
         byte[] image = _graphGenerator.GeneratePie(points.ToArray());
         int numPages = (int)Math.Ceiling(users.Count / (decimal)_maxUsersPerPage);
@@ -110,7 +107,7 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
         {
             Title = "User Ranking",
             Color = Color.Purple,
-            Fields = fields.Take(_maxUsersPerPage).ToList(),
+            Fields = fields,
             Footer = new EmbedFooterBuilder() { Text = $"page 1 of {numPages}" }
         }.Build(),
         components: GetPaginationButtons(forwardDisabled: numPages <= 1));
@@ -153,59 +150,35 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
 
         var stats = await _wakaTime.GetStatsAsync(user.WakaName);
 
-        fields.Add(new EmbedFieldBuilder()
-        {
-            Name = "Programming time",
-            Value = $"{stats.data.human_readable_total} {stats.data.human_readable_range}"
-        });
+        fields.Add(CreateEmbedField("Programming time",
+         $"{stats.data.human_readable_total} {stats.data.human_readable_range}"));
 
-        fields.Add(new EmbedFieldBuilder()
-        {
-            Name = "Daily average",
-            Value = stats.data.human_readable_daily_average
-        });
+        fields.Add(CreateEmbedField("Daily average", $"{stats.data.human_readable_daily_average}"));
 
         // Force C# to treat dynamic object as JArray instead of JObject
         JArray lanList = JArray.Parse(Convert.ToString(stats.data.languages));
         List<DataPoint<double>> points = new List<DataPoint<double>>();
 
-        var languages = lanList.ConcatForEach((token, last) =>
+        // Generate data points for pie chart
+        foreach (dynamic lan in lanList)
         {
-            points.Add(new DataPoint<double>(Convert.ToString(token.name), Convert.ToDouble(token.total_seconds)));
-            return $"{token.name} {token.percent}%" + (last ? "" : ", ");
-        });
+            points.Add(new DataPoint<double>(Convert.ToString(lan.name), Convert.ToDouble(lan.percent)));
+        }
 
-        fields.Add(new EmbedFieldBuilder()
-        {
-            Name = "Languages",
-            Value = languages
-        });
+        fields.Add(CreateEmbedField("Languages",
+             lanList.AsEnumerable<dynamic>().Select(lan => $"{lan.name} {lan.percent}%").ToList()));
 
         // Force C# to treat dynamic object as JArray instead of JObject
         JArray editorList = JArray.Parse(Convert.ToString(stats.data.editors));
 
-        var editors = editorList.ConcatForEach((token, last) =>
-            $"{token.name} {token.percent}%" + (last ? "" : ", "));
-
-        fields.Add(new EmbedFieldBuilder()
-        {
-            Name = "Editors",
-            Value = editors
-        });
-
+        fields.Add(CreateEmbedField("Editors",
+            editorList.AsEnumerable<dynamic>().Select(editor => $"{editor.name} {editor.percent}%").ToList()));
 
         // Force C# to treat dynamic object as JArray instead of JObject
         JArray osList = JArray.Parse(Convert.ToString(stats.data.operating_systems));
 
-        var os = osList.ConcatForEach((token, last) =>
-            $"{token.name} {token.percent}%" + (last ? "" : ", "));
-
-
-        fields.Add(new EmbedFieldBuilder()
-        {
-            Name = "Operating Systems",
-            Value = os
-        });
+        fields.Add(CreateEmbedField("Operating Systems",
+            osList.AsEnumerable<dynamic>().Select(lan => $"{lan.name} {lan.percent}%").ToList()));
 
         byte[] image = _graphGenerator.GeneratePie(points.ToArray());
 
@@ -235,5 +208,72 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
         .Build();
     }
 
+    /// <summary>
+    /// Creates a safe Embed Field Builder 
+    /// </summary>
+    /// <param name="name">Name of the embedded filed</param>
+    /// <param name="values">Content of value from list</param>
+    /// <returns>Safe embedded field builder</returns>
+    private EmbedFieldBuilder CreateEmbedField(string name, List<string> values)
+    {
+        StringBuilder sb = new StringBuilder();
+
+        // Check sb length is less than or equal to 1024
+        for (int i = 0; i < values.Count; i++)
+        {
+            if (sb.Length + values[i].ToString().Length > EmbedFieldBuilder.MaxFieldValueLength)
+            {
+                break;
+            }
+
+            sb.Append(values[i].ToString());
+
+            // Only append comma if not last and next won't go over max length
+            if (i != values.Count - 1 &&
+             sb.Length + 1 + values[i + 1].ToString().Length
+             <= EmbedFieldBuilder.MaxFieldValueLength)
+            {
+                sb.Append(", ");
+            }
+        }
+
+        if (sb.Length == 0)
+        {
+            sb.Append("No data");
+        }
+
+        return new EmbedFieldBuilder()
+        {
+            Name = name,
+            Value = sb.ToString()
+        };
+    }
+
+    /// <summary>
+    /// Creates a safe Embed Field Builder 
+    /// </summary>
+    /// <param name="name">Name of the embedded filed</param>
+    /// <param name="values">Content of value from string</param>
+    /// <returns>Safe embedded field builder</returns>
+    private EmbedFieldBuilder CreateEmbedField(string name, string value)
+    {
+        // value isn't empty
+        if (value.Length == 0)
+        {
+            value = "No data";
+        }
+
+        // value is too long
+        if (value.Length > 1024)
+        {
+            value = value.Substring(0, 1024);
+        }
+
+        return new EmbedFieldBuilder()
+        {
+            Name = name,
+            Value = value
+        };
+    }
 
 }

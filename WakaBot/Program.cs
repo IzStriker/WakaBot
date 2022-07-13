@@ -77,6 +77,10 @@ public class WakaBot
         await _client.LoginAsync(TokenType.Bot, _configuration["token"]);
         await _client.StartAsync();
 
+#if DEBUG
+        await _client.SetGameAsync("Down for maintenance");
+#endif
+
         await services.GetRequiredService<CommandHandler>().InitializeAsync();
         // Initialise WebServer if Enabled.
         if (_configuration.GetValue<bool>("runWebServer"))

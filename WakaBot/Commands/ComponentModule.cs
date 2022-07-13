@@ -29,7 +29,7 @@ public class ComponentModule : InteractionModuleBase<SocketInteractionContext>
         _wakaContext = wakaContext;
         _wakaTime = wakaTime;
         _maxUsersPerPage = config["maxUsersPerPage"] != null
-            ? config.GetValue<int>("maxUsersPerPage") : 4;
+            ? config.GetValue<int>("maxUsersPerPage") : 3;
     }
 
     /// <summary>
