@@ -34,7 +34,7 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
         _wakaContext = wakaContext;
         _wakaTime = wakaTime;
         _maxUsersPerPage = config["maxUsersPerPage"] != null
-            ? config.GetValue<int>("maxUsersPerPage") : 4;
+            ? config.GetValue<int>("maxUsersPerPage") : 3;
     }
     /// <summary>
     /// Checks that bot can respond to messages.
@@ -88,11 +88,8 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
             languages += lanList.ConcatForEach(6, (token, last) =>
                 $"{token.name} {token.percent}%" + (last ? "" : ", "));
 
-            fields.Add(new EmbedFieldBuilder()
-            {
-                Name = $"#{user.index + 1} - " + user.value.data.username,
-                Value = user.value.data.human_readable_total + range + languages
-            });
+            fields.Add(CreateEmbedField($"#{user.index + 1} - " + user.value.data.username,
+                Convert.ToString(user.value.data.human_readable_total + range + languages)));
 
             // Store data point for pie chart
             points.Add(new DataPoint<double>(Convert.ToString(user.value.data.username), Convert.ToDouble(user.value.data.total_seconds)));
@@ -100,11 +97,8 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
             totalSeconds += Convert.ToDouble(user.value.data.total_seconds);
         }
 
-        fields.Insert(0, new EmbedFieldBuilder()
-        {
-            Name = "Total programming time",
-            Value = $"{(int)totalSeconds / (60 * 60)} hrs {(int)(totalSeconds % (60 * 60)) / 60} mins"
-        });
+        fields = fields.Take(_maxUsersPerPage).ToList();
+        fields.Insert(0, CreateEmbedField("Total programming time", $"{(int)totalSeconds / (60 * 60)} hrs {(int)(totalSeconds % (60 * 60)) / 60} mins"));
 
         byte[] image = _graphGenerator.GeneratePie(points.ToArray());
         int numPages = (int)Math.Ceiling(users.Count / (decimal)_maxUsersPerPage);
@@ -113,7 +107,7 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
         {
             Title = "User Ranking",
             Color = Color.Purple,
-            Fields = fields.Take(_maxUsersPerPage).ToList(),
+            Fields = fields,
             Footer = new EmbedFooterBuilder() { Text = $"page 1 of {numPages}" }
         }.Build(),
         components: GetPaginationButtons(forwardDisabled: numPages <= 1));
@@ -214,6 +208,12 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
         .Build();
     }
 
+    /// <summary>
+    /// Creates a safe Embed Field Builder 
+    /// </summary>
+    /// <param name="name">Name of the embedded filed</param>
+    /// <param name="values">Content of value from list</param>
+    /// <returns>Safe embedded field builder</returns>
     private EmbedFieldBuilder CreateEmbedField(string name, List<string> values)
     {
         StringBuilder sb = new StringBuilder();
@@ -237,7 +237,6 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
             }
         }
 
-        // check sb isn't empty
         if (sb.Length == 0)
         {
             sb.Append("No data");
@@ -250,6 +249,12 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
         };
     }
 
+    /// <summary>
+    /// Creates a safe Embed Field Builder 
+    /// </summary>
+    /// <param name="name">Name of the embedded filed</param>
+    /// <param name="values">Content of value from string</param>
+    /// <returns>Safe embedded field builder</returns>
     private EmbedFieldBuilder CreateEmbedField(string name, string value)
     {
         // value isn't empty
