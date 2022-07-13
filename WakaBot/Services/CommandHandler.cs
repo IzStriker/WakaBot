@@ -181,6 +181,7 @@ public class CommandHandler
         catch (Exception e)
         {
             _logger.LogError(e, "interaction error");
+            _logger.LogError(e.Data.ToString());
 
             if (arg.Type == InteractionType.ApplicationCommand)
             {
