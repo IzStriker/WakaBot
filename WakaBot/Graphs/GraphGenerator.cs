@@ -98,6 +98,55 @@ public class GraphGenerator
         return webClient.DownloadData(chart.GetUrl());
     }
 
+    public byte[] GenerateBar(String[] labels, DataPoint<float[]>[] dataPoints)
+    {
+        Chart chart = new Chart()
+        {
+            DevicePixelRatio = 10,
+            Width = this.Width,
+            Height = this.Height
+        };
+
+        var config = new
+        {
+            type = "bar",
+            data = new
+            {
+                labels,
+                datasets = dataPoints.Select(point => new
+                {
+                    label = point.label,
+                    data = point.value
+                })
+            },
+            options = new
+            {
+                scales = new
+                {
+                    xAxes = new[] {
+                        new
+                        {
+                            stacked = true
+                        }
+                    },
+                    yAxes = new[] {
+                        new
+                        {
+                            stacked = true
+                        }
+                    }
+                },
+            }
+        };
+
+        chart.Config = JsonConvert.SerializeObject(config);
+        chart.BackgroundColor = "#FFF";
+
+        Console.WriteLine(chart.GetUrl());
+
+        return chart.ToByteArray();
+    }
+
     /// <summary>
     /// If key is a programming language it picks the colour associated with that language,
     /// else picks a random colour.  

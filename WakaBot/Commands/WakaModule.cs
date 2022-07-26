@@ -205,7 +205,7 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
         var statsTasks = users.Select(user => _wakaTime.GetStatsAsync(user.WakaName));
         dynamic[] userStats = await Task.WhenAll(statsTasks);
 
-        Dictionary<string, decimal> languages = new Dictionary<string, decimal>();
+        Dictionary<string, float> languages = new Dictionary<string, float>();
 
         // Calculate top languages in for each user in server
         foreach (var user in userStats)
@@ -216,8 +216,8 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
             foreach (dynamic lang in langList)
             {
                 string langName = Convert.ToString(lang.name);
-                decimal totalSeconds = Convert.ToDecimal(lang.total_seconds);
-                decimal originalValue;
+                float totalSeconds = Convert.ToSingle(lang.total_seconds);
+                float originalValue;
 
                 if (languages.TryGetValue(langName, out originalValue))
                 {
@@ -230,13 +230,13 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
             }
         }
 
-        var topLanguages = languages.OrderByDescending(lang => lang.Value).Select(lang => lang.Key).Take(6).ToList();
-        List<KeyValuePair<string, decimal[]>> userTopLangs = new List<KeyValuePair<string, decimal[]>>();
+        var topLanguages = languages.OrderByDescending(lang => lang.Value).Select(lang => lang.Key).Take(6).ToArray();
+        List<DataPoint<float[]>> userTopLangs = new List<DataPoint<float[]>>();
 
         // Calculate each users programming time with top languages
         foreach (var user in userStats)
         {
-            decimal[] languageTotals = new decimal[6];
+            float[] languageTotals = new float[6];
             // Force C# to treat as JArray
             var langList = JArray.Parse(Convert.ToString(user.data.languages));
 
@@ -249,20 +249,17 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
 
                     if (lang.name == topLanguages[i])
                     {
-                        languageTotals[i] = Convert.ToDecimal(lang.total_seconds);
+                        languageTotals[i] = Convert.ToSingle(lang.total_seconds);
                         break;
                     }
 
                     // If user hasn't used language, value defaults to zero
                 }
             }
-            userTopLangs.Add(new KeyValuePair<string, decimal[]>(Convert.ToString(user.data.username), languageTotals));
+            userTopLangs.Add(new DataPoint<float[]>(Convert.ToString(user.data.username), languageTotals));
         }
 
-        foreach (var v in userTopLangs)
-        {
-            Console.WriteLine($"{v.Key} - {string.Join(", ", v.Value)}");
-        }
+        _graphGenerator.GenerateBar(topLanguages, userTopLangs.ToArray());
     }
 
     /// <summary>
