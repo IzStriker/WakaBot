@@ -249,7 +249,8 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
 
                     if (lang.name == topLanguages[i])
                     {
-                        languageTotals[i] = Convert.ToSingle(lang.total_seconds);
+                        // Convert hours to seconds
+                        languageTotals[i] = Convert.ToSingle(lang.total_seconds) / 3600;
                         break;
                     }
 
