@@ -191,6 +191,80 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
         }.Build());
     }
 
+    [SlashCommand("wakastats", "Get programming stats for whole server")]
+    public async Task Stats()
+    {
+        await RespondAsync(embed: new EmbedBuilder()
+        {
+            Title = "Hold the line",
+            Color = Color.Orange,
+            Description = "Complex processing happening here!"
+        }.Build());
+
+        var users = _wakaContext.Users.Where(user => user.GuildId == Context.Guild.Id);
+        var statsTasks = users.Select(user => _wakaTime.GetStatsAsync(user.WakaName));
+        dynamic[] userStats = await Task.WhenAll(statsTasks);
+
+        Dictionary<string, decimal> languages = new Dictionary<string, decimal>();
+
+        // Calculate top languages in for each user in server
+        foreach (var user in userStats)
+        {
+            // Force C# to treat as JArray
+            JArray langList = JArray.Parse(Convert.ToString(user.data.languages));
+
+            foreach (dynamic lang in langList)
+            {
+                string langName = Convert.ToString(lang.name);
+                decimal totalSeconds = Convert.ToDecimal(lang.total_seconds);
+                decimal originalValue;
+
+                if (languages.TryGetValue(langName, out originalValue))
+                {
+                    languages[langName] = originalValue + totalSeconds;
+                }
+                else
+                {
+                    languages[langName] = totalSeconds;
+                }
+            }
+        }
+
+        var topLanguages = languages.OrderByDescending(lang => lang.Value).Select(lang => lang.Key).Take(6).ToList();
+        List<KeyValuePair<string, decimal[]>> userTopLangs = new List<KeyValuePair<string, decimal[]>>();
+
+        // Calculate each users programming time with top languages
+        foreach (var user in userStats)
+        {
+            decimal[] languageTotals = new decimal[6];
+            // Force C# to treat as JArray
+            var langList = JArray.Parse(Convert.ToString(user.data.languages));
+
+            // Get programming time for each top language
+            for (int i = 0; i < languageTotals.Count(); i++)
+            {
+                // Search corresponding language in languages
+                foreach (dynamic lang in langList)
+                {
+
+                    if (lang.name == topLanguages[i])
+                    {
+                        languageTotals[i] = Convert.ToDecimal(lang.total_seconds);
+                        break;
+                    }
+
+                    // If user hasn't used language, value defaults to zero
+                }
+            }
+            userTopLangs.Add(new KeyValuePair<string, decimal[]>(Convert.ToString(user.data.username), languageTotals));
+        }
+
+        foreach (var v in userTopLangs)
+        {
+            Console.WriteLine($"{v.Key} - {string.Join(", ", v.Value)}");
+        }
+    }
+
     /// <summary>
     /// Create pagination buttons for component. 
     /// </summary>
