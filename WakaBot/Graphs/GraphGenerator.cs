@@ -11,6 +11,7 @@ public class GraphGenerator
 {
     private readonly int Width = 650;
     private readonly int Height = 650;
+    private readonly string DiscordBackgroundColour = "#36393f";
     private Dictionary<string, Dictionary<string, string>> _colourMap;
 
 
@@ -166,9 +167,7 @@ public class GraphGenerator
         };
 
         chart.Config = JsonConvert.SerializeObject(config);
-        chart.BackgroundColor = "#36393f";
-
-        Console.WriteLine(chart.GetUrl());
+        chart.BackgroundColor = DiscordBackgroundColour;
 
         return chart.ToByteArray();
     }

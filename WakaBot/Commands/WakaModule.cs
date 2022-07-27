@@ -260,7 +260,9 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
             userTopLangs.Add(new DataPoint<float[]>(Convert.ToString(user.data.username), languageTotals));
         }
 
-        _graphGenerator.GenerateBar(topLanguages, userTopLangs.ToArray());
+        byte[] image = _graphGenerator.GenerateBar(topLanguages, userTopLangs.ToArray());
+        await DeleteOriginalResponseAsync();
+        await Context.Channel.SendFileAsync(new MemoryStream(image), "graph.png");
     }
 
     /// <summary>
