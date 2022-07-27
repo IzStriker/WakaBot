@@ -260,9 +260,23 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
             userTopLangs.Add(new DataPoint<float[]>(Convert.ToString(user.data.username), languageTotals));
         }
 
+        // Create fields of detailed top language stats
+        var fields = new List<EmbedFieldBuilder>();
+        for (int i = 0; i < topLanguages.Count(); i++)
+        {
+            fields.Add(CreateEmbedField($"#{i + 1} {topLanguages[i]}", "value"));
+            // Value should be list of user who used language and percentage of their contribution to language
+            // e.g. user1 25%, user2 15% ... user(n) n% sorted
+        }
+
         byte[] image = _graphGenerator.GenerateBar(topLanguages, userTopLangs.ToArray());
         await DeleteOriginalResponseAsync();
-        await Context.Channel.SendFileAsync(new MemoryStream(image), "graph.png");
+        await Context.Channel.SendFileAsync(new MemoryStream(image), "graph.png", embed: new EmbedBuilder()
+        {
+            Title = "Top Languages",
+            Fields = fields,
+            ImageUrl = "attachment://graph.png"
+        }.Build());
     }
 
     /// <summary>
