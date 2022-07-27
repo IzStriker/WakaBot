@@ -103,7 +103,6 @@ public class GraphGenerator
     {
         Chart chart = new Chart()
         {
-            DevicePixelRatio = 10,
             Width = this.Width,
             Height = this.Height
         };
@@ -127,7 +126,8 @@ public class GraphGenerator
                 {
                     labels = new
                     {
-                        fontColor = "#FFFFFF"
+                        fontColor = "#FFFFFF",
+                        fontSize = 16
                     }
                 },
                 scales = new
@@ -139,7 +139,8 @@ public class GraphGenerator
                             // X-Axis Labels
                             ticks = new
                             {
-                                fontColor = "#FFFFFF"
+                                fontColor = "#FFFFFF",
+                                fontSize = 16
                             },
                             gridLines = new
                             {
@@ -154,7 +155,8 @@ public class GraphGenerator
                             // Y-Axis Labels
                             ticks = new
                             {
-                                fontColor = "#FFFFFF"
+                                fontColor = "#FFFFFF",
+                                fontSize = 16
                             },
                             gridLines = new
                             {
