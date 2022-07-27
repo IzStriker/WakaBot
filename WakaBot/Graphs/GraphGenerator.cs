@@ -121,26 +121,52 @@ public class GraphGenerator
             },
             options = new
             {
+                // Key map
+                legend = new
+                {
+                    labels = new
+                    {
+                        fontColor = "#FFFFFF"
+                    }
+                },
                 scales = new
                 {
                     xAxes = new[] {
                         new
                         {
-                            stacked = true
+                            stacked = true,
+                            // X-Axis Labels
+                            ticks = new
+                            {
+                                fontColor = "#FFFFFF"
+                            },
+                            gridLines = new
+                            {
+                                display = false,
+                            }
                         }
                     },
                     yAxes = new[] {
                         new
                         {
-                            stacked = true
-                        }
-                    }
+                            stacked = true,
+                            // Y-Axis Labels
+                            ticks = new
+                            {
+                                fontColor = "#FFFFFF"
+                            },
+                            gridLines = new
+                            {
+                                display = false,
+                            }
+                        },
+                    },
                 },
             }
         };
 
         chart.Config = JsonConvert.SerializeObject(config);
-        chart.BackgroundColor = "#FFF";
+        chart.BackgroundColor = "#36393f";
 
         Console.WriteLine(chart.GetUrl());
 
