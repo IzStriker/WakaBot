@@ -118,7 +118,7 @@ public class ComponentModule : InteractionModuleBase<SocketInteractionContext>
         dynamic[] userStats = await Task.WhenAll(statsTasks);
 
         userStats = userStats.OrderByDescending(stat => stat.data.total_seconds)
-            .TakeLast(_maxUsersPerPage).ToArray();
+            .Skip(_maxUsersPerPage * page).ToArray();
         await UpdatePage(page, messageId, userStats.ToList(), maxPages);
     }
 
