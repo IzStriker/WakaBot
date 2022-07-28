@@ -246,15 +246,13 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
                 // Search corresponding language in languages
                 foreach (dynamic lang in langList)
                 {
-
+                    // If user hasn't used language, value defaults to zero
                     if (lang.name == topLanguages[i])
                     {
                         // Convert hours to seconds
                         languageTotals[i] = Convert.ToSingle(lang.total_seconds) / 3600;
                         break;
                     }
-
-                    // If user hasn't used language, value defaults to zero
                 }
             }
             userTopLangs.Add(new DataPoint<float[]>(Convert.ToString(user.data.username), languageTotals));
@@ -264,9 +262,16 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
         var fields = new List<EmbedFieldBuilder>();
         for (int i = 0; i < topLanguages.Count(); i++)
         {
-            fields.Add(CreateEmbedField($"#{i + 1} {topLanguages[i]}", "value"));
-            // Value should be list of user who used language and percentage of their contribution to language
-            // e.g. user1 25%, user2 15% ... user(n) n% sorted
+            List<string> userPercentages = new List<string>();
+
+            // for each user, get programming time for current language
+            userTopLangs.OrderByDescending(ele => ele.value[i]).ToList().ForEach(point =>
+            {
+                var hours = (point.value[i]).ToString("0.##");
+                userPercentages.Add($"{point.label} {hours}h ");
+            });
+
+            fields.Add(CreateEmbedField($"#{i + 1} {topLanguages[i]}", userPercentages));
         }
 
         byte[] image = _graphGenerator.GenerateBar(topLanguages, userTopLangs.ToArray());
