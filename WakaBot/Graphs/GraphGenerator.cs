@@ -89,14 +89,9 @@ public class GraphGenerator
             }
         };
 
-
         chart.Config = JsonConvert.SerializeObject(config);
-        using WebClient webClient = new WebClient();
 
-        // I prefer image above embed rather than inside,
-        // Discord doesn't allow bot to post images by link.
-        // Therefore the image needs to be downloaded.
-        return webClient.DownloadData(chart.GetUrl());
+        return chart.ToByteArray();
     }
 
     public byte[] GenerateBar(String[] labels, DataPoint<float[]>[] dataPoints)
