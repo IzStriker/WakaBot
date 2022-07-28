@@ -371,7 +371,3 @@ appsettings.json
 *.db
 *.db-shm
 *.db-wal
-
-# Image and Image Directory
-Images/
-*.png

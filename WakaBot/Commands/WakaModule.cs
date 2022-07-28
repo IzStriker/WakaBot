@@ -191,6 +191,99 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
         }.Build());
     }
 
+    [SlashCommand("wakastats", "Get programming stats for whole server")]
+    public async Task Stats()
+    {
+        await RespondAsync(embed: new EmbedBuilder()
+        {
+            Title = "Hold the line",
+            Color = Color.Orange,
+            Description = "Complex processing happening here!"
+        }.Build());
+
+        var users = _wakaContext.Users.Where(user => user.GuildId == Context.Guild.Id);
+        var statsTasks = users.Select(user => _wakaTime.GetStatsAsync(user.WakaName));
+        dynamic[] userStats = await Task.WhenAll(statsTasks);
+
+        Dictionary<string, float> languages = new Dictionary<string, float>();
+
+        // Calculate top languages in for each user in server
+        foreach (var user in userStats)
+        {
+            // Force C# to treat as JArray
+            JArray langList = JArray.Parse(Convert.ToString(user.data.languages));
+
+            foreach (dynamic lang in langList)
+            {
+                string langName = Convert.ToString(lang.name);
+                float totalSeconds = Convert.ToSingle(lang.total_seconds);
+                float originalValue;
+
+                if (languages.TryGetValue(langName, out originalValue))
+                {
+                    languages[langName] = originalValue + totalSeconds;
+                }
+                else
+                {
+                    languages[langName] = totalSeconds;
+                }
+            }
+        }
+
+        var topLanguages = languages.OrderByDescending(lang => lang.Value).Select(lang => lang.Key).Take(6).ToArray();
+        List<DataPoint<float[]>> userTopLangs = new List<DataPoint<float[]>>();
+
+        // Calculate each users programming time with top languages
+        foreach (var user in userStats)
+        {
+            float[] languageTotals = new float[6];
+            // Force C# to treat as JArray
+            var langList = JArray.Parse(Convert.ToString(user.data.languages));
+
+            // Get programming time for each top language
+            for (int i = 0; i < languageTotals.Count(); i++)
+            {
+                // Search corresponding language in languages
+                foreach (dynamic lang in langList)
+                {
+                    // If user hasn't used language, value defaults to zero
+                    if (lang.name == topLanguages[i])
+                    {
+                        // Convert seconds to hours
+                        languageTotals[i] = Convert.ToSingle(lang.total_seconds) / 3600;
+                        break;
+                    }
+                }
+            }
+            userTopLangs.Add(new DataPoint<float[]>(Convert.ToString(user.data.username), languageTotals));
+        }
+
+        // Create fields of detailed top language stats
+        var fields = new List<EmbedFieldBuilder>();
+        for (int i = 0; i < topLanguages.Count(); i++)
+        {
+            List<string> userPercentages = new List<string>();
+
+            // for each user, get programming time for current language
+            userTopLangs.OrderByDescending(ele => ele.value[i]).ToList().ForEach(point =>
+            {
+                var hours = (point.value[i]).ToString("0.##");
+                userPercentages.Add($"{point.label} {hours}h ");
+            });
+
+            fields.Add(CreateEmbedField($"#{i + 1} {topLanguages[i]}", userPercentages));
+        }
+
+        byte[] image = _graphGenerator.GenerateBar(topLanguages, userTopLangs.ToArray());
+        await DeleteOriginalResponseAsync();
+        await Context.Channel.SendFileAsync(new MemoryStream(image), "graph.png", embed: new EmbedBuilder()
+        {
+            Title = "Top Languages",
+            Fields = fields,
+            ImageUrl = "attachment://graph.png"
+        }.Build());
+    }
+
     /// <summary>
     /// Create pagination buttons for component. 
     /// </summary>

@@ -11,6 +11,7 @@ public class GraphGenerator
 {
     private readonly int Width = 650;
     private readonly int Height = 650;
+    private readonly string DiscordBackgroundColour = "#36393f";
     private Dictionary<string, Dictionary<string, string>> _colourMap;
 
 
@@ -88,14 +89,84 @@ public class GraphGenerator
             }
         };
 
+        chart.Config = JsonConvert.SerializeObject(config);
+
+        return chart.ToByteArray();
+    }
+
+    public byte[] GenerateBar(String[] labels, DataPoint<float[]>[] dataPoints)
+    {
+        Chart chart = new Chart()
+        {
+            Width = this.Width,
+            Height = this.Height
+        };
+
+        var config = new
+        {
+            type = "bar",
+            data = new
+            {
+                labels,
+                datasets = dataPoints.Select(point => new
+                {
+                    label = point.label,
+                    data = point.value
+                })
+            },
+            options = new
+            {
+                // Key map
+                legend = new
+                {
+                    labels = new
+                    {
+                        fontColor = "#FFFFFF",
+                        fontSize = 16
+                    }
+                },
+                scales = new
+                {
+                    xAxes = new[] {
+                        new
+                        {
+                            stacked = true,
+                            // X-Axis Labels
+                            ticks = new
+                            {
+                                fontColor = "#FFFFFF",
+                                fontSize = 16
+                            },
+                            gridLines = new
+                            {
+                                display = false,
+                            }
+                        }
+                    },
+                    yAxes = new[] {
+                        new
+                        {
+                            stacked = true,
+                            // Y-Axis Labels
+                            ticks = new
+                            {
+                                fontColor = "#FFFFFF",
+                                fontSize = 16
+                            },
+                            gridLines = new
+                            {
+                                display = false,
+                            }
+                        },
+                    },
+                },
+            }
+        };
 
         chart.Config = JsonConvert.SerializeObject(config);
-        using WebClient webClient = new WebClient();
+        chart.BackgroundColor = DiscordBackgroundColour;
 
-        // I prefer image above embed rather than inside,
-        // Discord doesn't allow bot to post images by link.
-        // Therefore the image needs to be downloaded.
-        return webClient.DownloadData(chart.GetUrl());
+        return chart.ToByteArray();
     }
 
     /// <summary>
