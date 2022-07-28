@@ -191,7 +191,7 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
         }.Build());
     }
 
-    [SlashCommand("wakastats", "Get programming stats for whole server")]
+    [SlashCommand("wakatoplangs", "Get programming stats for whole server")]
     public async Task Stats()
     {
         await RespondAsync(embed: new EmbedBuilder()
