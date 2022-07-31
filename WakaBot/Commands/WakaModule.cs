@@ -277,13 +277,6 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
                 ImageUrl = "attachment://graph.png"
             }.Build();
         });
-
-        // await Context.Channel.SendFileAsync(new MemoryStream(image), "graph.png", embed: new EmbedBuilder()
-        // {
-        //     Title = "Top Languages",
-        //     Fields = fields,
-        //     ImageUrl = "attachment://graph.png"
-        // }.Build());
     }
 
     /// <summary>
