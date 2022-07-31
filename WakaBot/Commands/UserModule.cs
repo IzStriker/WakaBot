@@ -111,37 +111,35 @@ public class UserModule : InteractionModuleBase<SocketInteractionContext>
     [SlashCommand("wakaderegister", "Deregister registered wakabot user")]
     public async Task DeregisterUser(IUser discordUser)
     {
+        await DeferAsync();
+
         var user = _wakaContext.Users.FirstOrDefault(user => user.DiscordId == discordUser.Id &&
              user.GuildId == Context.Guild.Id);
 
         if (user == null)
         {
-            await RespondAsync(embed: new EmbedBuilder
-            {
-                Color = Color.Red,
-                Title = "Error",
-                Description = $"User {discordUser.Username} isn't registered to WakaBot."
-            }.Build());
+            await ModifyOriginalResponseAsync(msg =>
+                msg.Embed = new EmbedBuilder
+                {
+                    Color = Color.Red,
+                    Title = "Error",
+                    Description = $"User {discordUser.Username} isn't registered to WakaBot."
+                }.Build()
+            );
             return;
         }
-
-        await RespondAsync(embed: new EmbedBuilder
-        {
-            Color = Color.Orange,
-            Title = "Hang about",
-            Description = "Removing user from database"
-        }.Build());
 
         _wakaContext.Users.Remove(user);
         _wakaContext.SaveChanges();
 
-        await DeleteOriginalResponseAsync();
-        await Context.Channel.SendMessageAsync(embed: new EmbedBuilder()
-        {
-            Color = Color.Green,
-            Title = "User Deregistered",
-            Description = $"User {discordUser.Username} Successfully deregistered."
-        }.Build());
+        await ModifyOriginalResponseAsync(msg =>
+            msg.Embed = new EmbedBuilder()
+            {
+                Color = Color.Green,
+                Title = "User Deregistered",
+                Description = $"User {discordUser.Username} Successfully deregistered."
+            }.Build()
+        );
     }
 
     /// <summary>
