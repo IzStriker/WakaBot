@@ -359,9 +359,9 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
         }
 
         // value is too long
-        if (value.Length > 1024)
+        if (value.Length > EmbedFieldBuilder.MaxFieldValueLength)
         {
-            value = value.Substring(0, 1024);
+            value = value.Substring(0, EmbedFieldBuilder.MaxFieldValueLength);
         }
 
         return new EmbedFieldBuilder()
