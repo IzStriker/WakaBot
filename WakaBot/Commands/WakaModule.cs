@@ -98,20 +98,17 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
         byte[] image = _graphGenerator.GeneratePie(points.ToArray());
         int numPages = (int)Math.Ceiling(users.Count / (decimal)_maxUsersPerPage);
 
-        var message = await ModifyOriginalResponseAsync(msg =>
-        {
-            msg.Attachments = new List<FileAttachment>() { new FileAttachment(new MemoryStream(image), "graph.png") };
-            msg.Embed = new EmbedBuilder()
+        var message = await FollowupWithFileAsync(new MemoryStream(image), "graph.png", components: GetPaginationButtons(),
+            embed: new EmbedBuilder()
             {
                 Title = "User Ranking",
                 Color = Color.Purple,
                 Fields = fields,
                 Footer = new EmbedFooterBuilder() { Text = $"page 1 of {numPages}" }
-            }.Build();
-            msg.Components = GetPaginationButtons();
-        });
+            }.Build()
+        );
 
-        await message.ModifyAsync(msg => msg.Components = GetPaginationButtons(message.Id, numPages <= 1));
+        await ModifyOriginalResponseAsync(msg => msg.Components = GetPaginationButtons(message.Id, numPages <= 1));
     }
 
     /// <summary>
@@ -175,16 +172,12 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
 
         byte[] image = _graphGenerator.GeneratePie(points.ToArray());
 
-        await ModifyOriginalResponseAsync(msg =>
+        await FollowupWithFileAsync(new MemoryStream(image), "graph.png", embed: new EmbedBuilder()
         {
-            msg.Attachments = new List<FileAttachment>() { new FileAttachment(new MemoryStream(image), "graph.png") };
-            msg.Embed = new EmbedBuilder()
-            {
-                Title = discordUser.Username,
-                Color = Color.Purple,
-                Fields = fields
-            }.Build();
-        });
+            Title = discordUser.Username,
+            Color = Color.Purple,
+            Fields = fields
+        }.Build());
     }
 
     [SlashCommand("wakatoplangs", "Get programming stats for whole server")]
@@ -267,16 +260,12 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
 
         byte[] image = _graphGenerator.GenerateBar(topLanguages, userTopLangs.ToArray());
 
-        await ModifyOriginalResponseAsync(msg =>
+        await FollowupWithFileAsync(new MemoryStream(image), "graph.png", embed: new EmbedBuilder()
         {
-            msg.Attachments = new List<FileAttachment>() { new FileAttachment(new MemoryStream(image), "graph.png") };
-            msg.Embed = new EmbedBuilder()
-            {
-                Title = "Top Languages",
-                Fields = fields,
-                ImageUrl = "attachment://graph.png"
-            }.Build();
-        });
+            Title = "Top Languages",
+            Fields = fields,
+            ImageUrl = "attachment://graph.png"
+        }.Build());
     }
 
     /// <summary>
