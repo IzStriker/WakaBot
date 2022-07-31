@@ -57,12 +57,7 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
     [SlashCommand("wakarank", "Get rank of programming time.")]
     public async Task Rank()
     {
-        await RespondAsync(embed: new EmbedBuilder()
-        {
-            Title = "Hold tight",
-            Color = Color.Orange,
-            Description = "This could take a second."
-        }.Build());
+        await DeferAsync();
 
         var users = _wakaContext.Users.Where(user => user.GuildId == Context.Guild.Id).ToList();
 
@@ -103,19 +98,20 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
         byte[] image = _graphGenerator.GeneratePie(points.ToArray());
         int numPages = (int)Math.Ceiling(users.Count / (decimal)_maxUsersPerPage);
 
-        var message = await Context.Channel.SendFileAsync(new MemoryStream(image), "graph.png", embed: new EmbedBuilder()
+        var message = await ModifyOriginalResponseAsync(msg =>
         {
-            Title = "User Ranking",
-            Color = Color.Purple,
-            Fields = fields,
-            Footer = new EmbedFooterBuilder() { Text = $"page 1 of {numPages}" }
-        }.Build(),
-        components: GetPaginationButtons(forwardDisabled: numPages <= 1));
+            msg.Attachments = new List<FileAttachment>() { new FileAttachment(new MemoryStream(image), "graph.png") };
+            msg.Embed = new EmbedBuilder()
+            {
+                Title = "User Ranking",
+                Color = Color.Purple,
+                Fields = fields,
+                Footer = new EmbedFooterBuilder() { Text = $"page 1 of {numPages}" }
+            }.Build();
+            msg.Components = GetPaginationButtons();
+        });
 
         await message.ModifyAsync(msg => msg.Components = GetPaginationButtons(message.Id, numPages <= 1));
-
-        // Remove hold tight message
-        await DeleteOriginalResponseAsync();
     }
 
     /// <summary>
