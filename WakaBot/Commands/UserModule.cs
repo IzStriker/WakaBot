@@ -41,14 +41,12 @@ public class UserModule : InteractionModuleBase<SocketInteractionContext>
 
         if (errors.HasFlag(WakaTime.RegistrationErrors.UserNotFound))
         {
-            await ModifyOriginalResponseAsync(msg =>
-                msg.Embed = new EmbedBuilder()
-                {
-                    Title = "Error",
-                    Color = Color.Red,
-                    Description = $"Invalid username **{wakaUser}**, ensure your username is correct."
-                }.Build()
-            );
+            await FollowupAsync(embed: new EmbedBuilder()
+            {
+                Title = "Error",
+                Color = Color.Red,
+                Description = $"Invalid username **{wakaUser}**, ensure your username is correct."
+            }.Build());
             return;
         }
 
@@ -64,14 +62,12 @@ public class UserModule : InteractionModuleBase<SocketInteractionContext>
 
         if (!errors.Equals(WakaTime.RegistrationErrors.None))
         {
-            await ModifyOriginalResponseAsync(msg =>
-                msg.Embed = new EmbedBuilder()
-                {
-                    Title = "Error",
-                    Color = Color.Red,
-                    Description = description
-                }.Build()
-            );
+            await FollowupAsync(embed: new EmbedBuilder()
+            {
+                Title = "Error",
+                Color = Color.Red,
+                Description = description
+            }.Build());
             return;
         }
 
@@ -79,27 +75,24 @@ public class UserModule : InteractionModuleBase<SocketInteractionContext>
         if (_wakaContext.Users.Where(x => x.GuildId == Context.Guild.Id &&
             (x.DiscordId == discordUser.Id || x.WakaName == wakaUser)).Count() > 0)
         {
-            await ModifyOriginalResponseAsync(msg =>
-                msg.Embed = new EmbedBuilder()
-                {
-                    Title = "User already registered",
-                    Color = Color.Red,
-                    Description = $"User {discordUser.Mention} **{wakaUser}**, already registered"
-                }.Build()
-            );
+            await FollowupAsync(embed: new EmbedBuilder()
+            {
+                Title = "User already registered",
+                Color = Color.Red,
+                Description = $"User {discordUser.Mention} **{wakaUser}**, already registered"
+            }.Build());
             return;
         }
 
         _wakaContext.Add(new User() { DiscordId = discordUser.Id, WakaName = wakaUser, GuildId = Context.Guild.Id, });
         _wakaContext.SaveChanges();
 
-        await ModifyOriginalResponseAsync(msg =>
-            msg.Embed = new EmbedBuilder()
-            {
-                Title = "User registered",
-                Color = Color.Green,
-                Description = $"User {discordUser.Mention} register as {wakaUser}"
-            }.Build()
+        await FollowupAsync(embed: new EmbedBuilder()
+        {
+            Title = "User registered",
+            Color = Color.Green,
+            Description = $"User {discordUser.Mention} register as {wakaUser}"
+        }.Build()
         );
     }
 
@@ -118,28 +111,24 @@ public class UserModule : InteractionModuleBase<SocketInteractionContext>
 
         if (user == null)
         {
-            await ModifyOriginalResponseAsync(msg =>
-                msg.Embed = new EmbedBuilder
-                {
-                    Color = Color.Red,
-                    Title = "Error",
-                    Description = $"User {discordUser.Username} isn't registered to WakaBot."
-                }.Build()
-            );
+            await FollowupAsync(embed: new EmbedBuilder
+            {
+                Color = Color.Red,
+                Title = "Error",
+                Description = $"User {discordUser.Username} isn't registered to WakaBot."
+            }.Build());
             return;
         }
 
         _wakaContext.Users.Remove(user);
         _wakaContext.SaveChanges();
 
-        await ModifyOriginalResponseAsync(msg =>
-            msg.Embed = new EmbedBuilder()
-            {
-                Color = Color.Green,
-                Title = "User Deregistered",
-                Description = $"User {discordUser.Username} Successfully deregistered."
-            }.Build()
-        );
+        await FollowupAsync(embed: new EmbedBuilder()
+        {
+            Color = Color.Green,
+            Title = "User Deregistered",
+            Description = $"User {discordUser.Username} Successfully deregistered."
+        }.Build());
     }
 
     /// <summary>
