@@ -34,29 +34,21 @@ public class UserModule : InteractionModuleBase<SocketInteractionContext>
     [SlashCommand("wakaregister", "Register new server member to WakaBot Service")]
     public async Task RegisterUser(IUser discordUser, String wakaUser)
     {
-        await RespondAsync(embed: new EmbedBuilder()
-        {
-            Title = "Just checking your profile.",
-            Color = Color.Orange,
-            Description = "Should only take a second."
-        }.Build());
+        await DeferAsync();
 
         var errors = await _wakaTime.ValidateRegistration(wakaUser);
+        string description = string.Empty;
 
         if (errors.HasFlag(WakaTime.RegistrationErrors.UserNotFound))
         {
-            await Context.Channel.SendMessageAsync(embed: new EmbedBuilder()
+            await FollowupAsync(embed: new EmbedBuilder()
             {
                 Title = "Error",
                 Color = Color.Red,
                 Description = $"Invalid username **{wakaUser}**, ensure your username is correct."
-            }
-            .Build());
-            await DeleteOriginalResponseAsync();
+            }.Build());
             return;
         }
-
-        string description = string.Empty;
 
         if (errors.HasFlag(WakaTime.RegistrationErrors.StatsNotFound))
         {
@@ -70,13 +62,12 @@ public class UserModule : InteractionModuleBase<SocketInteractionContext>
 
         if (!errors.Equals(WakaTime.RegistrationErrors.None))
         {
-            await Context.Channel.SendMessageAsync(embed: new EmbedBuilder()
+            await FollowupAsync(embed: new EmbedBuilder()
             {
                 Title = "Error",
                 Color = Color.Red,
                 Description = description
             }.Build());
-            await DeleteOriginalResponseAsync();
             return;
         }
 
@@ -84,26 +75,25 @@ public class UserModule : InteractionModuleBase<SocketInteractionContext>
         if (_wakaContext.Users.Where(x => x.GuildId == Context.Guild.Id &&
             (x.DiscordId == discordUser.Id || x.WakaName == wakaUser)).Count() > 0)
         {
-            await Context.Channel.SendMessageAsync(embed: new EmbedBuilder()
+            await FollowupAsync(embed: new EmbedBuilder()
             {
                 Title = "User already registered",
                 Color = Color.Red,
                 Description = $"User {discordUser.Mention} **{wakaUser}**, already registered"
             }.Build());
-            await DeleteOriginalResponseAsync();
             return;
         }
 
         _wakaContext.Add(new User() { DiscordId = discordUser.Id, WakaName = wakaUser, GuildId = Context.Guild.Id, });
         _wakaContext.SaveChanges();
 
-        await Context.Channel.SendMessageAsync(embed: new EmbedBuilder()
+        await FollowupAsync(embed: new EmbedBuilder()
         {
             Title = "User registered",
             Color = Color.Green,
             Description = $"User {discordUser.Mention} register as {wakaUser}"
-        }.Build());
-        await DeleteOriginalResponseAsync();
+        }.Build()
+        );
     }
 
     /// <summary>
@@ -114,12 +104,14 @@ public class UserModule : InteractionModuleBase<SocketInteractionContext>
     [SlashCommand("wakaderegister", "Deregister registered wakabot user")]
     public async Task DeregisterUser(IUser discordUser)
     {
+        await DeferAsync();
+
         var user = _wakaContext.Users.FirstOrDefault(user => user.DiscordId == discordUser.Id &&
              user.GuildId == Context.Guild.Id);
 
         if (user == null)
         {
-            await RespondAsync(embed: new EmbedBuilder
+            await FollowupAsync(embed: new EmbedBuilder
             {
                 Color = Color.Red,
                 Title = "Error",
@@ -128,18 +120,10 @@ public class UserModule : InteractionModuleBase<SocketInteractionContext>
             return;
         }
 
-        await RespondAsync(embed: new EmbedBuilder
-        {
-            Color = Color.Orange,
-            Title = "Hang about",
-            Description = "Removing user from database"
-        }.Build());
-
         _wakaContext.Users.Remove(user);
         _wakaContext.SaveChanges();
 
-        await DeleteOriginalResponseAsync();
-        await Context.Channel.SendMessageAsync(embed: new EmbedBuilder()
+        await FollowupAsync(embed: new EmbedBuilder()
         {
             Color = Color.Green,
             Title = "User Deregistered",

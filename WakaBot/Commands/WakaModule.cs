@@ -57,12 +57,7 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
     [SlashCommand("wakarank", "Get rank of programming time.")]
     public async Task Rank()
     {
-        await RespondAsync(embed: new EmbedBuilder()
-        {
-            Title = "Hold tight",
-            Color = Color.Orange,
-            Description = "This could take a second."
-        }.Build());
+        await DeferAsync();
 
         var users = _wakaContext.Users.Where(user => user.GuildId == Context.Guild.Id).ToList();
 
@@ -103,19 +98,17 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
         byte[] image = _graphGenerator.GeneratePie(points.ToArray());
         int numPages = (int)Math.Ceiling(users.Count / (decimal)_maxUsersPerPage);
 
-        var message = await Context.Channel.SendFileAsync(new MemoryStream(image), "graph.png", embed: new EmbedBuilder()
-        {
-            Title = "User Ranking",
-            Color = Color.Purple,
-            Fields = fields,
-            Footer = new EmbedFooterBuilder() { Text = $"page 1 of {numPages}" }
-        }.Build(),
-        components: GetPaginationButtons(forwardDisabled: numPages <= 1));
+        var message = await FollowupWithFileAsync(new MemoryStream(image), "graph.png", components: GetPaginationButtons(),
+            embed: new EmbedBuilder()
+            {
+                Title = "User Ranking",
+                Color = Color.Purple,
+                Fields = fields,
+                Footer = new EmbedFooterBuilder() { Text = $"page 1 of {numPages}" }
+            }.Build()
+        );
 
-        await message.ModifyAsync(msg => msg.Components = GetPaginationButtons(message.Id, numPages <= 1));
-
-        // Remove hold tight message
-        await DeleteOriginalResponseAsync();
+        await ModifyOriginalResponseAsync(msg => msg.Components = GetPaginationButtons(message.Id, numPages <= 1));
     }
 
     /// <summary>
@@ -125,6 +118,8 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
     [SlashCommand("wakaprofile", "Get profile for specific WakaTime user")]
     public async Task Profile(IUser discordUser)
     {
+        await DeferAsync();
+
         var fields = new List<EmbedFieldBuilder>();
 
         var user = _wakaContext.Users.FirstOrDefault(user => user.DiscordId == discordUser.Id
@@ -132,21 +127,16 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
 
         if (user == null)
         {
-            await RespondAsync(embed: new EmbedBuilder()
-            {
-                Title = "Error",
-                Color = Color.Red,
-                Description = $"{discordUser.Mention} isn't registered with WakaBot."
-            }.Build());
+            await ModifyOriginalResponseAsync(msg =>
+                msg.Embed = new EmbedBuilder()
+                {
+                    Title = "Error",
+                    Color = Color.Red,
+                    Description = $"{discordUser.Mention} isn't registered with WakaBot."
+                }.Build()
+            );
             return;
         }
-
-        await RespondAsync(embed: new EmbedBuilder()
-        {
-            Title = "Just pulling the profile data.",
-            Color = Color.Orange,
-            Description = "Hang on"
-        }.Build());
 
         var stats = await _wakaTime.GetStatsAsync(user.WakaName);
 
@@ -182,8 +172,7 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
 
         byte[] image = _graphGenerator.GeneratePie(points.ToArray());
 
-        await DeleteOriginalResponseAsync();
-        await Context.Channel.SendFileAsync(new MemoryStream(image), "graph.png", embed: new EmbedBuilder()
+        await FollowupWithFileAsync(new MemoryStream(image), "graph.png", embed: new EmbedBuilder()
         {
             Title = discordUser.Username,
             Color = Color.Purple,
@@ -194,12 +183,7 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
     [SlashCommand("wakatoplangs", "Get programming stats for whole server")]
     public async Task Stats()
     {
-        await RespondAsync(embed: new EmbedBuilder()
-        {
-            Title = "Hold the line",
-            Color = Color.Orange,
-            Description = "Complex processing happening here!"
-        }.Build());
+        await DeferAsync();
 
         var users = _wakaContext.Users.Where(user => user.GuildId == Context.Guild.Id);
         var statsTasks = users.Select(user => _wakaTime.GetStatsAsync(user.WakaName));
@@ -275,8 +259,8 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
         }
 
         byte[] image = _graphGenerator.GenerateBar(topLanguages, userTopLangs.ToArray());
-        await DeleteOriginalResponseAsync();
-        await Context.Channel.SendFileAsync(new MemoryStream(image), "graph.png", embed: new EmbedBuilder()
+
+        await FollowupWithFileAsync(new MemoryStream(image), "graph.png", embed: new EmbedBuilder()
         {
             Title = "Top Languages",
             Fields = fields,
@@ -357,9 +341,9 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
         }
 
         // value is too long
-        if (value.Length > 1024)
+        if (value.Length > EmbedFieldBuilder.MaxFieldValueLength)
         {
-            value = value.Substring(0, 1024);
+            value = value.Substring(0, EmbedFieldBuilder.MaxFieldValueLength);
         }
 
         return new EmbedFieldBuilder()
