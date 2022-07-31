@@ -121,6 +121,8 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
     [SlashCommand("wakaprofile", "Get profile for specific WakaTime user")]
     public async Task Profile(IUser discordUser)
     {
+        await DeferAsync();
+
         var fields = new List<EmbedFieldBuilder>();
 
         var user = _wakaContext.Users.FirstOrDefault(user => user.DiscordId == discordUser.Id
@@ -128,21 +130,16 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
 
         if (user == null)
         {
-            await RespondAsync(embed: new EmbedBuilder()
-            {
-                Title = "Error",
-                Color = Color.Red,
-                Description = $"{discordUser.Mention} isn't registered with WakaBot."
-            }.Build());
+            await ModifyOriginalResponseAsync(msg =>
+                msg.Embed = new EmbedBuilder()
+                {
+                    Title = "Error",
+                    Color = Color.Red,
+                    Description = $"{discordUser.Mention} isn't registered with WakaBot."
+                }.Build()
+            );
             return;
         }
-
-        await RespondAsync(embed: new EmbedBuilder()
-        {
-            Title = "Just pulling the profile data.",
-            Color = Color.Orange,
-            Description = "Hang on"
-        }.Build());
 
         var stats = await _wakaTime.GetStatsAsync(user.WakaName);
 
@@ -178,13 +175,16 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
 
         byte[] image = _graphGenerator.GeneratePie(points.ToArray());
 
-        await DeleteOriginalResponseAsync();
-        await Context.Channel.SendFileAsync(new MemoryStream(image), "graph.png", embed: new EmbedBuilder()
+        await ModifyOriginalResponseAsync(msg =>
         {
-            Title = discordUser.Username,
-            Color = Color.Purple,
-            Fields = fields
-        }.Build());
+            msg.Attachments = new List<FileAttachment>() { new FileAttachment(new MemoryStream(image), "graph.png") };
+            msg.Embed = new EmbedBuilder()
+            {
+                Title = discordUser.Username,
+                Color = Color.Purple,
+                Fields = fields
+            }.Build();
+        });
     }
 
     [SlashCommand("wakatoplangs", "Get programming stats for whole server")]
