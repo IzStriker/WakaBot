@@ -190,12 +190,7 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
     [SlashCommand("wakatoplangs", "Get programming stats for whole server")]
     public async Task Stats()
     {
-        await RespondAsync(embed: new EmbedBuilder()
-        {
-            Title = "Hold the line",
-            Color = Color.Orange,
-            Description = "Complex processing happening here!"
-        }.Build());
+        await DeferAsync();
 
         var users = _wakaContext.Users.Where(user => user.GuildId == Context.Guild.Id);
         var statsTasks = users.Select(user => _wakaTime.GetStatsAsync(user.WakaName));
@@ -271,13 +266,24 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
         }
 
         byte[] image = _graphGenerator.GenerateBar(topLanguages, userTopLangs.ToArray());
-        await DeleteOriginalResponseAsync();
-        await Context.Channel.SendFileAsync(new MemoryStream(image), "graph.png", embed: new EmbedBuilder()
+
+        await ModifyOriginalResponseAsync(msg =>
         {
-            Title = "Top Languages",
-            Fields = fields,
-            ImageUrl = "attachment://graph.png"
-        }.Build());
+            msg.Attachments = new List<FileAttachment>() { new FileAttachment(new MemoryStream(image), "graph.png") };
+            msg.Embed = new EmbedBuilder()
+            {
+                Title = "Top Languages",
+                Fields = fields,
+                ImageUrl = "attachment://graph.png"
+            }.Build();
+        });
+
+        // await Context.Channel.SendFileAsync(new MemoryStream(image), "graph.png", embed: new EmbedBuilder()
+        // {
+        //     Title = "Top Languages",
+        //     Fields = fields,
+        //     ImageUrl = "attachment://graph.png"
+        // }.Build());
     }
 
     /// <summary>
