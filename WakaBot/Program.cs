@@ -8,6 +8,7 @@ using WakaBot.Graphs;
 using WakaBot.Data;
 using WakaBot.CommandLine;
 using WakaBot.WebApp;
+using WakaBot.WakaTimeAPI;
 using Serilog;
 
 namespace WakaBot;

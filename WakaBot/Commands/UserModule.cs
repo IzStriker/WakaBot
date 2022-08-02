@@ -2,6 +2,7 @@ using Discord;
 using Discord.Interactions;
 using WakaBot.Data;
 using WakaBot.Models;
+using WakaBot.WakaTimeAPI;
 
 
 namespace WakaBot.Commands;

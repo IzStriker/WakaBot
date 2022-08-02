@@ -2,6 +2,7 @@ using Discord;
 using Discord.Interactions;
 using Discord.WebSocket;
 using System.Reflection;
+using WakaBot.WakaTimeAPI;
 
 namespace WakaBot.Services;
 

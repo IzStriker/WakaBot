@@ -2,11 +2,9 @@ using Newtonsoft.Json.Linq;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Primitives;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
 using WakaBot.Data;
 
-namespace WakaBot;
+namespace WakaBot.WakaTimeAPI;
 
 /// <summary>
 /// <c> WakaTime </c> Class handles interactions with WakaTime API.

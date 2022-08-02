@@ -1,6 +1,6 @@
 using Discord;
 using Discord.Interactions;
-using WakaBot;
+using WakaBot.WakaTimeAPI;
 using WakaBot.Data;
 using WakaBot.Extensions;
 using Newtonsoft.Json.Linq;
