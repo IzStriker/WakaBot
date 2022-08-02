@@ -87,7 +87,8 @@ public class CommandHandler
     private Task Log(LogMessage message)
     {
         // Taken from https://www.gngrninja.com/code/2019/7/19/c-discord-bot-logging-all-the-things
-        string logText = $": {message.Exception?.ToString() ?? message.Message}";
+        string logText = $": {message.Exception?.ToString() ?? message.Message} - {message.Source}";
+
         switch (message.Severity.ToString())
         {
             case "Critical":
