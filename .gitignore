@@ -371,3 +371,8 @@ appsettings.json
 *.db
 *.db-shm
 *.db-wal
+
+# Replit hosting files
+.replit
+packages.lock.json
+replit.nix
