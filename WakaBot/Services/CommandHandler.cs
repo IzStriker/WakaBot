@@ -119,6 +119,7 @@ public class CommandHandler
             case "Error":
                 {
                     _logger.LogError(logText);
+                    _logger.LogError(message.Exception!.StackTrace);
                     break;
                 }
         }
