@@ -3,6 +3,7 @@ using Discord.Interactions;
 using WakaBot.Data;
 using WakaBot.Graphs;
 using WakaBot.WakaTimeAPI;
+using WakaBot.WakaTimeAPI.Stats;
 using WakaBot.Extensions;
 using Newtonsoft.Json.Linq;
 using System.Text;
@@ -62,9 +63,9 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
 
         var users = _wakaContext.Users.Where(user => user.GuildId == Context.Guild.Id).ToList();
 
-        var statsTasks = users.Select(user => _wakaTime.GetStatsAsync(user.WakaName));
+        var statsTasks = users.Select(user => _wakaTime.GetStats(user.WakaName));
 
-        dynamic[] userStats = await Task.WhenAll(statsTasks);
+        RootStat[] userStats = await Task.WhenAll(statsTasks);
 
         userStats = userStats.OrderByDescending(stat => stat.data.total_seconds).ToArray();
 
@@ -75,20 +76,17 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
 
         foreach (var user in userStats.Select((value, index) => new { index, value }))
         {
-            string range = "\nIn " + Convert.ToString(user.value.data.range).Replace("_", " ");
+            string range = "\nIn " + user.value.data.range.Replace("_", " ");
             string languages = "\nTop languages: ";
 
-            // Force C# to treat dynamic object as JArray instead of JObject
-            JArray lanList = JArray.Parse(Convert.ToString(user.value.data.languages));
-
-            languages += lanList.ConcatForEach(6, (token, last) =>
+            languages += user.value.data.languages.ToList().ConcatForEach(6, (token, last) =>
                 $"{token.name} {token.percent}%" + (last ? "" : ", "));
 
             fields.Add(CreateEmbedField($"#{user.index + 1} - " + user.value.data.username,
-                Convert.ToString(user.value.data.human_readable_total + range + languages)));
+                user.value.data.human_readable_total + range + languages));
 
             // Store data point for pie chart
-            points.Add(new DataPoint<double>(Convert.ToString(user.value.data.username), Convert.ToDouble(user.value.data.total_seconds)));
+            points.Add(new DataPoint<double>(user.value.data.username, user.value.data.total_seconds));
 
             totalSeconds += Convert.ToDouble(user.value.data.total_seconds);
         }
