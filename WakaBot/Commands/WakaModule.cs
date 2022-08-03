@@ -5,7 +5,6 @@ using WakaBot.Graphs;
 using WakaBot.WakaTimeAPI;
 using WakaBot.WakaTimeAPI.Stats;
 using WakaBot.Extensions;
-using Newtonsoft.Json.Linq;
 using System.Text;
 
 namespace WakaBot.Commands;
@@ -63,7 +62,7 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
 
         var users = _wakaContext.Users.Where(user => user.GuildId == Context.Guild.Id).ToList();
 
-        var statsTasks = users.Select(user => _wakaTime.GetStats(user.WakaName));
+        var statsTasks = users.Select(user => _wakaTime.GetStatsAsync(user.WakaName));
 
         RootStat[] userStats = await Task.WhenAll(statsTasks);
 
@@ -137,7 +136,7 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
             return;
         }
 
-        var stats = await _wakaTime.GetStats(user.WakaName);
+        var stats = await _wakaTime.GetStatsAsync(user.WakaName);
 
         fields.Add(CreateEmbedField("Programming time",
          $"{stats.data.human_readable_total} {stats.data.human_readable_range}"));
@@ -180,7 +179,7 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
         await DeferAsync();
 
         var users = _wakaContext.Users.Where(user => user.GuildId == Context.Guild.Id);
-        var statsTasks = users.Select(user => _wakaTime.GetStats(user.WakaName));
+        var statsTasks = users.Select(user => _wakaTime.GetStatsAsync(user.WakaName));
         var userStats = await Task.WhenAll(statsTasks);
 
         Dictionary<string, float> languages = new Dictionary<string, float>();

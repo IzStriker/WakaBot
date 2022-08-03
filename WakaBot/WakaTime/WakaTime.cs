@@ -75,46 +75,7 @@ public class WakaTime
     /// </summary>
     /// <param name="username">User we wish to gets stats for.</param>
     /// <returns>Users stats.</returns>
-    public async Task<dynamic> GetStatsAsync(string username)
-    {
-        using var httpClient = new HttpClient();
-        var stats = await _cache.GetOrCreateAsync(username, async cacheEntry =>
-        {
-            dynamic entry = JObject.Parse(
-                await httpClient.GetStringAsync($"{BaseUrl}/users/{username}/stats"));
-
-            // 3:00 AM tomorrow morning
-            var timeTillExpiration = DateTime.Parse("00:00").AddDays(1)
-                .AddHours(3).Subtract(DateTime.Now);
-
-            if (Convert.ToBoolean(entry.data.is_up_to_date))
-            {
-                cacheEntry.AbsoluteExpirationRelativeToNow = timeTillExpiration;
-            }
-            else
-            {
-                // Stats will be refreshed soon
-                cacheEntry.AbsoluteExpiration = DateTimeOffset.Now.AddMinutes(30);
-            }
-
-            if (_config.GetValue<bool>("alwaysCacheUsers"))
-            {
-                // Remove item from cache when expires, instead of when set is next called.
-                cacheEntry.AddExpirationToken(new CancellationChangeToken(
-                    new CancellationTokenSource(timeTillExpiration).Token));
-
-                // Add back to cache when removed
-                cacheEntry.RegisterPostEvictionCallback(PostEvictionCallBack);
-            }
-
-            return entry;
-        });
-
-        return stats;
-    }
-
-
-    public async Task<RootStat> GetStats(string username)
+    public async Task<RootStat> GetStatsAsync(string username)
     {
         using var httpClient = new HttpClient();
         var stats = await _cache.GetOrCreateAsync(username, async cacheEntry =>
@@ -129,7 +90,7 @@ public class WakaTime
             var timeTillExpiration = DateTime.Parse("00:00").AddDays(1)
                 .AddHours(3).Subtract(DateTime.Now);
 
-            if (Convert.ToBoolean(entry.data.is_up_to_date))
+            if (entry.data.is_up_to_date)
             {
                 cacheEntry.AbsoluteExpirationRelativeToNow = timeTillExpiration;
             }
@@ -162,7 +123,7 @@ public class WakaTime
         using var context = await _contextFactory.CreateDbContextAsync();
         var users = context.Users.ToList();
         var statsTasks = users.Select(user => GetStatsAsync(user.WakaName));
-        dynamic[] userStats = await Task.WhenAll(statsTasks);
+        var userStats = await Task.WhenAll(statsTasks);
 
         _logger.LogInformation("All users refreshed.");
     }
