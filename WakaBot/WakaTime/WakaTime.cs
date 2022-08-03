@@ -1,8 +1,10 @@
 using Newtonsoft.Json.Linq;
+using Newtonsoft.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Primitives;
 using WakaBot.Data;
+using WakaBot.WakaTimeAPI.Stats;
 
 namespace WakaBot.WakaTimeAPI;
 
@@ -111,6 +113,47 @@ public class WakaTime
         return stats;
     }
 
+
+    public async Task<RootStat> GetStats(string username)
+    {
+        using var httpClient = new HttpClient();
+        var stats = await _cache.GetOrCreateAsync(username, async cacheEntry =>
+        {
+            var response = await httpClient.GetStringAsync($"{BaseUrl}/users/{username}/stats");
+
+            RootStat entry = JsonConvert.DeserializeObject<RootStat>(
+                await httpClient.GetStringAsync($"{BaseUrl}/users/{username}/stats")
+            )!;
+
+            // 3:00 AM tomorrow morning
+            var timeTillExpiration = DateTime.Parse("00:00").AddDays(1)
+                .AddHours(3).Subtract(DateTime.Now);
+
+            if (Convert.ToBoolean(entry.data.is_up_to_date))
+            {
+                cacheEntry.AbsoluteExpirationRelativeToNow = timeTillExpiration;
+            }
+            else
+            {
+                // Stats will be refreshed soon
+                cacheEntry.AbsoluteExpiration = DateTimeOffset.Now.AddMinutes(30);
+            }
+
+            if (_config.GetValue<bool>("alwaysCacheUsers"))
+            {
+                // Remove item from cache when expires, instead of when set is next called.
+                cacheEntry.AddExpirationToken(new CancellationChangeToken(
+                    new CancellationTokenSource(timeTillExpiration).Token));
+
+                // Add back to cache when removed
+                cacheEntry.RegisterPostEvictionCallback(PostEvictionCallBack);
+            }
+
+            return entry;
+        });
+
+        return stats;
+    }
     /// <summary>
     /// Refreshes all users in the cache or adds them if they're not present.
     /// </summary>
