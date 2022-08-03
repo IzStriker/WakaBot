@@ -137,37 +137,32 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
             return;
         }
 
-        var stats = await _wakaTime.GetStatsAsync(user.WakaName);
+        var stats = await _wakaTime.GetStats(user.WakaName);
 
         fields.Add(CreateEmbedField("Programming time",
          $"{stats.data.human_readable_total} {stats.data.human_readable_range}"));
 
         fields.Add(CreateEmbedField("Daily average", $"{stats.data.human_readable_daily_average}"));
 
-        // Force C# to treat dynamic object as JArray instead of JObject
-        JArray lanList = JArray.Parse(Convert.ToString(stats.data.languages));
         List<DataPoint<double>> points = new List<DataPoint<double>>();
 
         // Generate data points for pie chart
-        foreach (dynamic lan in lanList)
+        foreach (var lan in stats.data.languages)
         {
-            points.Add(new DataPoint<double>(Convert.ToString(lan.name), Convert.ToDouble(lan.percent)));
+            points.Add(new DataPoint<double>(lan.name, lan.percent));
         }
 
         fields.Add(CreateEmbedField("Languages",
-             lanList.AsEnumerable<dynamic>().Select(lan => $"{lan.name} {lan.percent}%").ToList()));
-
-        // Force C# to treat dynamic object as JArray instead of JObject
-        JArray editorList = JArray.Parse(Convert.ToString(stats.data.editors));
+             stats.data.languages.Select(lan => $"{lan.name} {lan.percent}%").ToList())
+        );
 
         fields.Add(CreateEmbedField("Editors",
-            editorList.AsEnumerable<dynamic>().Select(editor => $"{editor.name} {editor.percent}%").ToList()));
-
-        // Force C# to treat dynamic object as JArray instead of JObject
-        JArray osList = JArray.Parse(Convert.ToString(stats.data.operating_systems));
+            stats.data.editors.Select(editor => $"{editor.name} {editor.percent}%").ToList())
+        );
 
         fields.Add(CreateEmbedField("Operating Systems",
-            osList.AsEnumerable<dynamic>().Select(lan => $"{lan.name} {lan.percent}%").ToList()));
+            stats.data.operating_systems.Select(lan => $"{lan.name} {lan.percent}%").ToList())
+        );
 
         byte[] image = _graphGenerator.GeneratePie(points.ToArray());
 
