@@ -2,7 +2,7 @@ namespace WakaBot.Extensions;
 
 public static class ListExtension
 {
-    public static string ConcatForEach<T>(this List<T> enumerable, Func<dynamic, bool, string> fetch)
+    public static string ConcatForEach<T>(this List<T> enumerable, Func<T, bool, string> fetch)
     {
         string result = string.Empty;
 
@@ -14,7 +14,7 @@ public static class ListExtension
         return result;
     }
 
-    public static string ConcatForEach<T>(this List<T> array, int limit, Func<dynamic, bool, string> fetch)
+    public static string ConcatForEach<T>(this List<T> array, int limit, Func<T, bool, string> fetch)
     {
         string result = string.Empty;
 
