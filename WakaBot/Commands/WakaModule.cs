@@ -214,7 +214,7 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
             for (int i = 0; i < languageTotals.Count(); i++)
             {
                 // Search corresponding language in languages
-                foreach (dynamic lang in user.data.languages)
+                foreach (var lang in user.data.languages)
                 {
                     // If user hasn't used language, value defaults to zero
                     if (lang.name == topLanguages[i])
