@@ -2,8 +2,9 @@ using Discord;
 using Discord.Interactions;
 using WakaBot.Data;
 using WakaBot.Graphs;
+using WakaBot.WakaTimeAPI;
+using WakaBot.WakaTimeAPI.Stats;
 using WakaBot.Extensions;
-using Newtonsoft.Json.Linq;
 using System.Text;
 
 namespace WakaBot.Commands;
@@ -63,7 +64,7 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
 
         var statsTasks = users.Select(user => _wakaTime.GetStatsAsync(user.WakaName));
 
-        dynamic[] userStats = await Task.WhenAll(statsTasks);
+        RootStat[] userStats = await Task.WhenAll(statsTasks);
 
         userStats = userStats.OrderByDescending(stat => stat.data.total_seconds).ToArray();
 
@@ -74,22 +75,19 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
 
         foreach (var user in userStats.Select((value, index) => new { index, value }))
         {
-            string range = "\nIn " + Convert.ToString(user.value.data.range).Replace("_", " ");
+            string range = "\nIn " + user.value.data.range.Replace("_", " ");
             string languages = "\nTop languages: ";
 
-            // Force C# to treat dynamic object as JArray instead of JObject
-            JArray lanList = JArray.Parse(Convert.ToString(user.value.data.languages));
-
-            languages += lanList.ConcatForEach(6, (token, last) =>
+            languages += user.value.data.languages.ToList().ConcatForEach(6, (token, last) =>
                 $"{token.name} {token.percent}%" + (last ? "" : ", "));
 
             fields.Add(CreateEmbedField($"#{user.index + 1} - " + user.value.data.username,
-                Convert.ToString(user.value.data.human_readable_total + range + languages)));
+                user.value.data.human_readable_total + range + languages));
 
             // Store data point for pie chart
-            points.Add(new DataPoint<double>(Convert.ToString(user.value.data.username), Convert.ToDouble(user.value.data.total_seconds)));
+            points.Add(new DataPoint<double>(user.value.data.username, user.value.data.total_seconds));
 
-            totalSeconds += Convert.ToDouble(user.value.data.total_seconds);
+            totalSeconds += user.value.data.total_seconds;
         }
 
         fields = fields.Take(_maxUsersPerPage).ToList();
@@ -145,30 +143,25 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
 
         fields.Add(CreateEmbedField("Daily average", $"{stats.data.human_readable_daily_average}"));
 
-        // Force C# to treat dynamic object as JArray instead of JObject
-        JArray lanList = JArray.Parse(Convert.ToString(stats.data.languages));
         List<DataPoint<double>> points = new List<DataPoint<double>>();
 
         // Generate data points for pie chart
-        foreach (dynamic lan in lanList)
+        foreach (var lan in stats.data.languages)
         {
-            points.Add(new DataPoint<double>(Convert.ToString(lan.name), Convert.ToDouble(lan.percent)));
+            points.Add(new DataPoint<double>(lan.name, lan.percent));
         }
 
         fields.Add(CreateEmbedField("Languages",
-             lanList.AsEnumerable<dynamic>().Select(lan => $"{lan.name} {lan.percent}%").ToList()));
-
-        // Force C# to treat dynamic object as JArray instead of JObject
-        JArray editorList = JArray.Parse(Convert.ToString(stats.data.editors));
+             stats.data.languages.Select(lan => $"{lan.name} {lan.percent}%").ToList())
+        );
 
         fields.Add(CreateEmbedField("Editors",
-            editorList.AsEnumerable<dynamic>().Select(editor => $"{editor.name} {editor.percent}%").ToList()));
-
-        // Force C# to treat dynamic object as JArray instead of JObject
-        JArray osList = JArray.Parse(Convert.ToString(stats.data.operating_systems));
+            stats.data.editors.Select(editor => $"{editor.name} {editor.percent}%").ToList())
+        );
 
         fields.Add(CreateEmbedField("Operating Systems",
-            osList.AsEnumerable<dynamic>().Select(lan => $"{lan.name} {lan.percent}%").ToList()));
+            stats.data.operating_systems.Select(lan => $"{lan.name} {lan.percent}%").ToList())
+        );
 
         byte[] image = _graphGenerator.GeneratePie(points.ToArray());
 
@@ -187,29 +180,24 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
 
         var users = _wakaContext.Users.Where(user => user.GuildId == Context.Guild.Id);
         var statsTasks = users.Select(user => _wakaTime.GetStatsAsync(user.WakaName));
-        dynamic[] userStats = await Task.WhenAll(statsTasks);
+        var userStats = await Task.WhenAll(statsTasks);
 
         Dictionary<string, float> languages = new Dictionary<string, float>();
 
         // Calculate top languages in for each user in server
         foreach (var user in userStats)
         {
-            // Force C# to treat as JArray
-            JArray langList = JArray.Parse(Convert.ToString(user.data.languages));
-
-            foreach (dynamic lang in langList)
+            foreach (var lang in user.data.languages)
             {
-                string langName = Convert.ToString(lang.name);
-                float totalSeconds = Convert.ToSingle(lang.total_seconds);
                 float originalValue;
 
-                if (languages.TryGetValue(langName, out originalValue))
+                if (languages.TryGetValue(lang.name, out originalValue))
                 {
-                    languages[langName] = originalValue + totalSeconds;
+                    languages[lang.name] = originalValue + lang.total_seconds;
                 }
                 else
                 {
-                    languages[langName] = totalSeconds;
+                    languages[lang.name] = lang.total_seconds;
                 }
             }
         }
@@ -221,25 +209,23 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
         foreach (var user in userStats)
         {
             float[] languageTotals = new float[6];
-            // Force C# to treat as JArray
-            var langList = JArray.Parse(Convert.ToString(user.data.languages));
 
             // Get programming time for each top language
             for (int i = 0; i < languageTotals.Count(); i++)
             {
                 // Search corresponding language in languages
-                foreach (dynamic lang in langList)
+                foreach (var lang in user.data.languages)
                 {
                     // If user hasn't used language, value defaults to zero
                     if (lang.name == topLanguages[i])
                     {
                         // Convert seconds to hours
-                        languageTotals[i] = Convert.ToSingle(lang.total_seconds) / 3600;
+                        languageTotals[i] = lang.total_seconds / 3600;
                         break;
                     }
                 }
             }
-            userTopLangs.Add(new DataPoint<float[]>(Convert.ToString(user.data.username), languageTotals));
+            userTopLangs.Add(new DataPoint<float[]>(user.data.username, languageTotals));
         }
 
         // Create fields of detailed top language stats

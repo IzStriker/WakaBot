@@ -1,12 +1,12 @@
 using Newtonsoft.Json.Linq;
+using Newtonsoft.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Primitives;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
 using WakaBot.Data;
+using WakaBot.WakaTimeAPI.Stats;
 
-namespace WakaBot;
+namespace WakaBot.WakaTimeAPI;
 
 /// <summary>
 /// <c> WakaTime </c> Class handles interactions with WakaTime API.
@@ -75,19 +75,22 @@ public class WakaTime
     /// </summary>
     /// <param name="username">User we wish to gets stats for.</param>
     /// <returns>Users stats.</returns>
-    public async Task<dynamic> GetStatsAsync(string username)
+    public async Task<RootStat> GetStatsAsync(string username)
     {
         using var httpClient = new HttpClient();
         var stats = await _cache.GetOrCreateAsync(username, async cacheEntry =>
         {
-            dynamic entry = JObject.Parse(
-                await httpClient.GetStringAsync($"{BaseUrl}/users/{username}/stats"));
+            var response = await httpClient.GetStringAsync($"{BaseUrl}/users/{username}/stats");
+
+            RootStat entry = JsonConvert.DeserializeObject<RootStat>(
+                await httpClient.GetStringAsync($"{BaseUrl}/users/{username}/stats")
+            )!;
 
             // 3:00 AM tomorrow morning
             var timeTillExpiration = DateTime.Parse("00:00").AddDays(1)
                 .AddHours(3).Subtract(DateTime.Now);
 
-            if (Convert.ToBoolean(entry.data.is_up_to_date))
+            if (entry.data.is_up_to_date)
             {
                 cacheEntry.AbsoluteExpirationRelativeToNow = timeTillExpiration;
             }
@@ -112,7 +115,6 @@ public class WakaTime
 
         return stats;
     }
-
     /// <summary>
     /// Refreshes all users in the cache or adds them if they're not present.
     /// </summary>
@@ -121,7 +123,7 @@ public class WakaTime
         using var context = await _contextFactory.CreateDbContextAsync();
         var users = context.Users.ToList();
         var statsTasks = users.Select(user => GetStatsAsync(user.WakaName));
-        dynamic[] userStats = await Task.WhenAll(statsTasks);
+        var userStats = await Task.WhenAll(statsTasks);
 
         _logger.LogInformation("All users refreshed.");
     }

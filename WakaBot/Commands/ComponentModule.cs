@@ -1,9 +1,9 @@
 using Discord;
 using Discord.Interactions;
-using WakaBot;
+using WakaBot.WakaTimeAPI;
 using WakaBot.Data;
 using WakaBot.Extensions;
-using Newtonsoft.Json.Linq;
+using WakaBot.WakaTimeAPI.Stats;
 
 
 namespace WakaBot.Commands;
@@ -47,7 +47,7 @@ public class ComponentModule : InteractionModuleBase<SocketInteractionContext>
         page = 0;
 
         var statsTasks = users.Select(user => _wakaTime.GetStatsAsync(user.WakaName));
-        dynamic[] userStats = await Task.WhenAll(statsTasks);
+        var userStats = await Task.WhenAll(statsTasks);
 
         userStats = userStats.OrderByDescending(stat => stat.data.total_seconds)
             .Take(_maxUsersPerPage).ToArray();
@@ -70,7 +70,7 @@ public class ComponentModule : InteractionModuleBase<SocketInteractionContext>
         page--;
 
         var statsTasks = users.Select(user => _wakaTime.GetStatsAsync(user.WakaName));
-        dynamic[] userStats = await Task.WhenAll(statsTasks);
+        var userStats = await Task.WhenAll(statsTasks);
 
         userStats = userStats.OrderByDescending(stat => stat.data.total_seconds)
             .Skip(page * _maxUsersPerPage).Take(_maxUsersPerPage).ToArray();
@@ -93,7 +93,7 @@ public class ComponentModule : InteractionModuleBase<SocketInteractionContext>
 
         var statsTasks = users.Select(user => _wakaTime.GetStatsAsync(user.WakaName));
 
-        dynamic[] userStats = await Task.WhenAll(statsTasks);
+        var userStats = await Task.WhenAll(statsTasks);
 
         userStats = userStats.OrderByDescending(stat => stat.data.total_seconds)
             .Skip(page * _maxUsersPerPage).Take(_maxUsersPerPage).ToArray();
@@ -115,7 +115,7 @@ public class ComponentModule : InteractionModuleBase<SocketInteractionContext>
         page = maxPages - 1;
 
         var statsTasks = users.Select(user => _wakaTime.GetStatsAsync(user.WakaName));
-        dynamic[] userStats = await Task.WhenAll(statsTasks);
+        var userStats = await Task.WhenAll(statsTasks);
 
         userStats = userStats.OrderByDescending(stat => stat.data.total_seconds)
             .Skip(_maxUsersPerPage * page).ToArray();
@@ -129,7 +129,7 @@ public class ComponentModule : InteractionModuleBase<SocketInteractionContext>
     /// <param name="messageId">Id of message to be edited</param>
     /// <param name="userStats">Users to be shown in table.</param>
     /// <param name="maxPages">Total number of existing pages.</param>
-    public async Task UpdatePage(int page, ulong messageId, List<dynamic> userStats, int maxPages)
+    public async Task UpdatePage(int page, ulong messageId, List<RootStat> userStats, int maxPages)
     {
         var fields = new List<EmbedFieldBuilder>();
 
@@ -141,13 +141,11 @@ public class ComponentModule : InteractionModuleBase<SocketInteractionContext>
 
         foreach (var user in userStats.Select((value, index) => new { value, index }))
         {
-            string range = "\nIn " + Convert.ToString(user.value.data.range).Replace("_", " ");
+            string range = "\nIn " + user.value.data.range.Replace("_", " ");
             string languages = "\nTop languages: ";
 
-            // Force C# to treat dynamic object as JArray instead of JObject
-            JArray lanList = JArray.Parse(Convert.ToString(user.value.data.languages));
 
-            languages += lanList.ConcatForEach(6, (token, last) =>
+            languages += user.value.data.languages.ToList().ConcatForEach(6, (token, last) =>
                 $"{token.name} {token.percent}%" + (last ? "" : ", "));
 
             int position = user.index + 1 + (page * _maxUsersPerPage);
@@ -185,14 +183,11 @@ public class ComponentModule : InteractionModuleBase<SocketInteractionContext>
     {
         var statsTasks = _wakaContext.Users.Where(user => user.GuildId == Context.Guild.Id)
             .Select(user => _wakaTime.GetStatsAsync(user.WakaName));
-        dynamic[] userStats = await Task.WhenAll(statsTasks);
+        var userStats = await Task.WhenAll(statsTasks);
 
         int totalSeconds = 0;
 
-        foreach (dynamic stat in userStats)
-        {
-            totalSeconds += Convert.ToDouble(stat.data.total_seconds);
-        }
+        userStats.ToList().ForEach(stat => totalSeconds += (int)stat.data.total_seconds);
 
         return $"{(int)totalSeconds / (60 * 60)} hrs {(int)(totalSeconds % (60 * 60)) / 60} mins";
     }
