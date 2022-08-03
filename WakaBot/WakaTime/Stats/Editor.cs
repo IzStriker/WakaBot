@@ -2,7 +2,7 @@ namespace WakaBot.WakaTimeAPI.Stats;
 
 public class Editor
 {
-    public string _decimal { get; set; } = string.Empty;
+    public string @decimal { get; set; } = string.Empty;
     public string digital { get; set; } = string.Empty;
     public int hours { get; set; }
     public int minutes { get; set; }
