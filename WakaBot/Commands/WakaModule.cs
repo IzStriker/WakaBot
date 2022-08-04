@@ -40,12 +40,12 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
     /// <summary>
     /// Checks that bot can respond to messages.
     /// </summary>
-    [SlashCommand("wakaping", "Recieve a pong")]
+    [SlashCommand("ping", "Recieve a pong")]
     public async Task Ping()
     {
         var embed = new EmbedBuilder()
         {
-            Title = "wakapong!",
+            Title = "pong!",
             Color = Discord.Color.LightGrey,
         };
         await RespondAsync(embed: embed.Build());
@@ -55,7 +55,7 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
     /// Rank all registered WakaBot users by programming time in decreasing order.
     /// </summary>
     /// <returns></returns>
-    [SlashCommand("wakarank", "Get rank of programming time.")]
+    [SlashCommand("rank", "Get rank of programming time.")]
     public async Task Rank()
     {
         await DeferAsync();
@@ -113,7 +113,7 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
     /// Get profile and detailed information about specific WakaBot user.
     /// </summary>
     /// <param name="discordUser">Subject Discord user.</param>
-    [SlashCommand("wakaprofile", "Get profile for specific WakaTime user")]
+    [SlashCommand("profile", "Get profile for specific WakaTime user")]
     public async Task Profile(IUser discordUser)
     {
         await DeferAsync();
@@ -173,7 +173,7 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
         }.Build());
     }
 
-    [SlashCommand("wakatoplangs", "Get programming stats for whole server")]
+    [SlashCommand("toplangs", "Get programming stats for whole server")]
     public async Task Stats()
     {
         await DeferAsync();

@@ -10,6 +10,7 @@ namespace WakaBot.Commands;
 /// <summary>
 /// Handles user operations in WakaBot.
 /// </summary>
+[Group("user", "user based commands")]
 public class UserModule : InteractionModuleBase<SocketInteractionContext>
 {
     private readonly WakaContext _wakaContext;
@@ -26,13 +27,12 @@ public class UserModule : InteractionModuleBase<SocketInteractionContext>
         _wakaTime = wakaTime;
     }
 
-
     /// <summary>
     /// Register new server member to Wakabot.
     /// </summary>
     /// <param name="discordUser">User to be registered.</param>
     /// <param name="wakaUser">WakaTime username of user to be registered.</param>
-    [SlashCommand("wakaregister", "Register new server member to WakaBot Service")]
+    [SlashCommand("register", "Register new server member to WakaBot Service")]
     public async Task RegisterUser(IUser discordUser, String wakaUser)
     {
         await DeferAsync();
@@ -102,7 +102,7 @@ public class UserModule : InteractionModuleBase<SocketInteractionContext>
     /// </summary>
     /// <param name="discordUser">User to be removed.</param>
     /// <returns></returns>
-    [SlashCommand("wakaderegister", "Deregister registered wakabot user")]
+    [SlashCommand("deregister", "Deregister registered wakabot user")]
     public async Task DeregisterUser(IUser discordUser)
     {
         await DeferAsync();
@@ -135,7 +135,7 @@ public class UserModule : InteractionModuleBase<SocketInteractionContext>
     /// <summary>
     /// Get list or registered users.
     /// </summary>
-    [SlashCommand("wakausers", "Get list of registered users")]
+    [SlashCommand("list", "Get list of registered users")]
     public async Task Users()
     {
         var fields = new List<EmbedFieldBuilder>();
