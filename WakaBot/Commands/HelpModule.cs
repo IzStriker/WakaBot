@@ -5,7 +5,7 @@ namespace WakaBot.Commands;
 
 public class HelpModule : InteractionModuleBase<SocketInteractionContext>
 {
-    [SlashCommand("wakahelp", "See information about how to use WakaBot")]
+    [SlashCommand("help", "See information about how to use WakaBot")]
     public async Task GetHelp()
     {
         var fields = new List<EmbedFieldBuilder>()
@@ -26,7 +26,7 @@ public class HelpModule : InteractionModuleBase<SocketInteractionContext>
                 "Now navigate to your [profile](https://wakatime.com/settings/profile)." +
                 "Select `Display code time publicly` and `Display languages, editors, os, categories publicly.\n`" +
                 "It's also a good idea to set `Display code time publicly` to `All Time`.\n\n"  +
-                "Now you can register to WakaBot using the `/wakaregister` command and your programming" +
+                "Now you can register to WakaBot using the `/user register` command and your programming" +
                 "metrics will appear in 24 hours."
 
             },
