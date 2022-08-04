@@ -2,17 +2,6 @@
 
 Cross Platform Discord bot for [WakaTime](https://wakatime.com) programming metrics. Currently can only run in a single discord server at a time.
 
-## Features
-
-| Command          | Description                                  |
-| ---------------- | -------------------------------------------- |
-| `wakaprofile`    | Get detailed information about WakaBot user. |
-| `wakarank`       | Get ranking of WakaBot registered users.     |
-| `wakausers`      | Get list of registered WakaBot users.        |
-| `wakaregister`   | Register new WakaBot user.                   |
-| `wakaderegister` | Deregister WakaBot user                      |
-| `wakaping`       | Test WakaBot is up and running.              |
-
 ## Compilation & Execution
 
 ### Requirements
@@ -43,13 +32,14 @@ In your WakaBot directory you need to create an `appsettings.json` and fill it w
 
 ```json
 {
-  "token": "required",
-  "guildId": "required",
-  "dBPath": "optional",
-  "dBFileName": "optional",
-  "colourURL": "optional",
-  "maxUsersPerPage": "optional",
-  "alwaysCacheUsers": "optional"
+  "token": "required: token for discord api.",
+  "guildId": "required: id of discord channel (used when testing).",
+  "dBPath": "optional: alter path to database",
+  "dBFileName": "optional: alter db file name.",
+  "colourURL": "optional: alter language colours url (must follow github colours format).",
+  "maxUsersPerPage": "optional: how many users are listed on each page of rank.",
+  "alwaysCacheUsers": "optional: cache user stats in memory to improve performance.",
+  "runWebServer": "optional: run very basic http API, will respond with `active`"
 }
 ```
 
@@ -79,7 +69,3 @@ Run the bot using the following command in the folder the bot is published in.
 ```bash
 dotnet WakaBot.dll
 ```
-
-## Issues
-
-Could break or be slow if too many users are registered.
