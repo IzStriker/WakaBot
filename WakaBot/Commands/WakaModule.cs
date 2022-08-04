@@ -254,6 +254,48 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
         }.Build());
     }
 
+    [SlashCommand("languagestats", "Get stats about specific programming language.")]
+    public async Task LanguageStasts(string language)
+    {
+        await DeferAsync();
+
+        var users = _wakaContext.Users.Where(user => user.GuildId == Context.Guild.Id);
+        var statsTasks = users.Select(user => _wakaTime.GetStatsAsync(user.WakaName));
+        var userStats = await Task.WhenAll(statsTasks);
+
+        var langStats = new List<DataPoint<double>>();
+        foreach (var user in userStats)
+        {
+            float seconds = 0;
+            var lang = user.data.languages.FirstOrDefault(lang => lang.name.ToLower() == language.ToLower());
+            if (lang != null)
+            {
+                seconds = lang.total_seconds;
+            }
+            langStats.Add(new DataPoint<double>(user.data.username, seconds));
+        }
+
+        if (langStats.Sum(stat => stat.value) <= 0)
+        {
+            await FollowupAsync(embed: new EmbedBuilder()
+            {
+                Title = "Error",
+                Color = Color.Red,
+                Description = "Language Not Found!"
+            }.Build());
+            return;
+        }
+
+        var image = _graphGenerator.GeneratePie(langStats.ToArray());
+        await FollowupWithFileAsync(new MemoryStream(image), "graph.png", embed: new EmbedBuilder()
+        {
+            Title = $"{language} stats",
+            ImageUrl = "attachment://graph.png",
+            Color = Color.Purple,
+        }.Build());
+
+    }
+
     /// <summary>
     /// Create pagination buttons for component. 
     /// </summary>
