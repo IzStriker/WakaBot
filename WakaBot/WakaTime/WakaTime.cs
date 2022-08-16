@@ -80,11 +80,19 @@ public class WakaTime
         using var httpClient = new HttpClient();
         var stats = await _cache.GetOrCreateAsync(username, async cacheEntry =>
         {
-            var response = await httpClient.GetStringAsync($"{BaseUrl}/users/{username}/stats");
+            RootStat entry;
+            try
+            {
+                var response = await httpClient.GetStringAsync($"{BaseUrl}/users/{username}/stats");
+                entry = JsonConvert.DeserializeObject<RootStat>(response)!;
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e.ToString());
+                _logger.LogError(e.StackTrace);
+                return null;
+            }
 
-            RootStat entry = JsonConvert.DeserializeObject<RootStat>(
-                await httpClient.GetStringAsync($"{BaseUrl}/users/{username}/stats")
-            )!;
 
             // 3:00 AM tomorrow morning
             var timeTillExpiration = DateTime.Parse("00:00").AddDays(1)
