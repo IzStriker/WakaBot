@@ -80,18 +80,10 @@ public class WakaTime
         using var httpClient = new HttpClient();
         var stats = await _cache.GetOrCreateAsync(username, async cacheEntry =>
         {
-            RootStat entry;
-            try
-            {
-                var response = await httpClient.GetStringAsync($"{BaseUrl}/users/{username}/stats");
-                entry = JsonConvert.DeserializeObject<RootStat>(response)!;
-            }
-            catch (Exception e)
-            {
-                _logger.LogError(e.ToString());
-                _logger.LogError(e.StackTrace);
-                return null;
-            }
+
+
+            var response = await httpClient.GetStringAsync($"{BaseUrl}/users/{username}/stats");
+            RootStat entry = JsonConvert.DeserializeObject<RootStat>(response)!;
 
 
             // 3:00 AM tomorrow morning

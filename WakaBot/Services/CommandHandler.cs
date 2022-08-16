@@ -169,6 +169,7 @@ public class CommandHandler
             _logger.LogError(arg3.ErrorReason);
             var error = (ExecuteResult)arg3;
             _logger.LogError(error.Exception.StackTrace);
+            _logger.LogError(error.Exception.InnerException!.StackTrace);
         }
 
         return Task.CompletedTask;
