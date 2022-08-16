@@ -82,8 +82,13 @@ public class WakaTime
         {
 
 
-            var response = await httpClient.GetStringAsync($"{BaseUrl}/users/{username}/stats");
-            RootStat entry = JsonConvert.DeserializeObject<RootStat>(response)!;
+            // var response = await httpClient.GetStringAsync($"{BaseUrl}/users/{username}/stats");
+            var response = await httpClient.GetAsync($"{BaseUrl}/users/{username}/stats");
+            if (response.StatusCode != System.Net.HttpStatusCode.OK)
+            {
+                _logger.LogError("Requst failed");
+            }
+            RootStat entry = JsonConvert.DeserializeObject<RootStat>(await response.Content.ReadAsStringAsync())!;
 
 
             // 3:00 AM tomorrow morning
