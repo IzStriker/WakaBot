@@ -165,7 +165,10 @@ public class CommandHandler
     {
         if (!arg3.IsSuccess)
         {
+            _logger.LogError($"Command: {arg1.Name}");
             _logger.LogError(arg3.ErrorReason);
+            var error = (ExecuteResult)arg3;
+            _logger.LogError(error.Exception.StackTrace);
         }
 
         return Task.CompletedTask;
