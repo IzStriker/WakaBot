@@ -74,7 +74,7 @@ public class UserModule : InteractionModuleBase<SocketInteractionContext>
 
         // Get users in current guild with matching discordId or WakaId
         if (_wakaContext.Users.Where(x => x.GuildId == Context.Guild.Id &&
-            (x.DiscordId == discordUser.Id || x.WakaName == wakaUser)).Count() > 0)
+            x.DiscordId == discordUser.Id).Count() > 0)
         {
             await FollowupAsync(embed: new EmbedBuilder()
             {
