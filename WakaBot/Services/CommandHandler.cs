@@ -170,6 +170,11 @@ public class CommandHandler
             var error = (ExecuteResult)arg3;
             _logger.LogError(error.Exception.StackTrace);
         }
+        else
+        {
+            _logger.LogInformation($"Command: {arg1.Name}, By {arg2.User.Username} In {arg2.Guild.Name}");
+        }
+
 
         return Task.CompletedTask;
     }
