@@ -1,0 +1,31 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": ".NET Core Launch (web)",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build",
+      "program": "${workspaceFolder}/WakaBot/bin/Debug/net6.0/WakaBot.dll",
+      "args": [],
+      "cwd": "${workspaceFolder}/WakaBot",
+      "stopAtEntry": false,
+      "env": {
+        "DOTNET_ENVIRONMENT": "Development",
+        "DOTNET_Serilog:MinimumLevel:Default": "Information",
+        "DOTNET_Serilog:MinimumLevel:Override:Microsoft": "Warning",
+        "DOTNET_Serilog:MinimumLevel:Override:System": "Warning",
+        "DOTNET_Serilog:WriteTo:0:Name": "Console",
+        "DOTNET_Serilog:WriteTo:1:Name": "File",
+        "DOTNET_Serilog:WriteTo:1:Args:rollingInterval": "Day",
+        "DOTNET_Serilog:WriteTo:1:Args:path": "Logs/wakabot.log",
+        "DOTNET_Serilog:WriteTo:2:Name": "AzureApp"
+      }
+    },
+    {
+      "name": ".NET Core Attach",
+      "type": "coreclr",
+      "request": "attach"
+    }
+  ]
+}

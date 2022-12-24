@@ -43,12 +43,18 @@ public class WakaBot
 
         try
         {
-            _configuration = new ConfigurationBuilder()
-                .SetBasePath(AppContext.BaseDirectory)
-                .AddEnvironmentVariables()
-                .AddJsonFile("logconfig.json", optional: false)
-                .AddJsonFile("appsettings.json", optional: false)
-                .Build();
+            var env = Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT");
+            var config = new ConfigurationBuilder();
+            config.SetBasePath(AppContext.BaseDirectory);
+            config.AddJsonFile("appsettings.json");
+
+            if (env != "Production")
+            {
+                config.AddJsonFile("logconfig.json");
+            }
+
+            config.AddEnvironmentVariables("DOTNET_");
+            _configuration = config.Build();
 
         }
         catch (FileNotFoundException e)

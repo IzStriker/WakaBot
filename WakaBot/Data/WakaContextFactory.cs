@@ -18,8 +18,8 @@ public class WakaContextFactory : IDesignTimeDbContextFactory<WakaContext>
         var configuration = new ConfigurationBuilder()
             .SetBasePath(AppContext.BaseDirectory)
             .AddEnvironmentVariables()
-            .AddJsonFile("logconfig.json", optional: false)
-            .AddJsonFile("appsettings.json", optional: false)
+            .AddJsonFile("appsettings.json")
+            .AddEnvironmentVariables("DOTNET_")
             .Build();
 
         string dbPath = Path.Join(configuration!["dBPath"] ?? AppContext.BaseDirectory,
