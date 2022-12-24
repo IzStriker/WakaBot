@@ -116,10 +116,18 @@ public class WakaBot
             .AddSingleton(_socketConfig)
             .AddSingleton<IConfiguration>(_configuration!)
             .AddSingleton(x => new GraphGenerator(_configuration!["colourURL"]))
-            .AddDbContextFactory<WakaContext>(opt => DbManager.GetConnection(opt, _configuration!))
+            .AddDbContextFactory<WakaContext>()
             .AddScoped<WakaTime>()
             .AddMemoryCache()
             .AddLogging(config => config.AddSerilog())
             .BuildServiceProvider();
+    }
+
+    /// <summary>
+    /// Allow creation of migrations without running main.
+    /// </summary>
+    public static IHostBuilder CreateHostBuilder(string[] args)
+    {
+        return Host.CreateDefaultBuilder();
     }
 }

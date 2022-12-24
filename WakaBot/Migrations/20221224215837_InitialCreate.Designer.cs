@@ -10,26 +10,31 @@ using WakaBot.Data;
 namespace WakaBot.Migrations
 {
     [DbContext(typeof(WakaContext))]
-    [Migration("20220325163952_IntialCreate")]
-    partial class IntialCreate
+    [Migration("20221224215837_InitialCreate")]
+    partial class InitialCreate
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
-            modelBuilder.HasAnnotation("ProductVersion", "6.0.3");
+            modelBuilder
+                .HasAnnotation("ProductVersion", "6.0.7")
+                .HasAnnotation("Relational:MaxIdentifierLength", 64);
 
             modelBuilder.Entity("WakaBot.Models.User", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("int");
 
                     b.Property<ulong>("DiscordId")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("bigint unsigned");
+
+                    b.Property<ulong>("GuildId")
+                        .HasColumnType("bigint unsigned");
 
                     b.Property<string>("WakaName")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("longtext");
 
                     b.HasKey("Id");
 
