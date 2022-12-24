@@ -101,10 +101,6 @@ public class WakaBot
     /// <returns>ServiceProvider of dependency injection objects.</returns>
     private ServiceProvider ConfigureServices()
     {
-        // Setup database connection path using default values.
-        string dbPath = Path.Join(_configuration!["dBPath"] ?? AppContext.BaseDirectory,
-                 _configuration["dBFileName"] ?? "waka.db");
-
         // Force Serilog to use base app directory instead of current.
         Environment.CurrentDirectory = AppContext.BaseDirectory;
 
@@ -119,8 +115,8 @@ public class WakaBot
             .AddSingleton<CommandHandler>()
             .AddSingleton(_socketConfig)
             .AddSingleton<IConfiguration>(_configuration!)
-            .AddSingleton(x => new GraphGenerator(_configuration["colourURL"]))
-            .AddDbContextFactory<WakaContext>(opt => opt.UseSqlite($"Data Source={dbPath}"))
+            .AddSingleton(x => new GraphGenerator(_configuration!["colourURL"]))
+            .AddDbContextFactory<WakaContext>(opt => DbManager.GetConnection(opt, _configuration!))
             .AddScoped<WakaTime>()
             .AddMemoryCache()
             .AddLogging(config => config.AddSerilog())

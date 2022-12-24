@@ -22,11 +22,8 @@ public class WakaContextFactory : IDesignTimeDbContextFactory<WakaContext>
             .AddEnvironmentVariables("DOTNET_")
             .Build();
 
-        string dbPath = Path.Join(configuration!["dBPath"] ?? AppContext.BaseDirectory,
-            configuration["dBFileName"] ?? "waka.db");
-
         var optionsBuilder = new DbContextOptionsBuilder<WakaContext>();
-        optionsBuilder.UseSqlite($"Data Source={dbPath}");
+        DbManager.GetConnection(optionsBuilder, configuration);
         return new WakaContext(optionsBuilder.Options);
     }
 
