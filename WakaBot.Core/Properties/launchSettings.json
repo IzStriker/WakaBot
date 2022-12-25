@@ -1,0 +1,12 @@
+{
+  "profiles": {
+    "WakaBot": {
+      "commandName": "Project",
+      "launchBrowser": true,
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      },
+      "applicationUrl": "https://localhost:1221;http://localhost:1222"
+    }
+  }
+}
