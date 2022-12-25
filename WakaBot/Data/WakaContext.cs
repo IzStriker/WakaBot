@@ -19,5 +19,19 @@ namespace WakaBot.Data
             : base(opt)
         { }
 
+        public WakaContext() { }
+
+        protected override void OnConfiguring(DbContextOptionsBuilder opt)
+        {
+            var configuration = new ConfigurationBuilder()
+                .SetBasePath(AppContext.BaseDirectory)
+                .AddEnvironmentVariables()
+                .AddJsonFile("appsettings.json")
+                .AddEnvironmentVariables("DOTNET_")
+                .Build();
+            opt.UseMySql(configuration.GetConnectionString("MySql"), new MySqlServerVersion(new Version(5, 7)));
+            base.OnConfiguring(opt);
+        }
+
     }
 }

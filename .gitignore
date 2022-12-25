@@ -376,3 +376,5 @@ appsettings.json
 .replit
 packages.lock.json
 replit.nix
+
+database/

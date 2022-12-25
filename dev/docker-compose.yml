@@ -1,0 +1,15 @@
+version: "3.3"
+
+services:
+  wakadb:
+    image: mysql:5.7
+    restart: always
+    environment:
+      MYSQL_DATABASE: "localdb"
+      MYSQL_USER: "user"
+      MYSQL_PASSWORD: "password"
+      MYSQL_ROOT_PASSWORD: "root"
+    ports:
+      - 3306:3306
+    volumes:
+      - ./database:/var/lib/mysql

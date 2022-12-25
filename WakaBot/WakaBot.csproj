@@ -10,7 +10,6 @@
   <ItemGroup>
     <PackageReference Include="CommandLineParser" Version="2.9.1" />
     <PackageReference Include="Discord.Net" Version="3.4.1" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="6.0.3" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="6.0.3">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -21,6 +20,7 @@
     <PackageReference Include="Microsoft.Extensions.Logging" Version="6.0.0" />
     <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="6.0.0" />
     <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="6.0.0" />
+    <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="6.0.2" />
     <PackageReference Include="QuickChart" Version="2.3.0" />
     <PackageReference Include="Serilog.AspNetCore" Version="6.1.0" />
     <PackageReference Include="Serilog.Sinks.AzureApp" Version="3.1.0" />
