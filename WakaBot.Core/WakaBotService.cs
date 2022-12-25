@@ -46,11 +46,11 @@ namespace WakaBot.Core
                 var env = Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT");
                 var config = new ConfigurationBuilder();
                 config.SetBasePath(AppContext.BaseDirectory);
-                config.AddJsonFile("appsettings.json");
+                config.AddJsonFile("appsettings.json", optional: true);
 
                 if (env != "Production")
                 {
-                    config.AddJsonFile("logconfig.json");
+                    config.AddJsonFile("logconfig.json", optional: true);
                 }
 
                 config.AddEnvironmentVariables("DOTNET_");
@@ -67,18 +67,7 @@ namespace WakaBot.Core
                 Environment.Exit(1);
             }
 
-
             var services = ConfigureServices();
-            // TODO: Create new project for console
-            // TODO: Only run in console app
-            // and move a copy to web app
-            //Parser.Default.ParseArguments<MigrationsCmd>(args)
-            //    .WithParsed<MigrationsCmd>(cmd => cmd.Execute(services))
-            //    .WithNotParsed(err =>
-            //    {
-            //        // if invalid command line args 
-            //        Environment.Exit(3);
-            //    });
 
             _client = services.GetRequiredService<DiscordSocketClient>();
             _interactionService = services.GetRequiredService<InteractionService>();
@@ -93,8 +82,6 @@ namespace WakaBot.Core
             {
                 await new Server().StartAsync(services);
             }
-
-            //await Task.Delay(-1, cancellationToken);
         }
 
         /// <summary>

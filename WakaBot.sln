@@ -5,7 +5,9 @@ VisualStudioVersion = 17.1.32319.34
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WakaBot.Core", "WakaBot.Core\WakaBot.Core.csproj", "{47BAF689-0C87-443B-9847-B55C5BEAD66E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WakaBot.Web", "WakaBot.Web\WakaBot.Web.csproj", "{6AC7456D-2B99-43C7-A2CC-F38D349DF60B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WakaBot.Web", "WakaBot.Web\WakaBot.Web.csproj", "{6AC7456D-2B99-43C7-A2CC-F38D349DF60B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WakaBot.Console", "WakaBot.Console\WakaBot.Console.csproj", "{692A0C43-69A3-4DCB-8E96-CD3A7911D599}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +23,10 @@ Global
 		{6AC7456D-2B99-43C7-A2CC-F38D349DF60B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6AC7456D-2B99-43C7-A2CC-F38D349DF60B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6AC7456D-2B99-43C7-A2CC-F38D349DF60B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{692A0C43-69A3-4DCB-8E96-CD3A7911D599}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{692A0C43-69A3-4DCB-8E96-CD3A7911D599}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{692A0C43-69A3-4DCB-8E96-CD3A7911D599}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{692A0C43-69A3-4DCB-8E96-CD3A7911D599}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -26,7 +26,7 @@ namespace WakaBot.Core.Data
             var configuration = new ConfigurationBuilder()
                 .SetBasePath(AppContext.BaseDirectory)
                 .AddEnvironmentVariables()
-                .AddJsonFile("appsettings.json")
+                .AddJsonFile("appsettings.json", optional: true)
                 .AddEnvironmentVariables("DOTNET_")
                 .Build();
             opt.UseMySql(configuration.GetConnectionString("MySql"), new MySqlServerVersion(new Version(5, 7)));
