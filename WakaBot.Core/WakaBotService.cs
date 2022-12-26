@@ -76,12 +76,6 @@ namespace WakaBot.Core
             await _client.StartAsync();
 
             await services.GetRequiredService<CommandHandler>().InitializeAsync();
-
-            // Initialise WebServer if Enabled.
-            if (_configuration.GetValue<bool>("runWebServer"))
-            {
-                await new Server().StartAsync(services);
-            }
         }
 
         /// <summary>
