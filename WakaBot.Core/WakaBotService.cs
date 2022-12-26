@@ -1,15 +1,11 @@
-﻿using CommandLine;
-using Discord.Interactions;
+﻿using Discord.Interactions;
 using Discord.WebSocket;
 using Discord;
 using Serilog;
-using WakaBot.Core.CommandLine;
 using WakaBot.Core.Data;
 using WakaBot.Core.Graphs;
 using WakaBot.Core.Services;
 using WakaBot.Core.WakaTimeAPI;
-using WakaBot.Core.WebApp;
-using WakaBot.Core.Commands;
 
 namespace WakaBot.Core
 {
