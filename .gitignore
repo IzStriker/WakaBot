@@ -378,3 +378,4 @@ packages.lock.json
 replit.nix
 
 database/
+*.csv

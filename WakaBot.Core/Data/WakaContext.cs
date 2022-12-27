@@ -10,6 +10,9 @@ namespace WakaBot.Core.Data
     {
 
         public DbSet<User> Users { get; set; }
+        public DbSet<DiscordUser> DiscordUsers { get; set; }
+        public DbSet<DiscordGuild> DiscordGuilds { get; set; }
+        public DbSet<WakaUser> WakaUsers { get; set; }
 
         /// <summary>
         /// Create instance of database context.
