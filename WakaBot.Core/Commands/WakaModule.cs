@@ -61,7 +61,6 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
     {
         await DeferAsync();
 
-        // var users = _wakaContext.Users.Where(user => user.GuildId == Context.Guild.Id).ToList();
         var users = _wakaContext.DiscordGuilds.Include(x => x.Users).ThenInclude(x => x.WakaUser)
             .FirstOrDefault(guild => guild.Id == Context.Guild.Id)?.Users;
 
@@ -133,8 +132,9 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
 
         var fields = new List<EmbedFieldBuilder>();
 
-        var user = _wakaContext.Users.FirstOrDefault(user => user.DiscordId == discordUser.Id
-            && user.GuildId == Context.Guild.Id);
+        var user = _wakaContext.DiscordGuilds.Include(x => x.Users).ThenInclude(x => x.WakaUser)
+            .FirstOrDefault(guild => guild.Id == Context.Guild.Id)?
+            .Users.FirstOrDefault(x => x.Id == discordUser.Id);
 
         if (user == null)
         {
@@ -149,7 +149,7 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
             return;
         }
 
-        var stats = await _wakaTime.GetStatsAsync(user.WakaName);
+        var stats = await _wakaTime.GetStatsAsync(user.WakaUser!.Username);
 
         fields.Add(CreateEmbedField("Programming time",
          $"{stats.data.human_readable_total} {stats.data.human_readable_range}"));
