@@ -103,7 +103,7 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
         }
 
         fields = fields.Take(_maxUsersPerPage).ToList();
-        fields.Insert(0, CreateEmbedField("Total programming time", $"{(int)totalSeconds / (60 * 60)} hrs {(int)(totalSeconds % (60 * 60)) / 60} mins"));
+        fields.Insert(0, CreateEmbedField("Total programming time", $"{totalSeconds / (60 * 60):N0} hrs {totalSeconds % (60 * 60) / 60:N0} mins"));
 
         byte[] image = _graphGenerator.GeneratePie(points.ToArray());
         int numPages = (int)Math.Ceiling(users.Count / (decimal)_maxUsersPerPage);
@@ -193,7 +193,6 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
 
         var users = _wakaContext.DiscordGuilds.Include(x => x.Users).ThenInclude(x => x.WakaUser)
             .FirstOrDefault(guild => guild.Id == Context.Guild.Id)?.Users;
-
 
         if (users == null || users.Count() == 0)
         {
@@ -287,8 +286,22 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
     {
         await DeferAsync();
 
-        var users = _wakaContext.Users.Where(user => user.GuildId == Context.Guild.Id);
-        var statsTasks = users.Select(user => _wakaTime.GetStatsAsync(user.WakaName));
+        var users = _wakaContext.DiscordGuilds.Include(x => x.Users).ThenInclude(x => x.WakaUser)
+            .FirstOrDefault(guild => guild.Id == Context.Guild.Id)?.Users;
+
+        if (users == null || users.Count() == 0)
+        {
+            await ModifyOriginalResponseAsync(msg =>
+                msg.Embed = new EmbedBuilder()
+                {
+                    Title = "Error",
+                    Color = Color.Red,
+                    Description = "No users are registered with WakaBot."
+                }.Build());
+            return;
+
+        }
+        var statsTasks = users.Select(user => _wakaTime.GetStatsAsync(user.WakaUser!.Username));
         var userStats = await Task.WhenAll(statsTasks);
 
         var langStats = new List<DataPoint<double>>();

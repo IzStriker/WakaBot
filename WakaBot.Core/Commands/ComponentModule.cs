@@ -4,7 +4,7 @@ using WakaBot.Core.WakaTimeAPI;
 using WakaBot.Core.Data;
 using WakaBot.Core.Extensions;
 using WakaBot.Core.WakaTimeAPI.Stats;
-
+using Microsoft.EntityFrameworkCore;
 
 namespace WakaBot.Core.Commands;
 
@@ -42,11 +42,16 @@ public class ComponentModule : InteractionModuleBase<SocketInteractionContext>
     {
         await DeferAsync();
 
-        var users = _wakaContext.Users.Where(user => user.GuildId == Context.Guild.Id);
+        var users = _wakaContext.DiscordGuilds.Include(x => x.Users).ThenInclude(x => x.WakaUser)
+            .FirstOrDefault(guild => guild.Id == Context.Guild.Id)?.Users;
+
+        if (users == null || users.Count() == 0)
+            return;
+
         int maxPages = (int)Math.Ceiling(users.Count() / (decimal)_maxUsersPerPage);
         page = 0;
 
-        var statsTasks = users.Select(user => _wakaTime.GetStatsAsync(user.WakaName));
+        var statsTasks = users.Select(user => _wakaTime.GetStatsAsync(user.WakaUser!.Username));
         var userStats = await Task.WhenAll(statsTasks);
 
         userStats = userStats.OrderByDescending(stat => stat.data.total_seconds)
@@ -64,12 +69,17 @@ public class ComponentModule : InteractionModuleBase<SocketInteractionContext>
     {
         await DeferAsync();
 
-        var users = _wakaContext.Users.Where(user => user.GuildId == Context.Guild.Id);
+        var users = _wakaContext.DiscordGuilds.Include(x => x.Users).ThenInclude(x => x.WakaUser)
+            .FirstOrDefault(guild => guild.Id == Context.Guild.Id)?.Users;
+
+        if (users == null || users.Count() == 0)
+            return;
+
         int maxPages = (int)Math.Ceiling(users.Count() / (decimal)_maxUsersPerPage);
 
         page--;
 
-        var statsTasks = users.Select(user => _wakaTime.GetStatsAsync(user.WakaName));
+        var statsTasks = users.Select(user => _wakaTime.GetStatsAsync(user.WakaUser!.Username));
         var userStats = await Task.WhenAll(statsTasks);
 
         userStats = userStats.OrderByDescending(stat => stat.data.total_seconds)
@@ -86,12 +96,16 @@ public class ComponentModule : InteractionModuleBase<SocketInteractionContext>
     public async Task RankNext(int page, ulong messageId)
     {
         await DeferAsync();
-        var users = _wakaContext.Users.Where(user => user.GuildId == Context.Guild.Id);
+        var users = _wakaContext.DiscordGuilds.Include(x => x.Users).ThenInclude(x => x.WakaUser)
+            .FirstOrDefault(guild => guild.Id == Context.Guild.Id)?.Users;
+
+        if (users == null || users.Count() == 0)
+            return;
         int maxPages = (int)Math.Ceiling(users.Count() / (decimal)_maxUsersPerPage);
 
         page++;
 
-        var statsTasks = users.Select(user => _wakaTime.GetStatsAsync(user.WakaName));
+        var statsTasks = users.Select(user => _wakaTime.GetStatsAsync(user.WakaUser!.Username));
 
         var userStats = await Task.WhenAll(statsTasks);
 
@@ -109,12 +123,17 @@ public class ComponentModule : InteractionModuleBase<SocketInteractionContext>
     public async Task RankLast(int page, ulong messageId)
     {
         await DeferAsync();
-        var users = _wakaContext.Users.Where(user => user.GuildId == Context.Guild.Id);
+        var users = _wakaContext.DiscordGuilds.Include(x => x.Users).ThenInclude(x => x.WakaUser)
+            .FirstOrDefault(guild => guild.Id == Context.Guild.Id)?.Users;
+
+        if (users == null || users.Count() == 0)
+            return;
+
         int maxPages = (int)Math.Ceiling(users.Count() / (decimal)_maxUsersPerPage);
 
         page = maxPages - 1;
 
-        var statsTasks = users.Select(user => _wakaTime.GetStatsAsync(user.WakaName));
+        var statsTasks = users.Select(user => _wakaTime.GetStatsAsync(user.WakaUser!.Username));
         var userStats = await Task.WhenAll(statsTasks);
 
         userStats = userStats.OrderByDescending(stat => stat.data.total_seconds)
@@ -181,15 +200,20 @@ public class ComponentModule : InteractionModuleBase<SocketInteractionContext>
     /// </summary>
     private async Task<string> GetTotalTimeAsync()
     {
-        var statsTasks = _wakaContext.Users.Where(user => user.GuildId == Context.Guild.Id)
-            .Select(user => _wakaTime.GetStatsAsync(user.WakaName));
+        var statsTasks = _wakaContext.DiscordGuilds.Include(x => x.Users).ThenInclude(x => x.WakaUser)
+            .FirstOrDefault(guild => guild.Id == Context.Guild.Id)?.Users
+            .Select(user => _wakaTime.GetStatsAsync(user.WakaUser!.Username));
+
+        if (statsTasks == null)
+            return "0 hrs 0 mins";
+
         var userStats = await Task.WhenAll(statsTasks);
 
         int totalSeconds = 0;
 
         userStats.ToList().ForEach(stat => totalSeconds += (int)stat.data.total_seconds);
 
-        return $"{(int)totalSeconds / (60 * 60)} hrs {(int)(totalSeconds % (60 * 60)) / 60} mins";
+        return $"{totalSeconds / (60 * 60):N0} hrs {totalSeconds % (60 * 60) / 60:N0} mins";
     }
 
 }
