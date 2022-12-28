@@ -191,8 +191,23 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
     {
         await DeferAsync();
 
-        var users = _wakaContext.Users.Where(user => user.GuildId == Context.Guild.Id);
-        var statsTasks = users.Select(user => _wakaTime.GetStatsAsync(user.WakaName));
+        var users = _wakaContext.DiscordGuilds.Include(x => x.Users).ThenInclude(x => x.WakaUser)
+            .FirstOrDefault(guild => guild.Id == Context.Guild.Id)?.Users;
+
+
+        if (users == null || users.Count() == 0)
+        {
+            await ModifyOriginalResponseAsync(msg =>
+                msg.Embed = new EmbedBuilder()
+                {
+                    Title = "Error",
+                    Color = Color.Red,
+                    Description = "No users are registered with WakaBot."
+                }.Build());
+            return;
+        }
+
+        var statsTasks = users.Select(user => _wakaTime.GetStatsAsync(user.WakaUser!.Username));
         var userStats = await Task.WhenAll(statsTasks);
 
         Dictionary<string, float> languages = new Dictionary<string, float>();
