@@ -67,21 +67,21 @@ namespace WakaBot.Core.Migrations
                 name: "DiscordGuildDiscordUser",
                 columns: table => new
                 {
-                    GuildId = table.Column<ulong>(type: "bigint unsigned", nullable: false),
-                    UserId = table.Column<ulong>(type: "bigint unsigned", nullable: false)
+                    GuildsId = table.Column<ulong>(type: "bigint unsigned", nullable: false),
+                    UsersId = table.Column<ulong>(type: "bigint unsigned", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_DiscordGuildDiscordUser", x => new { x.GuildId, x.UserId });
+                    table.PrimaryKey("PK_DiscordGuildDiscordUser", x => new { x.GuildsId, x.UsersId });
                     table.ForeignKey(
-                        name: "FK_DiscordGuildDiscordUser_DiscordGuilds_GuildId",
-                        column: x => x.GuildId,
+                        name: "FK_DiscordGuildDiscordUser_DiscordGuilds_GuildsId",
+                        column: x => x.GuildsId,
                         principalTable: "DiscordGuilds",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_DiscordGuildDiscordUser_DiscordUsers_UserId",
-                        column: x => x.UserId,
+                        name: "FK_DiscordGuildDiscordUser_DiscordUsers_UsersId",
+                        column: x => x.UsersId,
                         principalTable: "DiscordUsers",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
@@ -89,9 +89,9 @@ namespace WakaBot.Core.Migrations
                 .Annotation("MySql:CharSet", "utf8mb4");
 
             migrationBuilder.CreateIndex(
-                name: "IX_DiscordGuildDiscordUser_UserId",
+                name: "IX_DiscordGuildDiscordUser_UsersId",
                 table: "DiscordGuildDiscordUser",
-                column: "UserId");
+                column: "UsersId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_DiscordUsers_WakaUserId",
@@ -102,7 +102,7 @@ namespace WakaBot.Core.Migrations
             // move data from User Table into DiscordUser, DiscordGuild, and DiscordGuildDiscordUser tables
             migrationBuilder.Sql("INSERT INTO DiscordUsers (Id) SELECT DISTINCT DiscordId FROM Users;");
             migrationBuilder.Sql("INSERT INTO DiscordGuilds (Id) SELECT DISTINCT GuildId FROM Users;");
-            migrationBuilder.Sql("INSERT INTO DiscordGuildDiscordUser (GuildId, UserId) SELECT GuildId, DiscordId FROM Users;");
+            migrationBuilder.Sql("INSERT INTO DiscordGuildDiscordUser (GuildsId, UsersId) SELECT GuildId, DiscordId FROM Users;");
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)

@@ -1,5 +1,6 @@
 using Discord;
 using Discord.Interactions;
+using Microsoft.EntityFrameworkCore;
 using WakaBot.Core.Data;
 using WakaBot.Core.Models;
 using WakaBot.Core.WakaTimeAPI;
@@ -73,8 +74,9 @@ public class UserModule : InteractionModuleBase<SocketInteractionContext>
         }
 
         // Get users in current guild with matching discordId or WakaId
-        if (_wakaContext.Users.Where(x => x.GuildId == Context.Guild.Id &&
-            x.DiscordId == discordUser.Id).Count() > 0)
+        if (_wakaContext.DiscordGuilds.Include(x => x.Users)
+                .FirstOrDefault(x => x.Id == Context.Guild.Id)?
+                .Users.FirstOrDefault(x => x.Id == discordUser.Id) != null)
         {
             await FollowupAsync(embed: new EmbedBuilder()
             {
@@ -85,7 +87,36 @@ public class UserModule : InteractionModuleBase<SocketInteractionContext>
             return;
         }
 
-        _wakaContext.Add(new User() { DiscordId = discordUser.Id, WakaName = wakaUser, GuildId = Context.Guild.Id, });
+        var user = _wakaContext.DiscordUsers.FirstOrDefault(x => x.Id == discordUser.Id);
+        if (user == null)
+        {
+            user = new DiscordUser()
+            {
+                Id = discordUser.Id,
+                WakaUser = new WakaUser()
+                {
+                    Username = wakaUser,
+                    usingOAuth = false,
+                    Id = await _wakaTime.GetUserIdAsync(wakaUser)
+                }
+            };
+        }
+
+        var guild = _wakaContext.DiscordGuilds.FirstOrDefault(x => x.Id == Context.Guild.Id);
+        if (guild == null)
+        {
+            guild = new DiscordGuild()
+            {
+                Id = Context.Guild.Id,
+            };
+            guild.Users.Add(user);
+            _wakaContext.DiscordGuilds.Add(guild);
+        }
+        else
+        {
+            guild.Users.Add(user);
+        }
+
         _wakaContext.SaveChanges();
 
         await FollowupAsync(embed: new EmbedBuilder()
@@ -107,28 +138,30 @@ public class UserModule : InteractionModuleBase<SocketInteractionContext>
     {
         await DeferAsync();
 
-        var user = _wakaContext.Users.FirstOrDefault(user => user.DiscordId == discordUser.Id &&
-             user.GuildId == Context.Guild.Id);
+        var guild = _wakaContext.DiscordGuilds.Include(x => x.Users)
+            .FirstOrDefault(x => x.Id == Context.Guild.Id);
+        var user = guild?.Users.FirstOrDefault(x => x.Id == discordUser.Id);
 
-        if (user == null)
+
+        if (user == null || guild == null)
         {
             await FollowupAsync(embed: new EmbedBuilder
             {
                 Color = Color.Red,
                 Title = "Error",
-                Description = $"User {discordUser.Username} isn't registered to WakaBot."
+                Description = $"User {discordUser.Mention} isn't registered to WakaBot."
             }.Build());
             return;
         }
 
-        _wakaContext.Users.Remove(user);
+        guild.Users.Remove(user);
         _wakaContext.SaveChanges();
 
         await FollowupAsync(embed: new EmbedBuilder()
         {
             Color = Color.Green,
             Title = "User Deregistered",
-            Description = $"User {discordUser.Username} Successfully deregistered."
+            Description = $"User {discordUser.Mention} Successfully deregistered."
         }.Build());
     }
 
@@ -139,27 +172,43 @@ public class UserModule : InteractionModuleBase<SocketInteractionContext>
     public async Task Users()
     {
         var fields = new List<EmbedFieldBuilder>();
-        var users = _wakaContext.Users.Where(user => user.GuildId == Context.Guild.Id).ToList();
+        var users = _wakaContext.DiscordGuilds.Include(x => x.Users).ThenInclude(x => x.WakaUser)
+            .FirstOrDefault(x => x.Id == Context.Guild.Id)?.Users.ToList();
         await Context.Guild.DownloadUsersAsync();
-        foreach (User user in users)
-        {
-            string disUser;
-            var data = Context.Guild.GetUser(user.DiscordId);
-            if (Context.Guild.GetUser(user.DiscordId).Nickname != null)
-                disUser = Context.Guild.GetUser(user.DiscordId).Nickname;
-            else
-                disUser = Context.Guild.GetUser(user.DiscordId).Username;
 
-            fields.Add(new EmbedFieldBuilder()
+        if (users == null || users.Count() == 0)
+        {
+            await RespondAsync(embed: new EmbedBuilder()
             {
-                Name = disUser,
-                Value = $"[{user.WakaName}](https://wakatime.com/@{user.WakaName})"
-            });
+                Title = "No Registered Users",
+                Color = Color.Red
+            }.Build());
+            return;
+        }
+
+        foreach (var user in users)
+        {
+            string name;
+            var discordUser = Context.Guild.GetUser(user.Id);
+            if (discordUser.Nickname != null)
+                name = discordUser.Nickname;
+            else
+                name = discordUser.Username;
+
+            if (user.WakaUser != null)
+            {
+
+                fields.Add(new EmbedFieldBuilder()
+                {
+                    Name = name,
+                    Value = $"[{user.WakaUser.Username}](https://wakatime.com/@{user.WakaUser.Username})"
+                });
+            }
         }
 
         await RespondAsync(embed: new EmbedBuilder()
         {
-            Title = "Registered users",
+            Title = "Registered Users",
             Color = Color.Purple,
             Fields = fields
         }.Build());

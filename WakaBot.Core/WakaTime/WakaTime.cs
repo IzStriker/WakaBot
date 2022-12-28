@@ -145,9 +145,28 @@ public class WakaTime
     /// <summary>
     /// Add Users removed back into cache.
     /// </summary>
-    private void PostEvictionCallBack(object key, object value, EvictionReason resaon, object state)
+    private void PostEvictionCallBack(object key, object value, EvictionReason reason, object state)
     {
         Task.Run(async () => await GetStatsAsync((string)key)).Wait();
         _logger.LogInformation($"{key} cache refreshed");
+    }
+
+    public async Task<string> GetUserIdAsync(string username)
+    {
+        using var httpClient = new HttpClient();
+        var response = httpClient.GetAsync($"{BaseUrl}/users/{username}/stats").Result;
+        if (response.StatusCode != System.Net.HttpStatusCode.OK)
+        {
+            _logger.LogError("Request failed");
+            _logger.LogError(response.Content.ReadAsStringAsync().Result);
+        }
+
+        var result = await response.Content.ReadAsStringAsync();
+        if (result == null)
+        {
+            return "";
+        }
+        RootStat data = JsonConvert.DeserializeObject<RootStat>(result)!;
+        return data.data.user_id;
     }
 }

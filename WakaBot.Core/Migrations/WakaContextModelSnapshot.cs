@@ -21,15 +21,15 @@ namespace WakaBot.Core.Migrations
 
             modelBuilder.Entity("DiscordGuildDiscordUser", b =>
                 {
-                    b.Property<ulong>("GuildId")
+                    b.Property<ulong>("GuildsId")
                         .HasColumnType("bigint unsigned");
 
-                    b.Property<ulong>("UserId")
+                    b.Property<ulong>("UsersId")
                         .HasColumnType("bigint unsigned");
 
-                    b.HasKey("GuildId", "UserId");
+                    b.HasKey("GuildsId", "UsersId");
 
-                    b.HasIndex("UserId");
+                    b.HasIndex("UsersId");
 
                     b.ToTable("DiscordGuildDiscordUser");
                 });
@@ -114,13 +114,13 @@ namespace WakaBot.Core.Migrations
                 {
                     b.HasOne("WakaBot.Core.Models.DiscordGuild", null)
                         .WithMany()
-                        .HasForeignKey("GuildId")
+                        .HasForeignKey("GuildsId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("WakaBot.Core.Models.DiscordUser", null)
                         .WithMany()
-                        .HasForeignKey("UserId")
+                        .HasForeignKey("UsersId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
