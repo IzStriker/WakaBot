@@ -6,6 +6,7 @@ using WakaBot.Core.WakaTimeAPI;
 using WakaBot.Core.WakaTimeAPI.Stats;
 using WakaBot.Core.Extensions;
 using System.Text;
+using Microsoft.EntityFrameworkCore;
 
 namespace WakaBot.Core.Commands;
 
@@ -60,16 +61,28 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
     {
         await DeferAsync();
 
-        var users = _wakaContext.Users.Where(user => user.GuildId == Context.Guild.Id).ToList();
+        // var users = _wakaContext.Users.Where(user => user.GuildId == Context.Guild.Id).ToList();
+        var users = _wakaContext.DiscordGuilds.Include(x => x.Users).ThenInclude(x => x.WakaUser)
+            .FirstOrDefault(guild => guild.Id == Context.Guild.Id)?.Users;
 
-        var statsTasks = users.Select(user => _wakaTime.GetStatsAsync(user.WakaName));
+        if (users == null || users.Count == 0)
+        {
+            await ModifyOriginalResponseAsync(msg =>
+                msg.Embed = new EmbedBuilder()
+                {
+                    Title = "Error",
+                    Description = "No users registered.",
+                    Color = Color.Red
+                }.Build()
+            );
+            return;
+        }
 
+        var statsTasks = users.Select(user => _wakaTime.GetStatsAsync(user.WakaUser!.Username));
         RootStat[] userStats = await Task.WhenAll(statsTasks);
-
         userStats = userStats.OrderByDescending(stat => stat.data.total_seconds).ToArray();
 
         var fields = new List<EmbedFieldBuilder>();
-
         List<DataPoint<double>> points = new List<DataPoint<double>>();
         double totalSeconds = 0;
 
