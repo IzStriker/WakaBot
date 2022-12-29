@@ -6,6 +6,7 @@ using WakaBot.Core.Data;
 using WakaBot.Core.Graphs;
 using WakaBot.Core.Services;
 using WakaBot.Core.WakaTimeAPI;
+using WakaBot.Core.OAuth2;
 
 namespace WakaBot.Core
 {
@@ -97,6 +98,7 @@ namespace WakaBot.Core
                 .AddSingleton(x => new GraphGenerator(_configuration!["colourURL"]))
                 .AddDbContextFactory<WakaContext>()
                 .AddScoped<WakaTime>()
+                .AddScoped<OAuth2Client>()
                 .AddMemoryCache()
                 .AddLogging(config => config.AddSerilog())
                 .BuildServiceProvider();

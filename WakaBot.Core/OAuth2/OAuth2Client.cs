@@ -14,22 +14,17 @@ public class OAuth2Client
     private string? _tokenRevocationUrl;
 
     public OAuth2Client(
-        string name,
-        string clientId,
-        string clientSecret,
-        string authorizeUrl,
-        string redirectUrl,
-        string tokenUrl,
-        string? tokenRevocationUrl = null
+        IConfiguration config
     )
     {
-        _name = name;
-        _clientId = clientId;
-        _clientSecret = clientSecret;
-        _authorizeUrl = authorizeUrl;
-        _redirectUrl = redirectUrl;
-        _tokenUrl = tokenUrl;
-        _tokenRevocationUrl = tokenRevocationUrl;
+        var section = config.GetSection("OAuth2");
+        _name = section.GetValue<string>("Name");
+        _clientId = section.GetValue<string>("ClientId");
+        _clientSecret = section.GetValue<string>("ClientSecret");
+        _authorizeUrl = section.GetValue<string>("AuthorizeUrl");
+        _redirectUrl = section.GetValue<string>("RedirectUrl");
+        _tokenUrl = section.GetValue<string>("TokenUrl");
+        _tokenRevocationUrl = section.GetValue<string>("TokenRevocationUrl");
     }
 
     public string GetRedirectUrl(string[] scopes)
