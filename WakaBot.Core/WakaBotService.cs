@@ -7,6 +7,7 @@ using WakaBot.Core.Graphs;
 using WakaBot.Core.Services;
 using WakaBot.Core.WakaTimeAPI;
 using WakaBot.Core.OAuth2;
+using WakaBot.Core.MessageBroker;
 
 namespace WakaBot.Core
 {
@@ -15,6 +16,7 @@ namespace WakaBot.Core
         private DiscordSocketClient? _client;
         private InteractionService? _interactionService;
         private IConfiguration? _configuration;
+        private MessageQueue? _queue;
 
         private readonly DiscordSocketConfig _socketConfig = new()
         {
@@ -22,14 +24,10 @@ namespace WakaBot.Core
             AlwaysDownloadUsers = true,
         };
 
-        private string[] args;
-
-        public WakaBotService(string[] args)
+        public WakaBotService(MessageQueue queue)
         {
-            this.args = args;
+            _queue = queue;
         }
-
-        public WakaBotService() { }
 
         /// <summary>
         /// Entry point for Discord bot Component of application.
@@ -99,6 +97,7 @@ namespace WakaBot.Core
                 .AddDbContextFactory<WakaContext>()
                 .AddScoped<WakaTime>()
                 .AddScoped<OAuth2Client>()
+                .AddSingleton(_queue!)
                 .AddMemoryCache()
                 .AddLogging(config => config.AddSerilog())
                 .BuildServiceProvider();

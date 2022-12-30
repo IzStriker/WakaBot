@@ -42,7 +42,7 @@ public class WakaTime
     /// </summary>
     /// <param name="username">Username of user who wishes to register.</param>
     /// <returns>Enum of bit flags of errors.</returns>
-    public async Task<RegistrationErrors> ValidateRegistration(string username)
+    public async Task<(string?, RegistrationErrors)> ValidateRegistration(string username)
     {
         RegistrationErrors errors = RegistrationErrors.None;
 
@@ -52,7 +52,7 @@ public class WakaTime
         if (response.StatusCode != System.Net.HttpStatusCode.OK)
         {
             errors |= RegistrationErrors.UserNotFound;
-            return errors;
+            return (null, errors);
         }
 
         dynamic data = JObject.Parse(await response.Content.ReadAsStringAsync());
@@ -67,7 +67,7 @@ public class WakaTime
             errors |= RegistrationErrors.TimeNotFound;
         }
 
-        return errors;
+        return (data.data.user_id, errors);
     }
 
     /// <summary>

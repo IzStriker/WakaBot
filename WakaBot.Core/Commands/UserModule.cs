@@ -5,7 +5,8 @@ using WakaBot.Core.Data;
 using WakaBot.Core.Models;
 using WakaBot.Core.WakaTimeAPI;
 using WakaBot.Core.OAuth2;
-
+using WakaBot.Core.MessageBroker;
+using Discord.WebSocket;
 
 namespace WakaBot.Core.Commands;
 
@@ -24,11 +25,42 @@ public class UserModule : InteractionModuleBase<SocketInteractionContext>
     /// Create new instance of UserModule
     /// </summary>
     /// <param name="context">Database context.</param>
-    public UserModule(WakaContext context, WakaTime wakaTime, OAuth2Client oAuth2Client)
+    public UserModule(
+        WakaContext context,
+        WakaTime wakaTime,
+        OAuth2Client oAuth2Client,
+        DiscordSocketClient client,
+        MessageQueue queue
+    )
     {
         _wakaContext = context;
         _wakaTime = wakaTime;
         _oAuth2Client = oAuth2Client;
+
+        RegisterSubscriptions(queue, client);
+    }
+
+    private void RegisterSubscriptions(MessageQueue queue, DiscordSocketClient client)
+    {
+        queue.Subscribe<TokenResponse>("auth", async (res) =>
+        {
+            var discordUser = _wakaContext.DiscordUsers.Include(x => x.WakaUser).FirstOrDefault(x => x.WakaUserId == res.Uid);
+            if (discordUser == null)
+            {
+                return;
+            }
+            if (discordUser.WakaUser != null)
+            {
+                discordUser.WakaUser.AccessToken = res.AccessToken;
+                discordUser.WakaUser.RefreshToken = res.RefreshToken;
+                discordUser.WakaUser.ExpiresAt = res.ExpiresAt;
+                discordUser.WakaUser.Scope = res.Scope;
+
+                _wakaContext.SaveChanges();
+            }
+
+            await client.GetUser(discordUser.Id).SendMessageAsync("Your WakaTime account has been successfully linked to your Discord account.");
+        });
     }
 
     /// <summary>
@@ -142,7 +174,7 @@ public class UserModule : InteractionModuleBase<SocketInteractionContext>
 
     private async Task RegisterStandardUser(IUser discordUser, String wakaUser)
     {
-        var errors = await _wakaTime.ValidateRegistration(wakaUser);
+        var (userId, errors) = await _wakaTime.ValidateRegistration(wakaUser);
         string description = string.Empty;
 
         if (errors.HasFlag(WakaTime.RegistrationErrors.UserNotFound))
@@ -201,7 +233,7 @@ public class UserModule : InteractionModuleBase<SocketInteractionContext>
                 {
                     Username = wakaUser,
                     usingOAuth = false,
-                    Id = await _wakaTime.GetUserIdAsync(wakaUser)
+                    Id = userId == null ? await _wakaTime.GetUserIdAsync(wakaUser) : userId
                 }
             };
         }
@@ -233,6 +265,46 @@ public class UserModule : InteractionModuleBase<SocketInteractionContext>
     }
     private async Task RegisterOAuthUser(IUser discordUser, string wakaUser)
     {
+        var (userId, errors) = await _wakaTime.ValidateRegistration(wakaUser);
+
+        if (errors.HasFlag(WakaTime.RegistrationErrors.UserNotFound))
+        {
+            await FollowupAsync(embed: new EmbedBuilder()
+            {
+                Title = "Error",
+                Color = Color.Red,
+                Description = $"Invalid username **{wakaUser}**, ensure your username is correct."
+            }.Build());
+            return;
+        }
+
+        var user = new DiscordUser()
+        {
+            Id = discordUser.Id,
+            WakaUser = new WakaUser()
+            {
+                Username = wakaUser,
+                usingOAuth = true,
+                Id = userId == null ? await _wakaTime.GetUserIdAsync(wakaUser) : userId
+            }
+        };
+
+        var guild = _wakaContext.DiscordGuilds.Include(x => x.Users).FirstOrDefault(x => x.Id == Context.Guild.Id);
+        if (guild == null)
+        {
+            guild = new DiscordGuild()
+            {
+                Id = Context.Guild.Id,
+            };
+            guild.Users.Add(user);
+            _wakaContext.DiscordGuilds.Add(guild);
+        }
+        else
+        {
+            guild.Users.Add(user);
+        }
+        _wakaContext.SaveChanges();
+
         var link = _oAuth2Client.GetRedirectUrl(new string[] { "email", "read_stats" });
 
         await FollowupAsync(embed: new EmbedBuilder()
