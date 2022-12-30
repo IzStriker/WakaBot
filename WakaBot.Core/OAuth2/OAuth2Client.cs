@@ -27,7 +27,7 @@ public class OAuth2Client
         _tokenRevocationUrl = section.GetValue<string>("TokenRevocationUrl");
     }
 
-    public string GetRedirectUrl(string[] scopes)
+    public string GetRedirectUrl(string[] scopes, string? state = null)
     {
         var query = new Dictionary<string, string?>()
         {
@@ -36,6 +36,10 @@ public class OAuth2Client
             {"redirect_uri", _redirectUrl},
             {"scope", string.Join(",", scopes)}
         };
+        if (state != null)
+        {
+            query.Add("state", state);
+        }
 
         return QueryHelpers.AddQueryString(_authorizeUrl, query);
     }

@@ -45,21 +45,29 @@ public class UserModule : InteractionModuleBase<SocketInteractionContext>
         queue.Subscribe<TokenResponse>("auth", async (res) =>
         {
             var discordUser = _wakaContext.DiscordUsers.Include(x => x.WakaUser).FirstOrDefault(x => x.WakaUserId == res.Uid);
-            if (discordUser == null)
+            if (discordUser == null || discordUser.WakaUser == null)
             {
                 return;
             }
-            if (discordUser.WakaUser != null)
+            if (discordUser.WakaUser.State != res.State || discordUser.WakaUser.State == null)
             {
-                discordUser.WakaUser.AccessToken = res.AccessToken;
-                discordUser.WakaUser.RefreshToken = res.RefreshToken;
-                discordUser.WakaUser.ExpiresAt = res.ExpiresAt;
-                discordUser.WakaUser.Scope = res.Scope;
-
-                _wakaContext.SaveChanges();
+                return;
             }
 
-            await client.GetUser(discordUser.Id).SendMessageAsync("Your WakaTime account has been successfully linked to your Discord account.");
+            discordUser.WakaUser.AccessToken = res.AccessToken;
+            discordUser.WakaUser.RefreshToken = res.RefreshToken;
+            discordUser.WakaUser.ExpiresAt = res.ExpiresAt;
+            discordUser.WakaUser.Scope = res.Scope;
+            discordUser.WakaUser.State = null;
+
+            _wakaContext.SaveChanges();
+
+            await client.GetUser(discordUser.Id).SendMessageAsync(embed: new EmbedBuilder()
+            {
+                Title = "WakaBot OAuth2",
+                Description = "Your WakaTime account has been successfully linked to your Discord account.",
+                Color = Color.Green
+            }.Build());
         });
     }
 
@@ -266,6 +274,7 @@ public class UserModule : InteractionModuleBase<SocketInteractionContext>
     private async Task RegisterOAuthUser(IUser discordUser, string wakaUser)
     {
         var (userId, errors) = await _wakaTime.ValidateRegistration(wakaUser);
+        var state = Guid.NewGuid().ToString("N");
 
         if (errors.HasFlag(WakaTime.RegistrationErrors.UserNotFound))
         {
@@ -285,7 +294,8 @@ public class UserModule : InteractionModuleBase<SocketInteractionContext>
             {
                 Username = wakaUser,
                 usingOAuth = true,
-                Id = userId == null ? await _wakaTime.GetUserIdAsync(wakaUser) : userId
+                Id = userId == null ? await _wakaTime.GetUserIdAsync(wakaUser) : userId,
+                State = state
             }
         };
 
@@ -305,7 +315,7 @@ public class UserModule : InteractionModuleBase<SocketInteractionContext>
         }
         _wakaContext.SaveChanges();
 
-        var link = _oAuth2Client.GetRedirectUrl(new string[] { "email", "read_stats" });
+        var link = _oAuth2Client.GetRedirectUrl(new string[] { "email", "read_stats" }, state);
 
         await FollowupAsync(embed: new EmbedBuilder()
         {

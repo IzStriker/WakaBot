@@ -26,4 +26,6 @@ public class TokenResponse
     [JsonProperty("uid")]
     public string Uid { get; set; } = string.Empty;
 
+    [JsonIgnore]
+    public string State { get; set; } = string.Empty;
 }

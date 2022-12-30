@@ -9,4 +9,5 @@ public class WakaUser
     public string? RefreshToken { get; set; } = string.Empty;
     public DateTime? ExpiresAt { get; set; }
     public string? Scope { get; set; } = string.Empty;
+    public string? State { get; set; } = string.Empty;
 }
