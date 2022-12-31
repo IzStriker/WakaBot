@@ -18,7 +18,6 @@ public class UserModule : InteractionModuleBase<SocketInteractionContext>
 {
     private readonly WakaContext _wakaContext;
     private readonly WakaTime _wakaTime;
-    private readonly OAuth2Client _oAuth2Client;
 
 
     /// <summary>
@@ -27,48 +26,12 @@ public class UserModule : InteractionModuleBase<SocketInteractionContext>
     /// <param name="context">Database context.</param>
     public UserModule(
         WakaContext context,
-        WakaTime wakaTime,
-        OAuth2Client oAuth2Client,
-        DiscordSocketClient client,
-        MessageQueue queue
+        WakaTime wakaTime
     )
     {
         _wakaContext = context;
         _wakaTime = wakaTime;
-        _oAuth2Client = oAuth2Client;
 
-        RegisterSubscriptions(queue, client);
-    }
-
-    private void RegisterSubscriptions(MessageQueue queue, DiscordSocketClient client)
-    {
-        queue.Subscribe<TokenResponse>("auth", async (res) =>
-        {
-            var discordUser = _wakaContext.DiscordUsers.Include(x => x.WakaUser).FirstOrDefault(x => x.WakaUserId == res.Uid);
-            if (discordUser == null || discordUser.WakaUser == null)
-            {
-                return;
-            }
-            if (discordUser.WakaUser.State != res.State || discordUser.WakaUser.State == null)
-            {
-                return;
-            }
-
-            discordUser.WakaUser.AccessToken = res.AccessToken;
-            discordUser.WakaUser.RefreshToken = res.RefreshToken;
-            discordUser.WakaUser.ExpiresAt = res.ExpiresAt;
-            discordUser.WakaUser.Scope = res.Scope;
-            discordUser.WakaUser.State = null;
-
-            _wakaContext.SaveChanges();
-
-            await client.GetUser(discordUser.Id).SendMessageAsync(embed: new EmbedBuilder()
-            {
-                Title = "WakaBot OAuth2",
-                Description = "Your WakaTime account has been successfully linked to your Discord account.",
-                Color = Color.Green
-            }.Build());
-        });
     }
 
     /// <summary>

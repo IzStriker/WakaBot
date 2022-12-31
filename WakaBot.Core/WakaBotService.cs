@@ -71,6 +71,7 @@ namespace WakaBot.Core
             await _client.StartAsync();
 
             await services.GetRequiredService<CommandHandler>().InitializeAsync();
+            services.GetRequiredService<SubscriptionHandler>().Initialize();
         }
 
         /// <summary>
@@ -96,8 +97,8 @@ namespace WakaBot.Core
                 .AddSingleton(x => new GraphGenerator(_configuration!["colourURL"]))
                 .AddDbContextFactory<WakaContext>()
                 .AddScoped<WakaTime>()
-                .AddScoped<OAuth2Client>()
                 .AddSingleton(_queue!)
+                .AddSingleton<SubscriptionHandler>()
                 .AddMemoryCache()
                 .AddLogging(config => config.AddSerilog())
                 .BuildServiceProvider();
