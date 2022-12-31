@@ -9,6 +9,7 @@ namespace WakaBot.Core.Data
     public class WakaContext : DbContext
     {
 
+#pragma warning disable CS8618
         public DbSet<User> Users { get; set; }
         public DbSet<DiscordUser> DiscordUsers { get; set; }
         public DbSet<DiscordGuild> DiscordGuilds { get; set; }
@@ -23,6 +24,7 @@ namespace WakaBot.Core.Data
         { }
 
         public WakaContext() { }
+#pragma warning restore CS8618
 
         protected override void OnConfiguring(DbContextOptionsBuilder opt)
         {
