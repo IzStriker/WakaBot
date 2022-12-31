@@ -273,31 +273,81 @@ public class UserModule : InteractionModuleBase<SocketInteractionContext>
     }
     private async Task RegisterOAuthUser(IUser discordUser, string wakaUser)
     {
-        var (userId, errors) = await _wakaTime.ValidateRegistration(wakaUser);
-        var state = Guid.NewGuid().ToString("N");
+        // check if users exists
+        var user = _wakaContext.DiscordUsers.Include(x => x.WakaUser)
+        .FirstOrDefault(x => x.Id == discordUser.Id /*|| (x.WakaUser != null && x.WakaUser.Username == wakaUser)*/);
 
-        if (errors.HasFlag(WakaTime.RegistrationErrors.UserNotFound))
+        if (user != null &&
+            user.WakaUser != null &&
+            user.WakaUser.usingOAuth &&
+            user.WakaUser.ExpiresAt > DateTime.Now)
         {
+            // if user is already registered using OAuth and refresh token is valid
             await FollowupAsync(embed: new EmbedBuilder()
             {
-                Title = "Error",
+                Title = "User already registered",
                 Color = Color.Red,
-                Description = $"Invalid username **{wakaUser}**, ensure your username is correct."
+                Description = $"User {discordUser.Mention} **{wakaUser}**, already registered"
             }.Build());
             return;
         }
-
-        var user = new DiscordUser()
+        else if (user != null && user.WakaUser != null && user.WakaUser.usingOAuth && user.WakaUser.ExpiresAt < DateTime.Now)
         {
-            Id = discordUser.Id,
-            WakaUser = new WakaUser()
+            // if user is registered using OAuth but refresh token has expired
+            // clear old auth data and register user again
+            user.WakaUser.AccessToken = null;
+            user.WakaUser.RefreshToken = null;
+            user.WakaUser.ExpiresAt = null;
+            user.WakaUser.Scope = null;
+        }
+        else if (user != null && user.WakaUser != null && !user.WakaUser.usingOAuth)
+        {
+            // if user is registered using standard method and is trying to register 
+            // using OAuth then update user to use oauth
+            user.WakaUser.usingOAuth = true;
+        }
+        else if (user == null)
+        {
+            // if user is not already registered then create new user
+            var (userId, errors) = await _wakaTime.ValidateRegistration(wakaUser);
+
+            if (errors.HasFlag(WakaTime.RegistrationErrors.UserNotFound))
+            {
+                await FollowupAsync(embed: new EmbedBuilder()
+                {
+                    Title = "Error",
+                    Color = Color.Red,
+                    Description = $"Invalid username **{wakaUser}**, ensure your username is correct."
+                }.Build());
+                return;
+            }
+
+            user = new DiscordUser()
+            {
+                Id = discordUser.Id,
+                WakaUser = new WakaUser()
+                {
+                    Username = wakaUser,
+                    usingOAuth = true,
+                    Id = userId == null ? await _wakaTime.GetUserIdAsync(wakaUser) : userId
+                }
+            };
+        }
+
+        var state = Guid.NewGuid().ToString("N");
+        if (user.WakaUser != null)
+        {
+            user.WakaUser.State = state;
+        }
+        else
+        {
+            user.WakaUser = new WakaUser()
             {
                 Username = wakaUser,
                 usingOAuth = true,
-                Id = userId == null ? await _wakaTime.GetUserIdAsync(wakaUser) : userId,
                 State = state
-            }
-        };
+            };
+        }
 
         var guild = _wakaContext.DiscordGuilds.Include(x => x.Users).FirstOrDefault(x => x.Id == Context.Guild.Id);
         if (guild == null)
@@ -315,13 +365,17 @@ public class UserModule : InteractionModuleBase<SocketInteractionContext>
         }
         _wakaContext.SaveChanges();
 
-        var link = _oAuth2Client.GetRedirectUrl(new string[] { "email", "read_stats" }, state);
+        var link = _wakaTime.GetRedirectUrl(new string[] { "email", "read_stats" }, state);
 
         await FollowupAsync(embed: new EmbedBuilder()
         {
             Title = "OAuth Registration",
             Color = Color.Purple,
-            Description = $"Please follow the link below to register your account.\n\n[Register]({link})"
+            Description = @$"Please follow the link below to register your account.
+
+                            [Register]({link})
+
+                            You will be noticed when you have successfully registered."
         }.Build());
     }
 }

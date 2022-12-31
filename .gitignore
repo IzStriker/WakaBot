@@ -365,7 +365,7 @@ MigrationBackup/
 FodyWeavers.xsd
 
 # Configuration file containting sensitive data
-appsettings.json
+appsettings*.json
 
 # sqlite files
 *.db

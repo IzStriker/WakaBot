@@ -5,13 +5,14 @@ using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Primitives;
 using WakaBot.Core.Data;
 using WakaBot.Core.WakaTimeAPI.Stats;
+using WakaBot.Core.OAuth2;
 
 namespace WakaBot.Core.WakaTimeAPI;
 
 /// <summary>
 /// <c> WakaTime </c> Class handles interactions with WakaTime API.
 /// </summary>
-public class WakaTime
+public class WakaTime : OAuth2Client
 {
     const string BaseUrl = "https://wakatime.com/api/v1/";
     private readonly IMemoryCache _cache;
@@ -28,8 +29,12 @@ public class WakaTime
         TimeNotFound = 4,
     }
 
-    public WakaTime(IMemoryCache cache, IDbContextFactory<WakaContext> factory,
-    IConfiguration config, ILogger<WakaTime> logger)
+    public WakaTime(
+        IMemoryCache cache,
+        IDbContextFactory<WakaContext> factory,
+        IConfiguration config,
+        ILogger<WakaTime> logger
+    ) : base(config)
     {
         _cache = cache;
         _contextFactory = factory;
