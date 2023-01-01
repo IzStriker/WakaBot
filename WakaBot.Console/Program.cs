@@ -5,7 +5,10 @@ using WakaBot.Core;
 using WakaBot.Core.CommandLine;
 using WakaBot.Core.Data;
 
-var services = new ServiceCollection().AddDbContextFactory<WakaContext>().BuildServiceProvider();
+var services = new ServiceCollection()
+    .AddDbContextFactory<WakaContext>()
+    .AddLogging()
+    .BuildServiceProvider();
 
 Parser.Default.ParseArguments<MigrationsCmd>(args)
     .WithParsed<MigrationsCmd>(cmd => cmd.Execute(services))
