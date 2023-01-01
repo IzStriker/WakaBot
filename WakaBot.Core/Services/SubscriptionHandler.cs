@@ -55,6 +55,7 @@ public class SubscriptionHandler
                 Description = $"Your WakaTime account has been successfully linked to your Discord account until {res.ExpiresAt.ToLongDateString()}.",
                 Color = Color.Green
             }.Build());
+            _logger.LogInformation($"Successfully authenticated {discordUser.Id}.");
         });
 
         _messageQueue.Subscribe<ErrorResponse>("auth:fail", async (res) =>
@@ -79,6 +80,7 @@ public class SubscriptionHandler
                  You will still be able to use the bot, but you will not be able to use the OAuth2 feature.",
                 Color = Color.Red
             }.Build());
+            _logger.LogInformation($"Failed to authenticate {discordUser.Id}.");
         });
     }
 }
