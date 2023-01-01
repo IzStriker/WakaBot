@@ -16,13 +16,28 @@ app.MapGet("/", () =>
     return "Hello World!";
 });
 
-app.MapGet("/callback", async (string code, string state) =>
+app.MapGet("/callback", async (string? code, string state, string? error, string? error_description) =>
 {
-    var response = await client.GetTokenAsync(code);
     var queue = app.Services.GetService<MessageQueue>();
-    response.State = state;
-    queue!.Send("auth", response);
-    return "Successfully Authenticated! You can close this window now and return to the Discord.";
+    if (code != null)
+    {
+        var response = await client.GetTokenAsync(code);
+        response.State = state;
+        queue!.Send("auth:success", response);
+        return "Successfully Authenticated! You can close this window now and return to the Discord.";
+    }
+    else if (error != null && error_description != null)
+    {
+        queue!.Send("auth:fail", new ErrorResponse
+        {
+            Error = error,
+            Description = error_description,
+            State = state
+        });
+
+        return $"Error: {error_description}";
+    }
+    return "Something went wrong. :/";
 });
 
 app.Run();

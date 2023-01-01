@@ -28,7 +28,7 @@ public class SubscriptionHandler
 
     public void Initialize()
     {
-        _messageQueue.Subscribe<TokenResponse>("auth", async (res) =>
+        _messageQueue.Subscribe<TokenResponse>("auth:success", async (res) =>
         {
             using var context = _contextFactory.CreateDbContext();
             var discordUser = context.DiscordUsers.Include(x => x.WakaUser).FirstOrDefault(x => x.WakaUserId == res.Uid);
@@ -54,6 +54,30 @@ public class SubscriptionHandler
                 Title = "WakaBot OAuth2",
                 Description = $"Your WakaTime account has been successfully linked to your Discord account until {res.ExpiresAt.ToLongDateString()}.",
                 Color = Color.Green
+            }.Build());
+        });
+
+        _messageQueue.Subscribe<ErrorResponse>("auth:fail", async (res) =>
+        {
+            using var context = _contextFactory.CreateDbContext();
+            var discordUser = context.DiscordUsers.Include(x => x.WakaUser).FirstOrDefault(x => x.WakaUser!.State == res.State);
+            if (discordUser == null || discordUser.WakaUser == null)
+            {
+                return;
+            }
+
+            discordUser.WakaUser.State = null;
+            discordUser.WakaUser.usingOAuth = false;
+
+            context.SaveChanges();
+
+            await _client.GetUser(discordUser.Id).SendMessageAsync(embed: new EmbedBuilder()
+            {
+                Title = "WakaBot OAuth2",
+                Description = @$"There was an error authenticating your WakaTime account:
+                 `{res.Description}`
+                 You will still be able to use the bot, but you will not be able to use the OAuth2 feature.",
+                Color = Color.Red
             }.Build());
         });
     }

@@ -4,9 +4,6 @@ using Microsoft.EntityFrameworkCore;
 using WakaBot.Core.Data;
 using WakaBot.Core.Models;
 using WakaBot.Core.WakaTimeAPI;
-using WakaBot.Core.OAuth2;
-using WakaBot.Core.MessageBroker;
-using Discord.WebSocket;
 
 namespace WakaBot.Core.Commands;
 
