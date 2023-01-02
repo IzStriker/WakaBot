@@ -4,6 +4,8 @@ using WakaBot.Core.OAuth2;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Configuration.AddEnvironmentVariables("DOTNET_");
+
 builder.Services.AddHostedService<WakaBotService>();
 builder.Services.AddSingleton<MessageQueue>();
 
