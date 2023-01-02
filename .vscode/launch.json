@@ -6,9 +6,9 @@
       "type": "coreclr",
       "request": "launch",
       "preLaunchTask": "build",
-      "program": "${workspaceFolder}/WakaBot/bin/Debug/net6.0/WakaBot.dll",
+      "program": "${workspaceFolder}/WakaBot.Web/bin/Debug/net6.0/WakaBot.Web.dll",
       "args": [],
-      "cwd": "${workspaceFolder}/WakaBot",
+      "cwd": "${workspaceFolder}/WakaBot.Web",
       "stopAtEntry": false,
       "env": {
         "DOTNET_ENVIRONMENT": "Development",

@@ -7,7 +7,7 @@
       "type": "process",
       "args": [
         "build",
-        "${workspaceFolder}/WakaBot/WakaBot.csproj",
+        "${workspaceFolder}/WakaBot.Web/WakaBot.Web.csproj",
         "/property:GenerateFullPaths=true",
         "/consoleloggerparameters:NoSummary"
       ],
