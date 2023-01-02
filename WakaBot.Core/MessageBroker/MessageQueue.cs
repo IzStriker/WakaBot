@@ -12,7 +12,7 @@ public class MessageQueue
         _queue = new BlockingCollection<object>();
     }
 
-    public void Subscribe<T>(string channel, Action<T> action) where T : class
+    public void Subscribe<T>(string channel, Func<T, Task> action) where T : class
     {
         Task.Run(() =>
         {
