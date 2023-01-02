@@ -37,8 +37,8 @@ public class ComponentModule : InteractionModuleBase<SocketInteractionContext>
     /// </summary>
     /// <param name="page">Current page number.</param>
     /// <param name="messageId">Id of rank table message.</param>
-    [ComponentInteraction("rank-first:*,*")]
-    public async Task RankFirst(int page, ulong messageId)
+    [ComponentInteraction("rank-first:*,*,*")]
+    public async Task RankFirst(int page, ulong messageId, bool oAuthOnly)
     {
         await DeferAsync();
 
@@ -47,6 +47,9 @@ public class ComponentModule : InteractionModuleBase<SocketInteractionContext>
 
         if (users == null || users.Count() == 0)
             return;
+
+        if (oAuthOnly)
+            users = users.Where(user => user.WakaUser != null && user.WakaUser.usingOAuth).ToList();
 
         int maxPages = (int)Math.Ceiling(users.Count() / (decimal)_maxUsersPerPage);
         page = 0;
@@ -64,8 +67,8 @@ public class ComponentModule : InteractionModuleBase<SocketInteractionContext>
     /// </summary>
     /// <param name="page">Current page number.</param>
     /// <param name="messageId">Id of rank table message.</param>
-    [ComponentInteraction("rank-previous:*,*")]
-    public async Task RankPrevious(int page, ulong messageId)
+    [ComponentInteraction("rank-previous:*,*,*")]
+    public async Task RankPrevious(int page, ulong messageId, bool oAuthOnly)
     {
         await DeferAsync();
 
@@ -74,6 +77,9 @@ public class ComponentModule : InteractionModuleBase<SocketInteractionContext>
 
         if (users == null || users.Count() == 0)
             return;
+
+        if (oAuthOnly)
+            users = users.Where(user => user.WakaUser != null && user.WakaUser.usingOAuth).ToList();
 
         int maxPages = (int)Math.Ceiling(users.Count() / (decimal)_maxUsersPerPage);
 
@@ -92,8 +98,8 @@ public class ComponentModule : InteractionModuleBase<SocketInteractionContext>
     /// </summary>
     /// <param name="page">Current page number.</param>
     /// <param name="messageId">Id of rank table message.</param>
-    [ComponentInteraction("rank-next:*,*")]
-    public async Task RankNext(int page, ulong messageId)
+    [ComponentInteraction("rank-next:*,*,*")]
+    public async Task RankNext(int page, ulong messageId, bool oAuthOnly)
     {
         await DeferAsync();
         var users = _wakaContext.DiscordGuilds.Include(x => x.Users).ThenInclude(x => x.WakaUser)
@@ -101,6 +107,10 @@ public class ComponentModule : InteractionModuleBase<SocketInteractionContext>
 
         if (users == null || users.Count() == 0)
             return;
+
+        if (oAuthOnly)
+            users = users.Where(user => user.WakaUser != null && user.WakaUser.usingOAuth).ToList();
+
         int maxPages = (int)Math.Ceiling(users.Count() / (decimal)_maxUsersPerPage);
 
         page++;
@@ -119,8 +129,8 @@ public class ComponentModule : InteractionModuleBase<SocketInteractionContext>
     /// </summary>
     /// <param name="page">Current page number.</param>
     /// <param name="messageId">Id of rank table message.</param>
-    [ComponentInteraction("rank-last:*,*")]
-    public async Task RankLast(int page, ulong messageId)
+    [ComponentInteraction("rank-last:*,*,*")]
+    public async Task RankLast(int page, ulong messageId, bool oAuthOnly)
     {
         await DeferAsync();
         var users = _wakaContext.DiscordGuilds.Include(x => x.Users).ThenInclude(x => x.WakaUser)
@@ -128,6 +138,9 @@ public class ComponentModule : InteractionModuleBase<SocketInteractionContext>
 
         if (users == null || users.Count() == 0)
             return;
+
+        if (oAuthOnly)
+            users = users.Where(user => user.WakaUser != null && user.WakaUser.usingOAuth).ToList();
 
         int maxPages = (int)Math.Ceiling(users.Count() / (decimal)_maxUsersPerPage);
 

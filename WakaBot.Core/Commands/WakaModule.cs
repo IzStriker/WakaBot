@@ -84,10 +84,22 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
         }
         else
         {
-            statsTasks = users
-                .Where(u => u.WakaUser != null && u.WakaUser.usingOAuth)
-                .Select(user => _wakaTime.GetStatsAsync(user.WakaUser!, timeRange.Value));
+            users = users.Where(u => u.WakaUser != null && u.WakaUser.usingOAuth).ToList();
+            statsTasks = users.Select(user => _wakaTime.GetStatsAsync(user.WakaUser!, timeRange.Value));
+            if (users.Count() == 0)
+            {
+                await ModifyOriginalResponseAsync(msg =>
+                    msg.Embed = new EmbedBuilder()
+                    {
+                        Title = "Error",
+                        Description = "No OAuth users registered.",
+                        Color = Color.Red
+                    }.Build()
+                );
+                return;
+            }
         }
+
         RootStat[] userStats = await Task.WhenAll(statsTasks);
         userStats = userStats.OrderByDescending(stat => stat.data.total_seconds).ToArray();
 
@@ -353,14 +365,18 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
     /// <param name="messageId">Id of message for which buttons are applied to.</param>
     /// <param name="forwardDisabled">disables next and last button, should be set if only one page.</param>
     /// <returns>Returns generated buttons.</returns>/
-    private MessageComponent GetPaginationButtons(ulong messageId = 0, bool forwardDisabled = false)
+    private MessageComponent GetPaginationButtons(
+        ulong messageId = 0,
+        bool forwardDisabled = false,
+        bool oAuthOnly = false
+    )
     {
         return new ComponentBuilder()
-        /// operations: (page number), (message id)
-        .WithButton("⏮️", $"rank-first:0,{messageId}", disabled: true)
-        .WithButton("◀️", $"rank-previous:0,{messageId}", disabled: true)
-        .WithButton("▶️", $"rank-next:0,{messageId}", disabled: forwardDisabled)
-        .WithButton("⏭️", $"rank-last:0,{messageId}", disabled: forwardDisabled)
+        /// operations: (page number), (message id), (oAuthOnly)
+        .WithButton("⏮️", $"rank-first:0,{messageId},{oAuthOnly}", disabled: true)
+        .WithButton("◀️", $"rank-previous:0,{messageId},{oAuthOnly}", disabled: true)
+        .WithButton("▶️", $"rank-next:0,{messageId},{oAuthOnly}", disabled: forwardDisabled)
+        .WithButton("⏭️", $"rank-last:0,{messageId},{oAuthOnly}", disabled: forwardDisabled)
         .Build();
     }
 
