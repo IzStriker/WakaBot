@@ -66,4 +66,26 @@ public class OAuth2Client
 
         return tokenData;
     }
+
+    public async Task<TokenResponse> RefreshTokenAsync(string refreshToken)
+    {
+        var formData = new Dictionary<string, string>()
+        {
+            {"refresh_token", refreshToken},
+            {"grant_type", "refresh_token"},
+            {"client_id", _clientId},
+            {"client_secret", _clientSecret}
+        };
+        using var client = new HttpClient();
+        client.DefaultRequestHeaders.Add("Accept", "application/json");
+        var res = await client.PostAsync(_tokenUrl, new FormUrlEncodedContent(formData));
+
+        var tokenData = JsonConvert.DeserializeObject<TokenResponse>(await res.Content.ReadAsStringAsync());
+        if (tokenData == null)
+        {
+            throw new Exception("Request return null response");
+        }
+
+        return tokenData;
+    }
 }

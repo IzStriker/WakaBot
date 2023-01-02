@@ -57,7 +57,7 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
     /// </summary>
     /// <returns></returns>
     [SlashCommand("rank", "Get rank of programming time.")]
-    public async Task Rank()
+    public async Task Rank(TimeRange? timeRange = null)
     {
         await DeferAsync();
 
@@ -77,7 +77,17 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
             return;
         }
 
-        var statsTasks = users.Select(user => _wakaTime.GetStatsAsync(user.WakaUser!.Username));
+        IEnumerable<Task<RootStat>> statsTasks;
+        if (timeRange == null)
+        {
+            statsTasks = users.Select(user => _wakaTime.GetStatsAsync(user.WakaUser!.Username));
+        }
+        else
+        {
+            statsTasks = users
+                .Where(u => u.WakaUser != null && u.WakaUser.usingOAuth)
+                .Select(user => _wakaTime.GetStatsAsync(user.WakaUser!, timeRange.Value));
+        }
         RootStat[] userStats = await Task.WhenAll(statsTasks);
         userStats = userStats.OrderByDescending(stat => stat.data.total_seconds).ToArray();
 
@@ -111,7 +121,7 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
         var message = await FollowupWithFileAsync(new MemoryStream(image), "graph.png", components: GetPaginationButtons(),
             embed: new EmbedBuilder()
             {
-                Title = "User Ranking",
+                Title = $"User Ranking {(timeRange != null ? "for " + timeRange.GetDisplay() : string.Empty)}",
                 Color = Color.Purple,
                 Fields = fields,
                 Footer = new EmbedFooterBuilder() { Text = $"page 1 of {numPages}" }

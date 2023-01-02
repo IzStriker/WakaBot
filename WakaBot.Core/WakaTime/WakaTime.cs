@@ -6,6 +6,9 @@ using Microsoft.Extensions.Primitives;
 using WakaBot.Core.Data;
 using WakaBot.Core.WakaTimeAPI.Stats;
 using WakaBot.Core.OAuth2;
+using WakaBot.Core.Models;
+using WakaBot.Core.Extensions;
+using System.Net.Http.Headers;
 
 namespace WakaBot.Core.WakaTimeAPI;
 
@@ -134,6 +137,63 @@ public class WakaTime : OAuth2Client
 
         return stats;
     }
+
+    public async Task<RootStat> GetStatsAsync(WakaUser user, TimeRange range)
+    {
+        if (!user.usingOAuth)
+        {
+            throw new ArgumentException("User is not registered with OAuth2");
+        }
+
+        using var client = new HttpClient();
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", user.AccessToken);
+
+        var response = await client.GetAsync($"{BaseUrl}/users/current/stats/{range.GetValue()}");
+        if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+        {
+            _logger.LogError($"Invalid Access Token, {user.Username}");
+            _logger.LogError(await response.Content.ReadAsStringAsync());
+
+            // Refresh token
+            if (user.RefreshToken == null)
+            {
+                _logger.LogError($"Refresh token is null for {user.Username}");
+                throw new Exception($"Refresh token is null for {user.Username}");
+            }
+
+            var newToken = await RefreshTokenAsync(user.RefreshToken);
+
+            // store new token in db
+            using (var context = await _contextFactory.CreateDbContextAsync())
+            {
+                var dbUser = context.WakaUsers.FirstOrDefault(u => u.Id == user.Id);
+                if (dbUser == null)
+                {
+                    _logger.LogError($"User {user.Username} not found in database");
+                    throw new Exception($"User {user.Username} not found in database");
+                }
+
+                dbUser.AccessToken = newToken.AccessToken;
+                dbUser.RefreshToken = newToken.RefreshToken;
+                dbUser.ExpiresAt = newToken.ExpiresAt;
+                context.SaveChanges();
+            }
+
+            // Try again
+            response = await client.GetAsync($"{BaseUrl}/users/current/stats/{range.GetValue()}");
+
+        }
+
+        if (response.StatusCode != System.Net.HttpStatusCode.OK)
+        {
+            _logger.LogError("Request failed");
+            _logger.LogError(await response.Content.ReadAsStringAsync());
+        }
+
+        var stats = JsonConvert.DeserializeObject<RootStat>(await response.Content.ReadAsStringAsync())!;
+        return stats;
+    }
+
     /// <summary>
     /// Refreshes all users in the cache or adds them if they're not present.
     /// </summary>
