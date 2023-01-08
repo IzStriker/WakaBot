@@ -88,26 +88,29 @@ namespace WakaBot.Core
                 .ReadFrom.Configuration(_configuration)
                 .CreateLogger();
 
-            var builder = new ServiceCollection();
+            var services = new ServiceCollection();
 
             // setup services
-            builder.AddSingleton<DiscordSocketClient>();
-            builder.AddSingleton(x => new InteractionService(x.GetRequiredService<DiscordSocketClient>()));
-            builder.AddSingleton<CommandHandler>();
-            builder.AddSingleton(_socketConfig);
-            builder.AddSingleton<IConfiguration>(_configuration!);
-            builder.AddSingleton(x => new GraphGenerator(_configuration!["colourURL"]));
-            builder.AddDbContextFactory<WakaContext>();
-            builder.AddTransient<WakaTime>();
-            builder.AddSingleton(_queue!);
-            builder.AddSingleton<SubscriptionHandler>();
-            builder.AddMemoryCache();
-            builder.AddLogging(config => config.AddSerilog());
+            services.AddSingleton<DiscordSocketClient>();
+            services.AddSingleton(x => new InteractionService(x.GetRequiredService<DiscordSocketClient>()));
+            services.AddSingleton<CommandHandler>();
+            services.AddSingleton(_socketConfig);
+            services.AddSingleton<IConfiguration>(_configuration!);
+            services.AddSingleton(x => new GraphGenerator(_configuration!["colourURL"]));
+            services.AddDbContextFactory<WakaContext>();
+            services.AddTransient<WakaTime>();
+            services.AddSingleton(_queue!);
+            services.AddSingleton<SubscriptionHandler>();
+            services.AddMemoryCache();
+            services.AddLogging(config => config.AddSerilog());
 
             // setup http clients
-            builder.AddHttpClient<WakaTime>(c => c.BaseAddress = new Uri("https://wakatime.com/api/v1/"));
+            services.AddHttpClient<WakaTime>(c => c.BaseAddress = new Uri("https://wakatime.com/api/v1/"))
+                .AddHttpMessageHandler<WakaTimeCacheHandler>();
 
-            return builder.BuildServiceProvider();
+            services.AddSingleton<WakaTimeCacheHandler>();
+
+            return services.BuildServiceProvider();
         }
 
         public Task StopAsync(CancellationToken cancellationToken)
