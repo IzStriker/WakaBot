@@ -17,11 +17,11 @@ namespace WakaBot.Core.WakaTimeAPI;
 /// </summary>
 public class WakaTime : OAuth2Client
 {
-    const string BaseUrl = "https://wakatime.com/api/v1/";
     private readonly IMemoryCache _cache;
     private readonly IDbContextFactory<WakaContext> _contextFactory;
     private readonly IConfiguration _config;
     private readonly ILogger _logger;
+    private readonly HttpClient _client;
 
     [Flags]
     public enum RegistrationErrors
@@ -36,13 +36,15 @@ public class WakaTime : OAuth2Client
         IMemoryCache cache,
         IDbContextFactory<WakaContext> factory,
         IConfiguration config,
-        ILogger<WakaTime> logger
+        ILogger<WakaTime> logger,
+        HttpClient client
     ) : base(config)
     {
         _cache = cache;
         _contextFactory = factory;
         _config = config;
         _logger = logger;
+        _client = client;
     }
 
     /// <summary>
@@ -54,8 +56,7 @@ public class WakaTime : OAuth2Client
     {
         RegistrationErrors errors = RegistrationErrors.None;
 
-        var httpClient = new HttpClient();
-        var response = await httpClient.GetAsync($"{BaseUrl}/users/{username}/stats");
+        var response = await _client.GetAsync($"users/{username}/stats");
 
         if (response.StatusCode != System.Net.HttpStatusCode.OK)
         {
@@ -85,12 +86,9 @@ public class WakaTime : OAuth2Client
     /// <returns>Users stats.</returns>
     public async Task<RootStat> GetStatsAsync(string username)
     {
-        using var httpClient = new HttpClient();
         var stats = await _cache.GetOrCreateAsync(username, async cacheEntry =>
         {
-
-
-            var response = await httpClient.GetAsync($"{BaseUrl}/users/{username}/stats");
+            var response = await _client.GetAsync($"users/{username}/stats");
             if (response.StatusCode != System.Net.HttpStatusCode.OK)
             {
                 _logger.LogError("Request failed");
@@ -145,10 +143,12 @@ public class WakaTime : OAuth2Client
             throw new ArgumentException("User is not registered with OAuth2");
         }
 
-        using var client = new HttpClient();
-        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", user.AccessToken);
+        if (user.AccessToken == null || user.RefreshToken == null)
+        {
+            throw new Exception($"User {user.Id} has invalid authentication tokens");
+        }
 
-        var response = await client.GetAsync($"{BaseUrl}/users/current/stats/{range.GetValue()}");
+        var response = await _client.GetAsync($"users/current/stats/{range.GetValue()}", user.AccessToken);
         if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
         {
             _logger.LogError($"Invalid Access Token, {user.Username}");
@@ -180,7 +180,7 @@ public class WakaTime : OAuth2Client
             }
 
             // Try again
-            response = await client.GetAsync($"{BaseUrl}/users/current/stats/{range.GetValue()}");
+            response = await _client.GetAsync($"/users/current/stats/{range.GetValue()}", user.AccessToken);
 
         }
 
@@ -218,8 +218,7 @@ public class WakaTime : OAuth2Client
 
     public async Task<string> GetUserIdAsync(string username)
     {
-        using var httpClient = new HttpClient();
-        var response = httpClient.GetAsync($"{BaseUrl}/users/{username}/stats").Result;
+        var response = _client.GetAsync($"users/{username}/stats").Result;
         if (response.StatusCode != System.Net.HttpStatusCode.OK)
         {
             _logger.LogError("Request failed");

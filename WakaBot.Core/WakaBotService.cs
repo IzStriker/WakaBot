@@ -88,20 +88,26 @@ namespace WakaBot.Core
                 .ReadFrom.Configuration(_configuration)
                 .CreateLogger();
 
-            return new ServiceCollection()
-                .AddSingleton<DiscordSocketClient>()
-                .AddSingleton(x => new InteractionService(x.GetRequiredService<DiscordSocketClient>()))
-                .AddSingleton<CommandHandler>()
-                .AddSingleton(_socketConfig)
-                .AddSingleton<IConfiguration>(_configuration!)
-                .AddSingleton(x => new GraphGenerator(_configuration!["colourURL"]))
-                .AddDbContextFactory<WakaContext>()
-                .AddScoped<WakaTime>()
-                .AddSingleton(_queue!)
-                .AddSingleton<SubscriptionHandler>()
-                .AddMemoryCache()
-                .AddLogging(config => config.AddSerilog())
-                .BuildServiceProvider();
+            var builder = new ServiceCollection();
+
+            // setup services
+            builder.AddSingleton<DiscordSocketClient>();
+            builder.AddSingleton(x => new InteractionService(x.GetRequiredService<DiscordSocketClient>()));
+            builder.AddSingleton<CommandHandler>();
+            builder.AddSingleton(_socketConfig);
+            builder.AddSingleton<IConfiguration>(_configuration!);
+            builder.AddSingleton(x => new GraphGenerator(_configuration!["colourURL"]));
+            builder.AddDbContextFactory<WakaContext>();
+            builder.AddTransient<WakaTime>();
+            builder.AddSingleton(_queue!);
+            builder.AddSingleton<SubscriptionHandler>();
+            builder.AddMemoryCache();
+            builder.AddLogging(config => config.AddSerilog());
+
+            // setup http clients
+            builder.AddHttpClient<WakaTime>(c => c.BaseAddress = new Uri("https://wakatime.com/api/v1/"));
+
+            return builder.BuildServiceProvider();
         }
 
         public Task StopAsync(CancellationToken cancellationToken)

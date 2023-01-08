@@ -13,6 +13,8 @@ public class OAuth2Client
     private string _tokenUrl;
     private string? _tokenRevocationUrl;
 
+    private HttpClient _client;
+
     public OAuth2Client(
         IConfiguration config
     )
@@ -25,6 +27,9 @@ public class OAuth2Client
         _redirectUrl = section.GetValue<string>("RedirectUrl");
         _tokenUrl = section.GetValue<string>("TokenUrl");
         _tokenRevocationUrl = section.GetValue<string>("TokenRevocationUrl");
+
+        _client = new HttpClient();
+        _client.DefaultRequestHeaders.Add("Accept", "application/json");
     }
 
     public string GetRedirectUrl(string[] scopes, string? state = null)
@@ -54,9 +59,7 @@ public class OAuth2Client
             {"client_id", _clientId},
             {"client_secret", _clientSecret}
         };
-        using var client = new HttpClient();
-        client.DefaultRequestHeaders.Add("Accept", "application/json");
-        var res = await client.PostAsync(_tokenUrl, new FormUrlEncodedContent(formData));
+        var res = await _client.PostAsync(_tokenUrl, new FormUrlEncodedContent(formData));
 
         var tokenData = JsonConvert.DeserializeObject<TokenResponse>(await res.Content.ReadAsStringAsync());
         if (tokenData == null)
@@ -76,9 +79,7 @@ public class OAuth2Client
             {"client_id", _clientId},
             {"client_secret", _clientSecret}
         };
-        using var client = new HttpClient();
-        client.DefaultRequestHeaders.Add("Accept", "application/json");
-        var res = await client.PostAsync(_tokenUrl, new FormUrlEncodedContent(formData));
+        var res = await _client.PostAsync(_tokenUrl, new FormUrlEncodedContent(formData));
 
         var tokenData = JsonConvert.DeserializeObject<TokenResponse>(await res.Content.ReadAsStringAsync());
         if (tokenData == null)
