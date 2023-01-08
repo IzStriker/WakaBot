@@ -88,20 +88,29 @@ namespace WakaBot.Core
                 .ReadFrom.Configuration(_configuration)
                 .CreateLogger();
 
-            return new ServiceCollection()
-                .AddSingleton<DiscordSocketClient>()
-                .AddSingleton(x => new InteractionService(x.GetRequiredService<DiscordSocketClient>()))
-                .AddSingleton<CommandHandler>()
-                .AddSingleton(_socketConfig)
-                .AddSingleton<IConfiguration>(_configuration!)
-                .AddSingleton(x => new GraphGenerator(_configuration!["colourURL"]))
-                .AddDbContextFactory<WakaContext>()
-                .AddScoped<WakaTime>()
-                .AddSingleton(_queue!)
-                .AddSingleton<SubscriptionHandler>()
-                .AddMemoryCache()
-                .AddLogging(config => config.AddSerilog())
-                .BuildServiceProvider();
+            var services = new ServiceCollection();
+
+            // setup services
+            services.AddSingleton<DiscordSocketClient>();
+            services.AddSingleton(x => new InteractionService(x.GetRequiredService<DiscordSocketClient>()));
+            services.AddSingleton<CommandHandler>();
+            services.AddSingleton(_socketConfig);
+            services.AddSingleton<IConfiguration>(_configuration!);
+            services.AddSingleton(x => new GraphGenerator(_configuration!["colourURL"]));
+            services.AddDbContextFactory<WakaContext>();
+            services.AddTransient<WakaTime>();
+            services.AddSingleton(_queue!);
+            services.AddSingleton<SubscriptionHandler>();
+            services.AddMemoryCache();
+            services.AddLogging(config => config.AddSerilog());
+
+            // setup http clients
+            services.AddHttpClient<WakaTime>(c => c.BaseAddress = new Uri("https://wakatime.com/api/v1/"))
+                .AddHttpMessageHandler<WakaTimeCacheHandler>();
+
+            services.AddSingleton<WakaTimeCacheHandler>();
+
+            return services.BuildServiceProvider();
         }
 
         public Task StopAsync(CancellationToken cancellationToken)

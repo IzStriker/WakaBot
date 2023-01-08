@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using WakaBot.Core;
 using WakaBot.Core.MessageBroker;
 using WakaBot.Core.OAuth2;
@@ -11,11 +12,12 @@ builder.Services.AddSingleton<MessageQueue>();
 
 var client = new OAuth2Client(builder.Configuration);
 
+var stopwatch = Stopwatch.StartNew();
 var app = builder.Build();
 
 app.MapGet("/", () =>
 {
-    return "Hello World!";
+    return "Up time is " + stopwatch.Elapsed;
 });
 
 app.MapGet("/callback", async (string? code, string state, string? error, string? error_description) =>
