@@ -164,6 +164,8 @@ public class CommandHandler
     private Task SlashCommandExecuted(SlashCommandInfo arg1, Discord.IInteractionContext arg2,
         Discord.Interactions.IResult arg3)
     {
+        // get how long the command took to execute
+        var time = DateTime.Now - arg2.Interaction.CreatedAt;
         if (!arg3.IsSuccess)
         {
             _logger.LogError($"Command: {arg1.Name}");
@@ -173,7 +175,7 @@ public class CommandHandler
         }
         else
         {
-            _logger.LogInformation($"Command: {arg1.Name}, By {arg2.User.Username} In {arg2.Guild.Name}");
+            _logger.LogInformation($"Command: {arg1.Name}, By {arg2.User.Username} In {arg2.Guild.Name} and took {time.TotalMilliseconds}ms");
         }
 
 
