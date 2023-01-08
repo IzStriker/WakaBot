@@ -2,13 +2,11 @@ using Newtonsoft.Json.Linq;
 using Newtonsoft.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.Primitives;
 using WakaBot.Core.Data;
 using WakaBot.Core.WakaTimeAPI.Stats;
 using WakaBot.Core.OAuth2;
 using WakaBot.Core.Models;
 using WakaBot.Core.Extensions;
-using System.Net.Http.Headers;
 
 namespace WakaBot.Core.WakaTimeAPI;
 
@@ -17,7 +15,6 @@ namespace WakaBot.Core.WakaTimeAPI;
 /// </summary>
 public class WakaTime : OAuth2Client
 {
-    private readonly IMemoryCache _cache;
     private readonly IDbContextFactory<WakaContext> _contextFactory;
     private readonly IConfiguration _config;
     private readonly ILogger _logger;
@@ -40,7 +37,6 @@ public class WakaTime : OAuth2Client
         HttpClient client
     ) : base(config)
     {
-        _cache = cache;
         _contextFactory = factory;
         _config = config;
         _logger = logger;
