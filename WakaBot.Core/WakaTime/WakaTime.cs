@@ -86,54 +86,16 @@ public class WakaTime : OAuth2Client
     /// <returns>Users stats.</returns>
     public async Task<RootStat> GetStatsAsync(string username)
     {
-        var stats = await _cache.GetOrCreateAsync(username, async cacheEntry =>
+        var response = await _client.GetAsync($"users/{username}/stats");
+        if (response.StatusCode != System.Net.HttpStatusCode.OK)
         {
-            var response = await _client.GetAsync($"users/{username}/stats");
-            if (response.StatusCode != System.Net.HttpStatusCode.OK)
-            {
-                _logger.LogError("Request failed");
-                _logger.LogError(await response.Content.ReadAsStringAsync());
-            }
+            _logger.LogError("Request failed");
+            _logger.LogError(await response.Content.ReadAsStringAsync());
+        }
 
-            RootStat entry;
-            try
-            {
-                entry = JsonConvert.DeserializeObject<RootStat>(await response.Content.ReadAsStringAsync())!;
-            }
-            catch (Exception e)
-            {
-                _logger.LogError(e.StackTrace);
-                return null;
-            }
+        RootStat entry = JsonConvert.DeserializeObject<RootStat>(await response.Content.ReadAsStringAsync())!;
 
-            // 3:00 AM tomorrow morning
-            var timeTillExpiration = DateTime.Parse("00:00").AddDays(1)
-                .AddHours(3).Subtract(DateTime.Now);
-
-            if (entry.data.is_up_to_date)
-            {
-                cacheEntry.AbsoluteExpirationRelativeToNow = timeTillExpiration;
-            }
-            else
-            {
-                // Stats will be refreshed soon
-                cacheEntry.AbsoluteExpiration = DateTimeOffset.Now.AddMinutes(30);
-            }
-
-            if (_config.GetValue<bool>("alwaysCacheUsers"))
-            {
-                // Remove item from cache when expires, instead of when set is next called.
-                cacheEntry.AddExpirationToken(new CancellationChangeToken(
-                    new CancellationTokenSource(timeTillExpiration).Token));
-
-                // Add back to cache when removed
-                cacheEntry.RegisterPostEvictionCallback(PostEvictionCallBack);
-            }
-
-            return entry;
-        });
-
-        return stats;
+        return entry;
     }
 
     public async Task<RootStat> GetStatsAsync(WakaUser user, TimeRange range)
@@ -207,14 +169,6 @@ public class WakaTime : OAuth2Client
         _logger.LogInformation("All users refreshed.");
     }
 
-    /// <summary>
-    /// Add Users removed back into cache.
-    /// </summary>
-    private void PostEvictionCallBack(object key, object value, EvictionReason reason, object state)
-    {
-        Task.Run(async () => await GetStatsAsync((string)key)).Wait();
-        _logger.LogInformation($"{key} cache refreshed");
-    }
 
     public async Task<string> GetUserIdAsync(string username)
     {
