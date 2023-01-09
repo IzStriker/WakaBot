@@ -1,7 +1,7 @@
 # WakaBot
 
 Cross Platform Discord bot for [WakaTime](https://wakatime.com) programming metrics. Currently can only run in a single discord server at a time.
-
+[Click Here](https://discord.com/oauth2/authorize?client_id=955935991087128596&permissions=274878036992&scope=bot%20applications.commands) To add to your server.
 ## Compilation & Execution
 
 ### Requirements
