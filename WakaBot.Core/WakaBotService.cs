@@ -108,7 +108,7 @@ namespace WakaBot.Core
             services.AddHttpClient<WakaTime>(c => c.BaseAddress = new Uri("https://wakatime.com/api/v1/"))
                 .AddHttpMessageHandler<WakaTimeCacheHandler>();
 
-            services.AddSingleton<WakaTimeCacheHandler>();
+            services.AddTransient<WakaTimeCacheHandler>();
 
             return services.BuildServiceProvider();
         }
