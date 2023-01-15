@@ -59,7 +59,7 @@ public class ComponentModule : InteractionModuleBase<SocketInteractionContext>
 
         userStats = userStats.OrderByDescending(stat => stat.data.total_seconds)
             .Take(_maxUsersPerPage).ToArray();
-        await UpdatePage(page, messageId, userStats.ToList(), maxPages);
+        await UpdatePage(page, messageId, userStats.ToList(), maxPages, oAuthOnly);
     }
 
     /// <summary>
@@ -90,7 +90,7 @@ public class ComponentModule : InteractionModuleBase<SocketInteractionContext>
 
         userStats = userStats.OrderByDescending(stat => stat.data.total_seconds)
             .Skip(page * _maxUsersPerPage).Take(_maxUsersPerPage).ToArray();
-        await UpdatePage(page, messageId, userStats.ToList(), maxPages);
+        await UpdatePage(page, messageId, userStats.ToList(), maxPages, oAuthOnly);
     }
 
     /// <summary>
@@ -121,7 +121,7 @@ public class ComponentModule : InteractionModuleBase<SocketInteractionContext>
 
         userStats = userStats.OrderByDescending(stat => stat.data.total_seconds)
             .Skip(page * _maxUsersPerPage).Take(_maxUsersPerPage).ToArray();
-        await UpdatePage(page, messageId, userStats.ToList(), maxPages);
+        await UpdatePage(page, messageId, userStats.ToList(), maxPages, oAuthOnly);
     }
 
     /// <summary>
@@ -151,7 +151,7 @@ public class ComponentModule : InteractionModuleBase<SocketInteractionContext>
 
         userStats = userStats.OrderByDescending(stat => stat.data.total_seconds)
             .Skip(_maxUsersPerPage * page).ToArray();
-        await UpdatePage(page, messageId, userStats.ToList(), maxPages);
+        await UpdatePage(page, messageId, userStats.ToList(), maxPages, oAuthOnly);
     }
 
     /// <summary>
@@ -161,7 +161,7 @@ public class ComponentModule : InteractionModuleBase<SocketInteractionContext>
     /// <param name="messageId">Id of message to be edited</param>
     /// <param name="userStats">Users to be shown in table.</param>
     /// <param name="maxPages">Total number of existing pages.</param>
-    public async Task UpdatePage(int page, ulong messageId, List<RootStat> userStats, int maxPages)
+    public async Task UpdatePage(int page, ulong messageId, List<RootStat> userStats, int maxPages, bool oAuthOnly)
     {
         var fields = new List<EmbedFieldBuilder>();
 
@@ -200,10 +200,10 @@ public class ComponentModule : InteractionModuleBase<SocketInteractionContext>
 
             msg.Components = new ComponentBuilder()
                 /// operations: (page number), (message id)
-                .WithButton("⏮️", $"rank-first:{page},{messageId}", disabled: page <= 0)
-                .WithButton("◀️", $"rank-previous:{page},{messageId}", disabled: page <= 0)
-                .WithButton("▶️", $"rank-next:{page},{messageId}", disabled: page >= maxPages - 1)
-                .WithButton("⏭️", $"rank-last:{page},{messageId}", disabled: page >= maxPages - 1)
+                .WithButton("⏮️", $"rank-first:{page},{messageId},{oAuthOnly}", disabled: page <= 0)
+                .WithButton("◀️", $"rank-previous:{page},{messageId},{oAuthOnly}", disabled: page <= 0)
+                .WithButton("▶️", $"rank-next:{page},{messageId},{oAuthOnly}", disabled: page >= maxPages - 1)
+                .WithButton("⏭️", $"rank-last:{page},{messageId},{oAuthOnly}", disabled: page >= maxPages - 1)
                 .Build();
         });
     }
