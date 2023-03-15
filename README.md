@@ -47,6 +47,7 @@ In your WakaBot directory you need to create an `appsettings.json` and fill it w
   "guildId": "required",
   "dBPath": "optional",
   "dBFileName": "optional",
+  "dBType": "required, postgres/sqlite",
   "colourURL": "optional",
   "maxUsersPerPage": "optional",
   "alwaysCacheUsers": "optional"

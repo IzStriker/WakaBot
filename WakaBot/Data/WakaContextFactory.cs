@@ -22,11 +22,21 @@ public class WakaContextFactory : IDesignTimeDbContextFactory<WakaContext>
             .AddJsonFile("appsettings.json", optional: false)
             .Build();
 
+        string dbType = configuration["dBType"] ?? "sqlite";
         string dbPath = Path.Join(configuration!["dBPath"] ?? AppContext.BaseDirectory,
             configuration["dBFileName"] ?? "waka.db");
 
         var optionsBuilder = new DbContextOptionsBuilder<WakaContext>();
-        optionsBuilder.UseSqlite($"Data Source={dbPath}");
+
+        switch (dbType)
+        {
+            case "postgres":
+               optionsBuilder.UseNpgsql($"Data Source={dbPath}");
+               break;
+            case "sqlite":
+               optionsBuilder.UseSqlite($"Data Source={dbPath}");
+               break;
+        }
         return new WakaContext(optionsBuilder.Options);
     }
 
