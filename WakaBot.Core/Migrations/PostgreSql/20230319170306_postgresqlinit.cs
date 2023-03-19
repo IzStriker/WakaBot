@@ -1,11 +1,12 @@
 ﻿using System;
 using Microsoft.EntityFrameworkCore.Migrations;
+using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace WakaBot.Core.Migrations
+namespace WakaBot.Core.Migrations.PostgreSql
 {
-    public partial class modelRefactor : Migration
+    public partial class postgresqlinit : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
@@ -13,44 +14,52 @@ namespace WakaBot.Core.Migrations
                 name: "DiscordGuilds",
                 columns: table => new
                 {
-                    Id = table.Column<ulong>(type: "bigint unsigned", nullable: false)
+                    Id = table.Column<decimal>(type: "numeric(20,0)", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_DiscordGuilds", x => x.Id);
-                })
-                .Annotation("MySql:CharSet", "utf8mb4");
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Users",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    DiscordId = table.Column<decimal>(type: "numeric(20,0)", nullable: false),
+                    WakaName = table.Column<string>(type: "text", nullable: false),
+                    GuildId = table.Column<decimal>(type: "numeric(20,0)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Users", x => x.Id);
+                });
 
             migrationBuilder.CreateTable(
                 name: "WakaUsers",
                 columns: table => new
                 {
-                    Id = table.Column<string>(type: "varchar(95)", nullable: false)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    Username = table.Column<string>(type: "longtext", nullable: false)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    usingOAuth = table.Column<bool>(type: "tinyint(1)", nullable: false),
-                    AccessToken = table.Column<string>(type: "longtext", nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    RefreshToken = table.Column<string>(type: "longtext", nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    ExpiresAt = table.Column<DateTime>(type: "datetime(6)", nullable: true),
-                    Scope = table.Column<string>(type: "longtext", nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4")
+                    Id = table.Column<string>(type: "text", nullable: false),
+                    Username = table.Column<string>(type: "text", nullable: false),
+                    usingOAuth = table.Column<bool>(type: "boolean", nullable: false),
+                    AccessToken = table.Column<string>(type: "text", nullable: true),
+                    RefreshToken = table.Column<string>(type: "text", nullable: true),
+                    ExpiresAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    Scope = table.Column<string>(type: "text", nullable: true),
+                    State = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_WakaUsers", x => x.Id);
-                })
-                .Annotation("MySql:CharSet", "utf8mb4");
+                });
 
             migrationBuilder.CreateTable(
                 name: "DiscordUsers",
                 columns: table => new
                 {
-                    Id = table.Column<ulong>(type: "bigint unsigned", nullable: false),
-                    WakaUserId = table.Column<string>(type: "varchar(95)", nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4")
+                    Id = table.Column<decimal>(type: "numeric(20,0)", nullable: false),
+                    WakaUserId = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -60,15 +69,14 @@ namespace WakaBot.Core.Migrations
                         column: x => x.WakaUserId,
                         principalTable: "WakaUsers",
                         principalColumn: "Id");
-                })
-                .Annotation("MySql:CharSet", "utf8mb4");
+                });
 
             migrationBuilder.CreateTable(
                 name: "DiscordGuildDiscordUser",
                 columns: table => new
                 {
-                    GuildsId = table.Column<ulong>(type: "bigint unsigned", nullable: false),
-                    UsersId = table.Column<ulong>(type: "bigint unsigned", nullable: false)
+                    GuildsId = table.Column<decimal>(type: "numeric(20,0)", nullable: false),
+                    UsersId = table.Column<decimal>(type: "numeric(20,0)", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -85,8 +93,7 @@ namespace WakaBot.Core.Migrations
                         principalTable: "DiscordUsers",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
-                })
-                .Annotation("MySql:CharSet", "utf8mb4");
+                });
 
             migrationBuilder.CreateIndex(
                 name: "IX_DiscordGuildDiscordUser_UsersId",
@@ -98,17 +105,15 @@ namespace WakaBot.Core.Migrations
                 table: "DiscordUsers",
                 column: "WakaUserId",
                 unique: true);
-
-            // move data from User Table into DiscordUser, DiscordGuild, and DiscordGuildDiscordUser tables
-            migrationBuilder.Sql("INSERT INTO DiscordUsers (Id) SELECT DISTINCT DiscordId FROM Users;");
-            migrationBuilder.Sql("INSERT INTO DiscordGuilds (Id) SELECT DISTINCT GuildId FROM Users;");
-            migrationBuilder.Sql("INSERT INTO DiscordGuildDiscordUser (GuildsId, UsersId) SELECT GuildId, DiscordId FROM Users;");
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
                 name: "DiscordGuildDiscordUser");
+
+            migrationBuilder.DropTable(
+                name: "Users");
 
             migrationBuilder.DropTable(
                 name: "DiscordGuilds");

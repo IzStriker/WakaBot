@@ -13,6 +13,16 @@ public class WakaContextFactory : IDesignTimeDbContextFactory<WakaContext>
     /// Create instance of WakaTime DBContext
     /// </summary>
     /// <returns>Instance of DBContext</returns>
-    public WakaContext CreateDbContext(string[] args) => new WakaContext();
+    public WakaContext CreateDbContext(string[] args)
+    {
+        var config = new ConfigurationBuilder()
+            .SetBasePath(AppContext.BaseDirectory)
+            .AddEnvironmentVariables()
+            .AddJsonFile("appsettings.json", optional: true)
+            .AddEnvironmentVariables("DOTNET_")
+            .Build();
+
+        return DatabaseHelper.GetContext(config);
+    }
 
 }
