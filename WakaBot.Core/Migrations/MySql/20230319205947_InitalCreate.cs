@@ -1,65 +1,79 @@
 ﻿using System;
+using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
-using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace WakaBot.Core.Migrations.PostgreSql
+namespace WakaBot.Core.Migrations.MySql
 {
-    public partial class postgresqlinit : Migration
+    public partial class InitalCreate : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.AlterDatabase()
+                .Annotation("MySql:CharSet", "utf8mb4");
+
             migrationBuilder.CreateTable(
                 name: "DiscordGuilds",
                 columns: table => new
                 {
-                    Id = table.Column<decimal>(type: "numeric(20,0)", nullable: false)
+                    Id = table.Column<ulong>(type: "bigint unsigned", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_DiscordGuilds", x => x.Id);
-                });
+                })
+                .Annotation("MySql:CharSet", "utf8mb4");
 
             migrationBuilder.CreateTable(
                 name: "Users",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "integer", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    DiscordId = table.Column<decimal>(type: "numeric(20,0)", nullable: false),
-                    WakaName = table.Column<string>(type: "text", nullable: false),
-                    GuildId = table.Column<decimal>(type: "numeric(20,0)", nullable: false)
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
+                    DiscordId = table.Column<ulong>(type: "bigint unsigned", nullable: false),
+                    WakaName = table.Column<string>(type: "longtext", nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    GuildId = table.Column<ulong>(type: "bigint unsigned", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Users", x => x.Id);
-                });
+                })
+                .Annotation("MySql:CharSet", "utf8mb4");
 
             migrationBuilder.CreateTable(
                 name: "WakaUsers",
                 columns: table => new
                 {
-                    Id = table.Column<string>(type: "text", nullable: false),
-                    Username = table.Column<string>(type: "text", nullable: false),
-                    usingOAuth = table.Column<bool>(type: "boolean", nullable: false),
-                    AccessToken = table.Column<string>(type: "text", nullable: true),
-                    RefreshToken = table.Column<string>(type: "text", nullable: true),
-                    ExpiresAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    Scope = table.Column<string>(type: "text", nullable: true),
-                    State = table.Column<string>(type: "text", nullable: true)
+                    Id = table.Column<string>(type: "varchar(95)", nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    Username = table.Column<string>(type: "longtext", nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    usingOAuth = table.Column<bool>(type: "tinyint(1)", nullable: false),
+                    AccessToken = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    RefreshToken = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    ExpiresAt = table.Column<DateTime>(type: "datetime(6)", nullable: true),
+                    Scope = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    State = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4")
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_WakaUsers", x => x.Id);
-                });
+                })
+                .Annotation("MySql:CharSet", "utf8mb4");
 
             migrationBuilder.CreateTable(
                 name: "DiscordUsers",
                 columns: table => new
                 {
-                    Id = table.Column<decimal>(type: "numeric(20,0)", nullable: false),
-                    WakaUserId = table.Column<string>(type: "text", nullable: true)
+                    Id = table.Column<ulong>(type: "bigint unsigned", nullable: false),
+                    WakaUserId = table.Column<string>(type: "varchar(95)", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4")
                 },
                 constraints: table =>
                 {
@@ -69,14 +83,15 @@ namespace WakaBot.Core.Migrations.PostgreSql
                         column: x => x.WakaUserId,
                         principalTable: "WakaUsers",
                         principalColumn: "Id");
-                });
+                })
+                .Annotation("MySql:CharSet", "utf8mb4");
 
             migrationBuilder.CreateTable(
                 name: "DiscordGuildDiscordUser",
                 columns: table => new
                 {
-                    GuildsId = table.Column<decimal>(type: "numeric(20,0)", nullable: false),
-                    UsersId = table.Column<decimal>(type: "numeric(20,0)", nullable: false)
+                    GuildsId = table.Column<ulong>(type: "bigint unsigned", nullable: false),
+                    UsersId = table.Column<ulong>(type: "bigint unsigned", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -93,7 +108,8 @@ namespace WakaBot.Core.Migrations.PostgreSql
                         principalTable: "DiscordUsers",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
-                });
+                })
+                .Annotation("MySql:CharSet", "utf8mb4");
 
             migrationBuilder.CreateIndex(
                 name: "IX_DiscordGuildDiscordUser_UsersId",

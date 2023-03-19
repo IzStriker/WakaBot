@@ -12,8 +12,8 @@ using WakaBot.Core.Data;
 namespace WakaBot.Core.Migrations.PostgreSql
 {
     [DbContext(typeof(PostgreSqlContext))]
-    [Migration("20230319170306_postgresqlinit")]
-    partial class postgresqlinit
+    [Migration("20230319210044_InitalCreate")]
+    partial class InitalCreate
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {

@@ -11,8 +11,8 @@ using WakaBot.Core.Data;
 namespace WakaBot.Core.Migrations.MySql
 {
     [DbContext(typeof(MySqlContext))]
-    [Migration("20230319164644_mysqlinit")]
-    partial class mysqlinit
+    [Migration("20230319205947_InitalCreate")]
+    partial class InitalCreate
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {

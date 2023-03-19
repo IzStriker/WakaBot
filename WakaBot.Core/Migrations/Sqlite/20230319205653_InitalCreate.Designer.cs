@@ -11,8 +11,8 @@ using WakaBot.Core.Data;
 namespace WakaBot.Core.Migrations.Sqlite
 {
     [DbContext(typeof(SqliteContext))]
-    [Migration("20230319162547_sqliteInit")]
-    partial class sqliteInit
+    [Migration("20230319205653_InitalCreate")]
+    partial class InitalCreate
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
