@@ -62,9 +62,7 @@ public class UserModule : InteractionModuleBase<SocketInteractionContext>
     public async Task DeregisterUser(IUser discordUser)
     {
         await DeferAsync(ephemeral: true);
-
-        var guild = _wakaContext.DiscordGuilds.Include(x => x.Users)
-            .FirstOrDefault(x => x.Id == Context.Guild.Id);
+        var guild = _wakaContext.DiscordGuilds.Find(Context.Guild.Id);
         var user = guild?.Users.FirstOrDefault(x => x.Id == discordUser.Id);
 
 
