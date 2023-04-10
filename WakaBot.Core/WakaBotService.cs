@@ -24,7 +24,7 @@ namespace WakaBot.Core
             AlwaysDownloadUsers = true,
         };
 
-        public WakaBotService(MessageQueue queue)
+        public WakaBotService(MessageQueue queue, string[] args)
         {
             _queue = queue;
         }
