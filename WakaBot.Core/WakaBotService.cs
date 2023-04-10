@@ -6,8 +6,8 @@ using WakaBot.Core.Data;
 using WakaBot.Core.Graphs;
 using WakaBot.Core.Services;
 using WakaBot.Core.WakaTimeAPI;
-using WakaBot.Core.OAuth2;
 using WakaBot.Core.MessageBroker;
+using Microsoft.EntityFrameworkCore;
 
 namespace WakaBot.Core
 {
@@ -24,7 +24,7 @@ namespace WakaBot.Core
             AlwaysDownloadUsers = true,
         };
 
-        public WakaBotService(MessageQueue queue)
+        public WakaBotService(MessageQueue queue, string[] args)
         {
             _queue = queue;
         }
@@ -38,19 +38,7 @@ namespace WakaBot.Core
 
             try
             {
-                var env = Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT");
-                var config = new ConfigurationBuilder();
-                config.SetBasePath(AppContext.BaseDirectory);
-                config.AddJsonFile("appsettings.json", optional: true);
-
-                if (env != "Production")
-                {
-                    config.AddJsonFile("logconfig.json", optional: true);
-                }
-
-                config.AddEnvironmentVariables("DOTNET_");
-                _configuration = config.Build();
-
+                _configuration = ConfigManager.Configuration;
             }
             catch (FileNotFoundException e)
             {
@@ -97,7 +85,24 @@ namespace WakaBot.Core
             services.AddSingleton(_socketConfig);
             services.AddSingleton<IConfiguration>(_configuration!);
             services.AddSingleton(x => new GraphGenerator(_configuration!["colourURL"]));
-            services.AddDbContextFactory<WakaContext>();
+            services.AddDbContextFactory<WakaContext>(opt =>
+            {
+                var provider = _configuration!["databaseProvider"];
+                switch (provider?.ToLower())
+                {
+                    case "sqlite":
+                        opt.UseSqlite(_configuration!.GetConnectionString("Sqlite"));
+                        break;
+                    case "mysql":
+                        opt.UseMySql(_configuration.GetConnectionString("MySql"), new MySqlServerVersion(new Version(5, 7)));
+                        break;
+                    case "postgresql":
+                        opt.UseNpgsql(_configuration!.GetConnectionString("PostgreSql"));
+                        break;
+                    default:
+                        throw new ArgumentException("Invalid database provider specified in appsettings.json");
+                }
+            });
             services.AddTransient<WakaTime>();
             services.AddSingleton(_queue!);
             services.AddSingleton<SubscriptionHandler>();

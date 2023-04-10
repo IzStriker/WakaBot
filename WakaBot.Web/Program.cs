@@ -15,6 +15,8 @@ var client = new OAuth2Client(builder.Configuration);
 var stopwatch = Stopwatch.StartNew();
 var app = builder.Build();
 
+app.UseHttpLogging();
+
 app.MapGet("/", () =>
 {
     return "Up time is " + stopwatch.Elapsed;

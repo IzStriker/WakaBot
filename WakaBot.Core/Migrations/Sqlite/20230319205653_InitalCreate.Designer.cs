@@ -8,26 +8,24 @@ using WakaBot.Core.Data;
 
 #nullable disable
 
-namespace WakaBot.Core.Migrations
+namespace WakaBot.Core.Migrations.Sqlite
 {
-    [DbContext(typeof(WakaContext))]
-    [Migration("20221230170124_oAuthState")]
-    partial class oAuthState
+    [DbContext(typeof(SqliteContext))]
+    [Migration("20230319205653_InitalCreate")]
+    partial class InitalCreate
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
-            modelBuilder
-                .HasAnnotation("ProductVersion", "6.0.7")
-                .HasAnnotation("Relational:MaxIdentifierLength", 64);
+            modelBuilder.HasAnnotation("ProductVersion", "6.0.15");
 
             modelBuilder.Entity("DiscordGuildDiscordUser", b =>
                 {
                     b.Property<ulong>("GuildsId")
-                        .HasColumnType("bigint unsigned");
+                        .HasColumnType("INTEGER");
 
                     b.Property<ulong>("UsersId")
-                        .HasColumnType("bigint unsigned");
+                        .HasColumnType("INTEGER");
 
                     b.HasKey("GuildsId", "UsersId");
 
@@ -39,7 +37,7 @@ namespace WakaBot.Core.Migrations
             modelBuilder.Entity("WakaBot.Core.Models.DiscordGuild", b =>
                 {
                     b.Property<ulong>("Id")
-                        .HasColumnType("bigint unsigned");
+                        .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
 
@@ -49,10 +47,10 @@ namespace WakaBot.Core.Migrations
             modelBuilder.Entity("WakaBot.Core.Models.DiscordUser", b =>
                 {
                     b.Property<ulong>("Id")
-                        .HasColumnType("bigint unsigned");
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("WakaUserId")
-                        .HasColumnType("varchar(95)");
+                        .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 
@@ -66,17 +64,17 @@ namespace WakaBot.Core.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("INTEGER");
 
                     b.Property<ulong>("DiscordId")
-                        .HasColumnType("bigint unsigned");
+                        .HasColumnType("INTEGER");
 
                     b.Property<ulong>("GuildId")
-                        .HasColumnType("bigint unsigned");
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("WakaName")
                         .IsRequired()
-                        .HasColumnType("longtext");
+                        .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 
@@ -86,29 +84,29 @@ namespace WakaBot.Core.Migrations
             modelBuilder.Entity("WakaBot.Core.Models.WakaUser", b =>
                 {
                     b.Property<string>("Id")
-                        .HasColumnType("varchar(95)");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("AccessToken")
-                        .HasColumnType("longtext");
+                        .HasColumnType("TEXT");
 
                     b.Property<DateTime?>("ExpiresAt")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("RefreshToken")
-                        .HasColumnType("longtext");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("Scope")
-                        .HasColumnType("longtext");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("State")
-                        .HasColumnType("longtext");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("Username")
                         .IsRequired()
-                        .HasColumnType("longtext");
+                        .HasColumnType("TEXT");
 
                     b.Property<bool>("usingOAuth")
-                        .HasColumnType("tinyint(1)");
+                        .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
 

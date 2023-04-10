@@ -2,21 +2,23 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using WakaBot.Core.Data;
 
 #nullable disable
 
-namespace WakaBot.Core.Migrations
+namespace WakaBot.Core.Migrations.MySql
 {
-    [DbContext(typeof(WakaContext))]
-    partial class WakaContextModelSnapshot : ModelSnapshot
+    [DbContext(typeof(MySqlContext))]
+    [Migration("20230319205947_InitalCreate")]
+    partial class InitalCreate
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "6.0.7")
+                .HasAnnotation("ProductVersion", "6.0.15")
                 .HasAnnotation("Relational:MaxIdentifierLength", 64);
 
             modelBuilder.Entity("DiscordGuildDiscordUser", b =>

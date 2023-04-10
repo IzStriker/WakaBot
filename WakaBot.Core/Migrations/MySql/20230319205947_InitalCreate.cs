@@ -1,14 +1,18 @@
 ﻿using System;
+using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace WakaBot.Core.Migrations
+namespace WakaBot.Core.Migrations.MySql
 {
-    public partial class modelRefactor : Migration
+    public partial class InitalCreate : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.AlterDatabase()
+                .Annotation("MySql:CharSet", "utf8mb4");
+
             migrationBuilder.CreateTable(
                 name: "DiscordGuilds",
                 columns: table => new
@@ -18,6 +22,23 @@ namespace WakaBot.Core.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_DiscordGuilds", x => x.Id);
+                })
+                .Annotation("MySql:CharSet", "utf8mb4");
+
+            migrationBuilder.CreateTable(
+                name: "Users",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
+                    DiscordId = table.Column<ulong>(type: "bigint unsigned", nullable: false),
+                    WakaName = table.Column<string>(type: "longtext", nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    GuildId = table.Column<ulong>(type: "bigint unsigned", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Users", x => x.Id);
                 })
                 .Annotation("MySql:CharSet", "utf8mb4");
 
@@ -36,6 +57,8 @@ namespace WakaBot.Core.Migrations
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     ExpiresAt = table.Column<DateTime>(type: "datetime(6)", nullable: true),
                     Scope = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    State = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4")
                 },
                 constraints: table =>
@@ -98,17 +121,15 @@ namespace WakaBot.Core.Migrations
                 table: "DiscordUsers",
                 column: "WakaUserId",
                 unique: true);
-
-            // move data from User Table into DiscordUser, DiscordGuild, and DiscordGuildDiscordUser tables
-            migrationBuilder.Sql("INSERT INTO DiscordUsers (Id) SELECT DISTINCT DiscordId FROM Users;");
-            migrationBuilder.Sql("INSERT INTO DiscordGuilds (Id) SELECT DISTINCT GuildId FROM Users;");
-            migrationBuilder.Sql("INSERT INTO DiscordGuildDiscordUser (GuildsId, UsersId) SELECT GuildId, DiscordId FROM Users;");
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
                 name: "DiscordGuildDiscordUser");
+
+            migrationBuilder.DropTable(
+                name: "Users");
 
             migrationBuilder.DropTable(
                 name: "DiscordGuilds");
