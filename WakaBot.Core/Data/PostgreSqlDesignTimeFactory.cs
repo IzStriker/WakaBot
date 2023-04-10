@@ -1,6 +1,7 @@
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
+using WakaBot.Core.Services;
 
 namespace WakaBot.Core.Data;
 
@@ -9,14 +10,7 @@ public class PostgreSqlDesignTimeFactory : IDesignTimeDbContextFactory<PostgreSq
 
     PostgreSqlContext IDesignTimeDbContextFactory<PostgreSqlContext>.CreateDbContext(string[] args)
     {
-
-        var config = new ConfigurationBuilder()
-            .SetBasePath(AppContext.BaseDirectory)
-            .AddEnvironmentVariables()
-            .AddJsonFile("appsettings.json", optional: true)
-            .AddEnvironmentVariables("DOTNET_")
-            .Build();
-
+        var config = ConfigManager.Configuration;
         return new PostgreSqlContext(new DbContextOptionsBuilder<WakaContext>().UseNpgsql(config.GetConnectionString("PostgreSql")).Options);
     }
 }

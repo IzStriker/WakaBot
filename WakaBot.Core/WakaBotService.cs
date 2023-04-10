@@ -6,7 +6,6 @@ using WakaBot.Core.Data;
 using WakaBot.Core.Graphs;
 using WakaBot.Core.Services;
 using WakaBot.Core.WakaTimeAPI;
-using WakaBot.Core.OAuth2;
 using WakaBot.Core.MessageBroker;
 using Microsoft.EntityFrameworkCore;
 
@@ -39,14 +38,7 @@ namespace WakaBot.Core
 
             try
             {
-                var env = Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT");
-                var config = new ConfigurationBuilder();
-                config.SetBasePath(AppContext.BaseDirectory);
-                config.AddJsonFile("appsettings.json", optional: true);
-                config.AddJsonFile("logconfig.json", optional: true);
-                config.AddEnvironmentVariables("DOTNET_");
-                _configuration = config.Build();
-
+                _configuration = ConfigManager.Configuration;
             }
             catch (FileNotFoundException e)
             {
