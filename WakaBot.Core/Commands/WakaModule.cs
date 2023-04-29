@@ -360,11 +360,11 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
     }
 
     [SlashCommand("project", "Get project stats")]
-    public async Task GetProjectStats(IUser user, TimeRange timeRange = TimeRange.AllTime)
+    public async Task GetProjectStats(IUser discordUser, TimeRange timeRange = TimeRange.AllTime)
     {
         await DeferAsync();
 
-        var wakaUser = _wakaContext.WakaUsers.FirstOrDefault(x => x.DiscordUser!.Id == user.Id);
+        var wakaUser = _wakaContext.WakaUsers.FirstOrDefault(x => x.DiscordUser!.Id == discordUser.Id);
 
         if (wakaUser == null)
         {
@@ -404,7 +404,7 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
 
         await FollowupWithFileAsync(new MemoryStream(graph), "graph.png", embed: new EmbedBuilder()
         {
-            Title = "Project Stats",
+            Title = $"Project Stats - {discordUser.Username}",
             Color = Color.Purple,
             Description = timeRange.GetDisplay(),
             Fields = fields,
