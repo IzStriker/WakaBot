@@ -10,4 +10,5 @@ public class WakaUser
     public DateTime? ExpiresAt { get; set; }
     public string? Scope { get; set; } = string.Empty;
     public string? State { get; set; } = string.Empty;
+    public DiscordUser? DiscordUser { get; set; }
 }

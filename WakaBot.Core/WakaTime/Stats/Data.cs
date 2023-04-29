@@ -2,12 +2,12 @@ namespace WakaBot.Core.WakaTimeAPI.Stats;
 
 public class Data
 {
-    public Category[] categories { get; set; } = new Category[] { };
+    public GeneralStat[] categories { get; set; } = new GeneralStat[] { };
     public float daily_average { get; set; }
     public float daily_average_including_other_language { get; set; }
     public int days_including_holidays { get; set; }
     public int days_minus_holidays { get; set; }
-    public Editor[] editors { get; set; } = new Editor[] { };
+    public GeneralStat[] editors { get; set; } = new GeneralStat[] { };
     public int holidays { get; set; }
     public string human_readable_daily_average { get; set; } = string.Empty;
     public string human_readable_daily_average_including_other_language { get; set; } = string.Empty;
@@ -21,8 +21,8 @@ public class Data
     public bool is_other_usage_visible { get; set; }
     public bool is_stuck { get; set; }
     public bool is_up_to_date { get; set; }
-    public Language[] languages { get; set; } = new Language[] { };
-    public OperatingSystem[] operating_systems { get; set; } = new OperatingSystem[] { };
+    public GeneralStat[] languages { get; set; } = new GeneralStat[] { };
+    public GeneralStat[] operating_systems { get; set; } = new GeneralStat[] { };
     public int percent_calculated { get; set; }
     public string range { get; set; } = string.Empty;
     public string status { get; set; } = string.Empty;
@@ -32,4 +32,5 @@ public class Data
     public string user_id { get; set; } = string.Empty;
     public string username { get; set; } = string.Empty;
     public bool writes_only { get; set; }
+    public GeneralStat[] projects { get; set; } = new GeneralStat[] { };
 }
