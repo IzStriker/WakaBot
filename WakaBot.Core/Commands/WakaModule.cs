@@ -359,6 +359,58 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
 
     }
 
+    [SlashCommand("project", "Get project stats")]
+    public async Task GetProjectStats(IUser user, TimeRange timeRange = TimeRange.AllTime)
+    {
+        await DeferAsync();
+
+        var wakaUser = _wakaContext.WakaUsers.FirstOrDefault(x => x.DiscordUser!.Id == user.Id);
+
+        if (wakaUser == null)
+        {
+            await FollowupAsync(embed: new EmbedBuilder()
+            {
+                Title = "Error",
+                Color = Color.Red,
+                Description = "User is not registered with WakaBot."
+            }.Build());
+            return;
+        }
+
+        // Projects are stats are only returned from the api when using oauth
+        if (!wakaUser?.usingOAuth ?? false)
+        {
+            await FollowupAsync(embed: new EmbedBuilder()
+            {
+                Title = "Error",
+                Color = Color.Red,
+                Description = "You must be registered using OAuth to use this feature."
+            }.Build());
+            return;
+        }
+
+        var stats = await _wakaTime.GetStatsAsync(wakaUser!, timeRange);
+        var fields = new List<EmbedFieldBuilder>();
+
+        var projects = stats.data.projects.OrderByDescending(project => project.total_seconds).Take(15);
+        var points = projects.Select(project => new DataPoint<double>(project.name, project.total_seconds)).ToArray();
+
+        var graph = _graphGenerator.GeneratePie(points);
+        for (int i = 0; i < projects.Count(); i++)
+        {
+            var project = projects.ElementAt(i);
+            fields.Add(CreateEmbedField($"#{i + 1} {project.name}", project.text, true));
+        }
+
+        await FollowupWithFileAsync(new MemoryStream(graph), "graph.png", embed: new EmbedBuilder()
+        {
+            Title = "Project Stats",
+            Color = Color.Purple,
+            Description = timeRange.GetDisplay(),
+            Fields = fields,
+        }.Build());
+    }
+
     /// <summary>
     /// Create pagination buttons for component. 
     /// </summary>
@@ -427,7 +479,7 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
     /// <param name="name">Name of the embedded filed</param>
     /// <param name="values">Content of value from string</param>
     /// <returns>Safe embedded field builder</returns>
-    private EmbedFieldBuilder CreateEmbedField(string name, string value)
+    private EmbedFieldBuilder CreateEmbedField(string name, string value, bool inLine = false)
     {
         // value isn't empty
         if (value.Length == 0)
@@ -444,7 +496,8 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
         return new EmbedFieldBuilder()
         {
             Name = name,
-            Value = value
+            Value = value,
+            IsInline = inLine
         };
     }
 

@@ -1,6 +1,5 @@
 namespace WakaBot.Core.WakaTimeAPI.Stats;
-
-public class Editor
+public class GeneralStat
 {
     public string @decimal { get; set; } = string.Empty;
     public string digital { get; set; } = string.Empty;
