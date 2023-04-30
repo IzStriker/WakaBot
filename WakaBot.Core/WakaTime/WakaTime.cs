@@ -106,7 +106,7 @@ public class WakaTime : OAuth2Client
             throw new Exception($"User {user.Id} has invalid authentication tokens");
         }
 
-        var response = await _client.GetAsync($"users/current/stats/{range.GetValue()}", user.AccessToken);
+        var response = await _client.GetAsync($"users/{user.Username}/stats/{range.GetValue()}", user.AccessToken);
         if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
         {
             _logger.LogError($"Invalid Access Token, {user.Username}");
