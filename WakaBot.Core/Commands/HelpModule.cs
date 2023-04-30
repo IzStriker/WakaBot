@@ -13,7 +13,7 @@ public class HelpModule : InteractionModuleBase<SocketInteractionContext>
             new EmbedFieldBuilder()
             {
                 Name = "Hello 👋",
-                Value = "Hi, I'm WakaBot. I use data [WakaTime](https://wakatime.com) to " +
+                Value = "Hi, I'm WakaBot. I use [WakaTime](https://wakatime.com) data to " +
                 "compare programming metrics of registered discord users."
             },
             new EmbedFieldBuilder()
