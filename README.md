@@ -12,12 +12,12 @@ Cross Platform Discord bot for [WakaTime](https://wakatime.com) programming metr
 
 Signing up using OAuth is optional but allows the Wakabot to access more information about your WakaTime account such as projects and get specific time ranges. To sign up using OAuth, use the `/user register` command, set useOAuth to true and command and follow the instructions.
 
-
 ### Commands
 
 #### /Rank [timerange: All Time | Last 7 Days | Last 30 Days | Last 6 Months] default All Time
 
 Shows the rank of the top users in terms of programming time in your discord server with accompanying pie chart. You can optionally specify a time range option which will show the rank of the top users in that time range. To use the time range option, have signed up using OAuth.
+
 <img src="Images/Rank.png" alt="Rank Command" style="height: 300px;" />
 
 #### /toplangs
@@ -47,7 +47,6 @@ Shows the top projects of a user in your discord server with an accompanying pie
 #### /help
 
 Show the help menu.
-
 
 ### Discord Permissions
 
