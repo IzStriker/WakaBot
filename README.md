@@ -4,7 +4,7 @@
 
 # WakaBot
 
-Cross Platform Discord bot for [WakaTime](https://wakatime.com) programming metrics. Currently can only run in a single discord server at a time.
+Cross Platform Discord bot for [WakaTime](https://wakatime.com) programming metrics.
 
 ### Getting Started
 
