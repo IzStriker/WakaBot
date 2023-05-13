@@ -17,6 +17,7 @@ public class ComponentModule : InteractionModuleBase<SocketInteractionContext>
     private readonly WakaContext _wakaContext;
     private readonly WakaTime _wakaTime;
     private readonly int _maxUsersPerPage;
+    private readonly ILogger<ComponentModule> _logger;
 
     /// <summary>
     /// Create instance of ComponentModule.
@@ -24,133 +25,67 @@ public class ComponentModule : InteractionModuleBase<SocketInteractionContext>
     /// <param name="wakaContext">Database context.</param>
     /// <param name="wakaTime">Instance of WakaTime class.</param>
     /// <param name="config">Instance of global configuration.</param>
-    public ComponentModule(WakaContext wakaContext, WakaTime wakaTime, IConfiguration config)
+    public ComponentModule(
+        WakaContext wakaContext,
+        WakaTime wakaTime,
+        IConfiguration config,
+        ILogger<ComponentModule> logger
+    )
     {
         _wakaContext = wakaContext;
         _wakaTime = wakaTime;
         _maxUsersPerPage = config["maxUsersPerPage"] != null
-            ? config.GetValue<int>("maxUsersPerPage") : 3;
+            ? config.GetValue<int>("maxUsersPerPage") : 2;
+        _logger = logger;
     }
 
-    /// <summary>
-    /// Select first page of rank table.
-    /// </summary>
-    /// <param name="page">Current page number.</param>
-    /// <param name="messageId">Id of rank table message.</param>
-    [ComponentInteraction("rank-first:*,*,*")]
-    public async Task RankFirst(int page, ulong messageId, bool oAuthOnly)
+    [ComponentInteraction("rank-*:*,*,*")]
+    public async Task HandlePagination(string operation, int page, ulong messageId, bool oAuthOnly)
     {
         await DeferAsync();
 
-        var users = _wakaContext.DiscordGuilds.Include(x => x.Users).ThenInclude(x => x.WakaUser)
+        var users = _wakaContext
+            .DiscordGuilds
+            .Include(x => x.Users)
+            .ThenInclude(x => x.WakaUser)
             .FirstOrDefault(guild => guild.Id == Context.Guild.Id)?.Users;
 
         if (users == null || users.Count() == 0)
+        {
+            _logger.LogWarning("No users found in guild {guildId}", Context.Guild.Id);
             return;
+        }
 
         if (oAuthOnly)
+        {
             users = users.Where(user => user.WakaUser != null && user.WakaUser.usingOAuth).ToList();
+        }
 
         int maxPages = (int)Math.Ceiling(users.Count() / (decimal)_maxUsersPerPage);
-        page = 0;
+
+        switch (operation)
+        {
+            case "first":
+                page = 0;
+                break;
+            case "next":
+                page++;
+                break;
+            case "previous":
+                page--;
+                break;
+            case "last":
+                page = maxPages - 1;
+                break;
+        }
 
         var statsTasks = users.Select(user => _wakaTime.GetStatsAsync(user.WakaUser!.Username));
         var userStats = await Task.WhenAll(statsTasks);
 
         userStats = userStats.OrderByDescending(stat => stat.data.total_seconds)
-            .Take(_maxUsersPerPage).ToArray();
-        await UpdatePage(page, messageId, userStats.ToList(), maxPages, oAuthOnly);
-    }
-
-    /// <summary>
-    /// Select previous page of rank table.
-    /// </summary>
-    /// <param name="page">Current page number.</param>
-    /// <param name="messageId">Id of rank table message.</param>
-    [ComponentInteraction("rank-previous:*,*,*")]
-    public async Task RankPrevious(int page, ulong messageId, bool oAuthOnly)
-    {
-        await DeferAsync();
-
-        var users = _wakaContext.DiscordGuilds.Include(x => x.Users).ThenInclude(x => x.WakaUser)
-            .FirstOrDefault(guild => guild.Id == Context.Guild.Id)?.Users;
-
-        if (users == null || users.Count() == 0)
-            return;
-
-        if (oAuthOnly)
-            users = users.Where(user => user.WakaUser != null && user.WakaUser.usingOAuth).ToList();
-
-        int maxPages = (int)Math.Ceiling(users.Count() / (decimal)_maxUsersPerPage);
-
-        page--;
-
-        var statsTasks = users.Select(user => _wakaTime.GetStatsAsync(user.WakaUser!.Username));
-        var userStats = await Task.WhenAll(statsTasks);
-
-        userStats = userStats.OrderByDescending(stat => stat.data.total_seconds)
-            .Skip(page * _maxUsersPerPage).Take(_maxUsersPerPage).ToArray();
-        await UpdatePage(page, messageId, userStats.ToList(), maxPages, oAuthOnly);
-    }
-
-    /// <summary>
-    /// Select next page of rank table.
-    /// </summary>
-    /// <param name="page">Current page number.</param>
-    /// <param name="messageId">Id of rank table message.</param>
-    [ComponentInteraction("rank-next:*,*,*")]
-    public async Task RankNext(int page, ulong messageId, bool oAuthOnly)
-    {
-        await DeferAsync();
-        var users = _wakaContext.DiscordGuilds.Include(x => x.Users).ThenInclude(x => x.WakaUser)
-            .FirstOrDefault(guild => guild.Id == Context.Guild.Id)?.Users;
-
-        if (users == null || users.Count() == 0)
-            return;
-
-        if (oAuthOnly)
-            users = users.Where(user => user.WakaUser != null && user.WakaUser.usingOAuth).ToList();
-
-        int maxPages = (int)Math.Ceiling(users.Count() / (decimal)_maxUsersPerPage);
-
-        page++;
-
-        var statsTasks = users.Select(user => _wakaTime.GetStatsAsync(user.WakaUser!.Username));
-
-        var userStats = await Task.WhenAll(statsTasks);
-
-        userStats = userStats.OrderByDescending(stat => stat.data.total_seconds)
-            .Skip(page * _maxUsersPerPage).Take(_maxUsersPerPage).ToArray();
-        await UpdatePage(page, messageId, userStats.ToList(), maxPages, oAuthOnly);
-    }
-
-    /// <summary>
-    /// Select last page of rank table.
-    /// </summary>
-    /// <param name="page">Current page number.</param>
-    /// <param name="messageId">Id of rank table message.</param>
-    [ComponentInteraction("rank-last:*,*,*")]
-    public async Task RankLast(int page, ulong messageId, bool oAuthOnly)
-    {
-        await DeferAsync();
-        var users = _wakaContext.DiscordGuilds.Include(x => x.Users).ThenInclude(x => x.WakaUser)
-            .FirstOrDefault(guild => guild.Id == Context.Guild.Id)?.Users;
-
-        if (users == null || users.Count() == 0)
-            return;
-
-        if (oAuthOnly)
-            users = users.Where(user => user.WakaUser != null && user.WakaUser.usingOAuth).ToList();
-
-        int maxPages = (int)Math.Ceiling(users.Count() / (decimal)_maxUsersPerPage);
-
-        page = maxPages - 1;
-
-        var statsTasks = users.Select(user => _wakaTime.GetStatsAsync(user.WakaUser!.Username));
-        var userStats = await Task.WhenAll(statsTasks);
-
-        userStats = userStats.OrderByDescending(stat => stat.data.total_seconds)
-            .Skip(_maxUsersPerPage * page).ToArray();
+            .Skip(_maxUsersPerPage * page)
+            .Take(_maxUsersPerPage)
+            .ToArray();
         await UpdatePage(page, messageId, userStats.ToList(), maxPages, oAuthOnly);
     }
 
