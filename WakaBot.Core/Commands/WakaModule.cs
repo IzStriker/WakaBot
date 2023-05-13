@@ -425,10 +425,10 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
     {
         return new ComponentBuilder()
         /// operations: (page number), (message id), (timeRange)
-        .WithButton("⏮️", $"rank-first:0,{messageId},{timeRange.ToString()}", disabled: true)
-        .WithButton("◀️", $"rank-previous:0,{messageId},{timeRange.ToString()}", disabled: true)
-        .WithButton("▶️", $"rank-next:0,{messageId},{timeRange.ToString()}", disabled: forwardDisabled)
-        .WithButton("⏭️", $"rank-last:0,{messageId},{timeRange.ToString()}", disabled: forwardDisabled)
+        .WithButton("⏮️", $"rank-first:0,{messageId},{timeRange}", disabled: true)
+        .WithButton("◀️", $"rank-previous:0,{messageId},{timeRange}", disabled: true)
+        .WithButton("▶️", $"rank-next:0,{messageId},{timeRange}", disabled: forwardDisabled)
+        .WithButton("⏭️", $"rank-last:0,{messageId},{timeRange}", disabled: forwardDisabled)
         .Build();
     }
 
