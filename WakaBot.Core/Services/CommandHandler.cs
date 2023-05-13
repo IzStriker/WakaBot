@@ -160,6 +160,7 @@ public class CommandHandler
         var time = DateTime.Now - arg2.Interaction.CreatedAt;
         if (!arg3.IsSuccess)
         {
+            arg2.Interaction.GetOriginalResponseAsync().ContinueWith(async (msg) => await msg.Result.DeleteAsync());
             _logger.LogError($"Command: {arg1.Name}");
             _logger.LogError(arg3.ErrorReason);
             var error = (ExecuteResult)arg3;

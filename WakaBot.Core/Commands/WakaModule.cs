@@ -130,7 +130,7 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
         byte[] image = _graphGenerator.GeneratePie(points.ToArray());
         int numPages = (int)Math.Ceiling(users.Count / (decimal)_maxUsersPerPage);
 
-        var message = await FollowupWithFileAsync(new MemoryStream(image), "graph.png", components: GetPaginationButtons(),
+        var message = await FollowupWithFileAsync(new MemoryStream(image), "graph.png", components: GetPaginationButtons(timeRange: timeRange),
             embed: new EmbedBuilder()
             {
                 Title = $"User Ranking {(timeRange != null ? "for " + timeRange.GetDisplay() : string.Empty)}",
@@ -140,7 +140,7 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
             }.Build()
         );
 
-        await ModifyOriginalResponseAsync(msg => msg.Components = GetPaginationButtons(message.Id, numPages <= 1));
+        await ModifyOriginalResponseAsync(msg => msg.Components = GetPaginationButtons(message.Id, numPages <= 1, timeRange));
     }
 
     /// <summary>
@@ -420,15 +420,15 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
     private MessageComponent GetPaginationButtons(
         ulong messageId = 0,
         bool forwardDisabled = false,
-        bool oAuthOnly = false
+        TimeRange? timeRange = null
     )
     {
         return new ComponentBuilder()
-        /// operations: (page number), (message id), (oAuthOnly)
-        .WithButton("⏮️", $"rank-first:0,{messageId},{oAuthOnly}", disabled: true)
-        .WithButton("◀️", $"rank-previous:0,{messageId},{oAuthOnly}", disabled: true)
-        .WithButton("▶️", $"rank-next:0,{messageId},{oAuthOnly}", disabled: forwardDisabled)
-        .WithButton("⏭️", $"rank-last:0,{messageId},{oAuthOnly}", disabled: forwardDisabled)
+        /// operations: (page number), (message id), (timeRange)
+        .WithButton("⏮️", $"rank-first:0,{messageId},{timeRange}", disabled: true)
+        .WithButton("◀️", $"rank-previous:0,{messageId},{timeRange}", disabled: true)
+        .WithButton("▶️", $"rank-next:0,{messageId},{timeRange}", disabled: forwardDisabled)
+        .WithButton("⏭️", $"rank-last:0,{messageId},{timeRange}", disabled: forwardDisabled)
         .Build();
     }
 
