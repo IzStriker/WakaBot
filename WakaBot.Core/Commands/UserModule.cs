@@ -231,23 +231,55 @@ public class UserModule : InteractionModuleBase<SocketInteractionContext>
     }
     private async Task RegisterOAuthUser(IUser discordUser, string wakaUser)
     {
-        // check if users exists
+        var guild = _wakaContext.DiscordGuilds.Include(x => x.Users).FirstOrDefault(x => x.Id == Context.Guild.Id);
         var user = _wakaContext.DiscordUsers.Include(x => x.WakaUser)
-        .FirstOrDefault(x => x.Id == discordUser.Id /*|| (x.WakaUser != null && x.WakaUser.Username == wakaUser)*/);
+        .FirstOrDefault(x => x.Id == discordUser.Id);
 
-        if (user != null &&
+        if (
+            user != null &&
             user.WakaUser != null &&
             user.WakaUser.usingOAuth &&
-            user.WakaUser.ExpiresAt > DateTime.Now)
+            user.WakaUser.ExpiresAt > DateTime.Now
+        )
         {
-            // if user is already registered using OAuth and refresh token is valid
-            await FollowupAsync(embed: new EmbedBuilder()
+            // if user already exists and is using OAuth and token is not expired
+            // check if user is already registered in guild else add user to guild
+            if (guild != null && guild.Users.FirstOrDefault(x => x.Id == user.Id) != null)
             {
-                Title = "User already registered",
-                Color = Color.Red,
-                Description = $"User {discordUser.Mention} **{wakaUser}**, already registered"
-            }.Build());
-            return;
+                await FollowupAsync(embed: new EmbedBuilder()
+                {
+                    Title = "User already registered",
+                    Color = Color.Red,
+                    Description = $"User {discordUser.Mention} **{wakaUser}**, already registered"
+                }.Build());
+                return;
+            }
+            else
+            {
+                if (guild == null)
+                {
+                    guild = new DiscordGuild()
+                    {
+                        Id = Context.Guild.Id,
+                    };
+                    guild.Users.Add(user);
+                    _wakaContext.DiscordGuilds.Add(guild);
+                }
+                else
+                {
+                    guild.Users.Add(user);
+                }
+                _wakaContext.SaveChanges();
+
+                await FollowupAsync(embed: new EmbedBuilder()
+                {
+                    Title = "User registered",
+                    Color = Color.Green,
+                    Description = $"User {discordUser.Mention} register as {wakaUser}"
+                }.Build()
+                );
+                return;
+            }
         }
         else if (user != null && user.WakaUser != null && user.WakaUser.usingOAuth && user.WakaUser.ExpiresAt < DateTime.Now)
         {
@@ -307,7 +339,6 @@ public class UserModule : InteractionModuleBase<SocketInteractionContext>
             };
         }
 
-        var guild = _wakaContext.DiscordGuilds.Include(x => x.Users).FirstOrDefault(x => x.Id == Context.Guild.Id);
         if (guild == null)
         {
             guild = new DiscordGuild()
