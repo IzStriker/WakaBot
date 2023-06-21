@@ -16,7 +16,7 @@ namespace WakaBot.Core.Commands;
 public class WakaModule : InteractionModuleBase<SocketInteractionContext>
 {
 
-    private readonly GraphGenerator _graphGenerator;
+    private readonly QuickChartGenerator _graphGenerator;
     private readonly WakaContext _wakaContext;
     private readonly WakaTime _wakaTime;
     private readonly int _maxUsersPerPage;
@@ -27,7 +27,7 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
     /// <param name="graphGenerator">Instance of graph generator class</param>
     /// <param name="wakaContext">Instance of database context.</param>/
     public WakaModule(
-        GraphGenerator graphGenerator,
+        QuickChartGenerator graphGenerator,
         WakaContext wakaContext,
         WakaTime wakaTime,
         IConfiguration config)
