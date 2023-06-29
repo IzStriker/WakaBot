@@ -5,8 +5,8 @@ namespace WakaBot.Core.Graphs;
 public abstract class GraphGenerator
 {
 
-    protected int Width => 650;
-    protected int Height => 650;
+    protected virtual int Width => 650;
+    protected virtual int Height => 650;
     protected Dictionary<string, Dictionary<string, string>> _colourMap;
 
     /// <summary>
