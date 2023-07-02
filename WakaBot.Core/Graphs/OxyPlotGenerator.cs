@@ -16,8 +16,6 @@ public class OxyPlotGenerator : GraphGenerator
         var plotModel = new PlotModel
         {
             TextColor = OxyColors.White,
-            DefaultFontSize = 30,
-
         };
 
         var seriesP1 = new PieSeries
@@ -27,13 +25,24 @@ public class OxyPlotGenerator : GraphGenerator
             StartAngle = 0,
             InsideLabelFormat = "",
             OutsideLabelFormat = "{1} {2:0}%",
-            EdgeRenderingMode = EdgeRenderingMode.PreferSpeed,
+            FontSize = 15,
         };
 
+        double total = dataPoints.Sum(point => point.value);
+        double other = 0;
         foreach (var point in dataPoints)
         {
-            seriesP1.Slices.Add(new PieSlice(point.label, point.value) { Fill = OxyColor.Parse(GetColour(point.label)) });
+            if (point.value / total < 0.01)
+            {
+                other += point.value;
+            }
+            else
+            {
+                seriesP1.Slices.Add(new PieSlice(point.label, point.value) { Fill = OxyColor.Parse(GetColour(point.label)) });
+            }
         }
+
+        seriesP1.Slices.Add(new PieSlice("Other", other) { Fill = OxyColor.Parse(GetColour("Other")) });
 
         plotModel.Series.Add(seriesP1);
 
