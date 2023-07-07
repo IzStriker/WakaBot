@@ -11,7 +11,7 @@ public class OxyPlotGenerator : GraphGenerator
     public OxyPlotGenerator(string url) : base(url)
     { }
 
-    public override byte[] GeneratePie(DataPoint<double>[] dataPoints)
+    public override byte[] GeneratePie(DataPoint<double>[] dataPoints, double otherThreshold = 0.01)
     {
         var plotModel = new PlotModel
         {
@@ -32,7 +32,7 @@ public class OxyPlotGenerator : GraphGenerator
         double other = 0;
         foreach (var point in dataPoints)
         {
-            if (point.value / total < 0.01)
+            if (point.value / total < otherThreshold)
             {
                 other += point.value;
             }

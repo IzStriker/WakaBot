@@ -49,8 +49,9 @@ public abstract class GraphGenerator
     /// Creates an image of a pie chart.
     /// </summary>
     /// <param name="dataPoints">Data used to create the chart.</param>
+    /// <param name="threshold">Percentage threshold for data points. (Can only be modified in abstract class not children classes)</param>       
     /// <returns></returns>
-    public abstract byte[] GeneratePie(DataPoint<double>[] dataPoints);
+    public abstract byte[] GeneratePie(DataPoint<double>[] dataPoints, double otherThreshold = 0.01);
 
     /// <summary>
     /// Creates an image of a stacked bar chart.

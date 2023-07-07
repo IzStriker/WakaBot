@@ -13,7 +13,7 @@ public class QuickChartGenerator : GraphGenerator
 
     private string DiscordBackgroundColour => "#36393f";
 
-    public override byte[] GeneratePie(DataPoint<double>[] dataPoints)
+    public override byte[] GeneratePie(DataPoint<double>[] dataPoints, double otherThreshold = 0)
     {
         Chart chart = new Chart()
         {
@@ -22,23 +22,38 @@ public class QuickChartGenerator : GraphGenerator
             Height = this.Height
         };
 
+        var total = dataPoints.Sum(point => point.value);
+        var other = 0.0;
         List<string> colours = new List<string>();
-        foreach (string label in dataPoints.Select(point => point.label))
+        List<DataPoint<double>> outputDataPoints = new List<DataPoint<double>>();
+
+        foreach (var point in dataPoints)
         {
-            colours.Add(GetColour(label));
+            if (point.value / total < otherThreshold)
+            {
+                other += point.value;
+            }
+            else
+            {
+                outputDataPoints.Add(point);
+                colours.Add(GetColour(point.label));
+            }
         }
+
+        colours.Add(GetColour("Other"));
+        outputDataPoints.Add(new DataPoint<double>("Other", other));
 
         var config = new
         {
             type = "outlabeledPie",
             data = new
             {
-                labels = dataPoints.Select(point => point.label),
+                labels = outputDataPoints.Select(point => point.label),
                 datasets = new[]
                 {
                     new
                     {
-                        data = dataPoints.Select(point => point.value),
+                        data = outputDataPoints.Select(point => point.value),
                         backgroundColor = colours
                     }
                 }
