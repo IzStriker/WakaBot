@@ -11,7 +11,12 @@ public class OxyPlotGenerator : GraphGenerator
     public OxyPlotGenerator(string url) : base(url)
     { }
 
-    public override byte[] GeneratePie(DataPoint<double>[] dataPoints, double otherThreshold = 0.01)
+    public override byte[] GeneratePie(DataPoint<double>[] dataPoints)
+    {
+        return GeneratePie(dataPoints, 0.01);
+    }
+
+    public override byte[] GeneratePie(DataPoint<double>[] dataPoints, double otherThreshold)
     {
         var plotModel = new PlotModel
         {

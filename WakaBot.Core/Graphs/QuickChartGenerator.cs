@@ -13,7 +13,12 @@ public class QuickChartGenerator : GraphGenerator
 
     private string DiscordBackgroundColour => "#36393f";
 
-    public override byte[] GeneratePie(DataPoint<double>[] dataPoints, double otherThreshold = 0)
+    public override byte[] GeneratePie(DataPoint<double>[] dataPoints)
+    {
+        return GeneratePie(dataPoints, 0.01);
+    }
+
+    public override byte[] GeneratePie(DataPoint<double>[] dataPoints, double otherThreshold)
     {
         Chart chart = new Chart()
         {
