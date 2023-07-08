@@ -8,9 +8,6 @@ namespace WakaBot.Core.Graphs;
 /// </summary>
 public class QuickChartGenerator : GraphGenerator
 {
-    public QuickChartGenerator(string url) : base(url)
-    { }
-
     private string DiscordBackgroundColour => "#36393f";
 
 

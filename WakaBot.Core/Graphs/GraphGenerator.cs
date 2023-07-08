@@ -1,4 +1,5 @@
 using Newtonsoft.Json;
+using WakaBot.Core.Services;
 
 namespace WakaBot.Core.Graphs;
 
@@ -12,10 +13,10 @@ public abstract class GraphGenerator
     /// <summary>
     /// Creates an instance of GraphGenerator.
     /// </summary>
-    /// <param name="url">url of github colour repo.</param>
-    public GraphGenerator(string url)
+    public GraphGenerator()
     {
-        string colourURL = url ?? "https://raw.githubusercontent.com/ozh/github-colors/master/colors.json";
+        var config = ConfigManager.Configuration;
+        string colourURL = config["colourURL"] ?? "https://raw.githubusercontent.com/ozh/github-colors/master/colors.json";
         using var client = new HttpClient();
         string data = "";
 

@@ -84,7 +84,7 @@ namespace WakaBot.Core
             services.AddSingleton<CommandHandler>();
             services.AddSingleton(_socketConfig);
             services.AddSingleton<IConfiguration>(_configuration!);
-            services.AddSingleton<GraphGenerator>(x => new OxyPlotGenerator(_configuration!["colourURL"]));
+            services.AddSingleton<GraphGenerator, OxyPlotGenerator>();
             services.AddDbContextFactory<WakaContext>(opt =>
             {
                 var provider = _configuration!["databaseProvider"];

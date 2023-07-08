@@ -10,8 +10,6 @@ public class OxyPlotGenerator : GraphGenerator
 {
     protected override int Width => 600;
     protected override int Height => 400;
-    public OxyPlotGenerator(string url) : base(url)
-    { }
 
     public override byte[] GeneratePie(DataPoint<double>[] dataPoints, double otherThreshold)
     {
