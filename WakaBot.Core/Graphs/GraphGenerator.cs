@@ -50,8 +50,10 @@ public abstract class GraphGenerator
     /// </summary>
     /// <param name="dataPoints">Data used to create the chart.</param>
     /// <returns></returns>
-    public abstract byte[] GeneratePie(DataPoint<double>[] dataPoints);
-
+    public byte[] GeneratePie(DataPoint<double>[] dataPoints)
+    {
+        return GeneratePie(dataPoints, 0.01);
+    }
     /// <summary>
     /// Creates an image of a pie chart.
     /// </summary>

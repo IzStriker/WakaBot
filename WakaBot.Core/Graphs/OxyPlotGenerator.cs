@@ -1,6 +1,8 @@
 using OxyPlot;
 using OxyPlot.Series;
 using OxyPlot.ImageSharp;
+using OxyPlot.Axes;
+using OxyPlot.Legends;
 
 namespace WakaBot.Core.Graphs;
 
@@ -10,11 +12,6 @@ public class OxyPlotGenerator : GraphGenerator
     protected override int Height => 400;
     public OxyPlotGenerator(string url) : base(url)
     { }
-
-    public override byte[] GeneratePie(DataPoint<double>[] dataPoints)
-    {
-        return GeneratePie(dataPoints, 0.01);
-    }
 
     public override byte[] GeneratePie(DataPoint<double>[] dataPoints, double otherThreshold)
     {
@@ -59,6 +56,47 @@ public class OxyPlotGenerator : GraphGenerator
 
     public override byte[] GenerateBar(string[] labels, DataPoint<float[]>[] dataPoints)
     {
-        throw new NotImplementedException();
+        var plotModel = new PlotModel
+        {
+            TextColor = OxyColors.White,
+            Legends = {
+                new Legend {
+                    LegendPosition = LegendPosition.RightTop,
+                    LegendOrientation = LegendOrientation.Horizontal,
+                    LegendFontSize = 15,
+                }
+            },
+        };
+
+        foreach (var point in dataPoints.Select((value, index) => new { value, index }))
+        {
+            var series = new BarSeries
+            {
+                Title = point.value.label,
+                FontSize = 20,
+                IsStacked = true,
+                XAxisKey = "Value",
+                YAxisKey = "Category"
+            };
+
+            foreach (var v in point.value.value)
+            {
+                series.Items.Add(new BarItem { Value = v });
+            }
+            plotModel.Series.Add(series);
+        }
+
+        var categoryAxis = new CategoryAxis { Position = AxisPosition.Bottom, Key = "Category", FontSize = 20 };
+        foreach (var label in labels)
+        {
+            categoryAxis.Labels.Add(label);
+        }
+        plotModel.Axes.Add(categoryAxis);
+        plotModel.Axes.Add(new LinearAxis { Position = AxisPosition.Left, Key = "Value", FontSize = 20 });
+
+        using var stream = new MemoryStream();
+        var pngExporter = new PngExporter(this.Width, this.Height);
+        pngExporter.Export(plotModel, stream);
+        return stream.ToArray();
     }
 }
