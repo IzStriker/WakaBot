@@ -8,7 +8,7 @@ namespace WakaBot.Core.Graphs;
 
 public class OxyPlotGenerator : GraphGenerator
 {
-    protected override int Width => 600;
+    protected override int Width => 800;
     protected override int Height => 400;
 
     public override byte[] GeneratePie(DataPoint<double>[] dataPoints, double otherThreshold)
@@ -16,6 +16,7 @@ public class OxyPlotGenerator : GraphGenerator
         var plotModel = new PlotModel
         {
             TextColor = OxyColors.White,
+            PlotMargins = new OxyThickness(10),
         };
 
         var seriesP1 = new PieSeries
