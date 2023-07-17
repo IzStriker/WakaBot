@@ -28,7 +28,7 @@ app.MapGet("/metrics", () =>
 {
     StringBuilder sb = new StringBuilder();
     sb.AppendLine("waka_uptime " + stopwatch.Elapsed);
-    sb.AppendLine("waka_memory_usage" + Process.GetCurrentProcess().PrivateMemorySize64);
+    sb.AppendLine("waka_memory_usage " + Process.GetCurrentProcess().PrivateMemorySize64);
     var database = app.Services.GetService<WakaContext>();
     sb.AppendLine("waka_users " + database.WakaUsers.ToList().Count());
     sb.AppendLine("waka_guilds " + database.DiscordGuilds.ToList().Count());
