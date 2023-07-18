@@ -36,8 +36,8 @@ app.MapGet("/metrics", () =>
     sb.AppendLine("waka_guilds " + database.DiscordGuilds.ToList().Count());
 
     var cacheHandler = app.Services.GetService<WakaTimeCacheHandler>();
-    sb.AppendLine("waka_cache_hits " + cacheHandler.GetCacheHits());
-    sb.AppendLine("waka_cache_misses " + cacheHandler.GetCacheMisses());
+    sb.AppendLine("waka_cache_hits " + cacheHandler.CacheHits);
+    sb.AppendLine("waka_cache_misses " + cacheHandler.CacheMisses);
     return sb.ToString();
 });
 

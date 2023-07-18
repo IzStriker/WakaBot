@@ -10,8 +10,8 @@ public class WakaTimeCacheHandler : DelegatingHandler
 {
     private readonly IMemoryCache _cache;
     private readonly ILogger<WakaTimeCacheHandler> _logger;
-    private long _cacheHits = 0;
-    private long _cacheMisses = 0;
+    public long CacheHits { get; private set; }
+    public long CacheMisses { get; private set; }
 
     public WakaTimeCacheHandler(IMemoryCache cache, ILogger<WakaTimeCacheHandler> logger)
     {
@@ -28,13 +28,13 @@ public class WakaTimeCacheHandler : DelegatingHandler
 
         if (_cache.TryGetValue(request.RequestUri.AbsoluteUri, out string? cachedContent))
         {
-            _cacheHits++;
+            CacheHits++;
             return new HttpResponseMessage(HttpStatusCode.OK)
             {
                 Content = new StringContent(cachedContent!)
             };
         }
-        _cacheMisses++;
+        CacheMisses++;
 
         var response = await base.SendAsync(request, cancellationToken);
         var entry = JsonConvert.DeserializeObject<RootStat>(await response.Content.ReadAsStringAsync())!;
@@ -84,15 +84,5 @@ public class WakaTimeCacheHandler : DelegatingHandler
             _cache.Set(key, result.Content.ReadAsStringAsync());
         }
         _logger.LogInformation($"{key} cache refreshed");
-    }
-
-    public long GetCacheMisses()
-    {
-        return _cacheMisses;
-    }
-
-    public long GetCacheHits()
-    {
-        return _cacheHits;
     }
 }
