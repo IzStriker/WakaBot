@@ -26,12 +26,23 @@ public sealed class ConfigManager
 
     private ConfigManager()
     {
-        var env = Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT");
-        var config = new ConfigurationBuilder();
-        config.SetBasePath(AppContext.BaseDirectory);
-        config.AddJsonFile("appsettings.json", optional: false);
-        config.AddJsonFile("logconfig.json", optional: true);
-        config.AddEnvironmentVariables("DOTNET_");
-        _configuration = config.Build();
+        try
+        {
+            var env = Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT");
+            var config = new ConfigurationBuilder();
+            config.SetBasePath(AppContext.BaseDirectory);
+            config.AddJsonFile("appsettings.json", optional: false);
+            config.AddJsonFile("logconfig.json", optional: true);
+            config.AddEnvironmentVariables("DOTNET_");
+            _configuration = config.Build();
+        }
+        catch (FileNotFoundException e)
+        {
+            ConsoleColor originalColor = Console.ForegroundColor;
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine(e.Message);
+            Console.ForegroundColor = originalColor;
+            Environment.Exit(1);
+        }
     }
 }

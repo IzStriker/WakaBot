@@ -1,7 +1,6 @@
 using Discord;
 using Discord.Interactions;
 using Discord.WebSocket;
-using System.Reflection;
 using WakaBot.Core.WakaTimeAPI;
 
 namespace WakaBot.Core.Services;
@@ -38,7 +37,8 @@ public class CommandHandler
     /// </summary>
     public async Task InitializeAsync()
     {
-        await _interaction.AddModulesAsync(typeof(WakaBotService).Assembly, _services);
+        using var scope = _services.CreateAsyncScope();
+        await _interaction.AddModulesAsync(typeof(WakaBotService).Assembly, scope.ServiceProvider);
 
         _client.InteractionCreated += HandleInteraction;
         _client.Ready += ClientReady;
@@ -61,7 +61,7 @@ public class CommandHandler
     private async Task ClientReady()
     {
 
-        _logger.LogInformation("Registered on {serverCount} servers", _client.Guilds.Count);
+        _logger.LogInformation("Registered on {sejrverCount} servers", _client.Guilds.Count);
         _logger.LogInformation("Connected as {currentUser}", _client.CurrentUser);
 
         // Could take up to an hour.
