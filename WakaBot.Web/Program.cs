@@ -1,14 +1,17 @@
 using System.Diagnostics;
+using System.Text;
 using WakaBot.Core;
+using WakaBot.Core.Data;
+using WakaBot.Core.Extensions;
 using WakaBot.Core.MessageBroker;
 using WakaBot.Core.OAuth2;
+using WakaBot.Core.WakaTimeAPI;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Configuration.AddEnvironmentVariables("DOTNET_");
-
+builder.Services.AddWakaBot();
 builder.Services.AddHostedService<WakaBotService>();
-builder.Services.AddSingleton<MessageQueue>();
 
 var client = new OAuth2Client(builder.Configuration);
 
@@ -20,6 +23,23 @@ app.UseHttpLogging();
 app.MapGet("/", () =>
 {
     return "Up time is " + stopwatch.Elapsed;
+});
+
+app.MapGet("/metrics", () =>
+{
+    using var scope = app.Services.CreateScope();
+    StringBuilder sb = new StringBuilder();
+    sb.AppendLine("waka_uptime " + stopwatch.Elapsed);
+    sb.AppendLine("waka_memory_usage " + Process.GetCurrentProcess().PrivateMemorySize64);
+
+    var database = scope.ServiceProvider.GetService<WakaContext>();
+    sb.AppendLine("waka_users " + database.WakaUsers.Count());
+    sb.AppendLine("waka_guilds " + database.DiscordGuilds.Count());
+
+    var cacheHandler = scope.ServiceProvider.GetService<WakaTimeCacheHandler>();
+    sb.AppendLine("waka_cache_hits " + cacheHandler.CacheHits);
+    sb.AppendLine("waka_cache_misses " + cacheHandler.CacheMisses);
+    return sb.ToString();
 });
 
 app.MapGet("/callback", async (string? code, string state, string? error, string? error_description) =>
