@@ -2,7 +2,7 @@ using System.Net;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Primitives;
 using Newtonsoft.Json;
-using WakaBot.Core.WakaTime;
+using WakaBot.Core.Extensions;
 using WakaBot.Core.WakaTimeAPI.Stats;
 
 namespace WakaBot.Core.WakaTimeAPI;
@@ -11,11 +11,13 @@ public class WakaTimeCacheHandler : DelegatingHandler
 {
     private readonly IMemoryCache _cache;
     private readonly ILogger<WakaTimeCacheHandler> _logger;
+    private readonly CacheMetrics _cacheMetrics;
 
-    public WakaTimeCacheHandler(IMemoryCache cache, ILogger<WakaTimeCacheHandler> logger)
+    public WakaTimeCacheHandler(IMemoryCache cache, ILogger<WakaTimeCacheHandler> logger, CacheMetrics cacheMetrics)
     {
         _cache = cache;
         _logger = logger;
+        _cacheMetrics = cacheMetrics;
     }
 
     protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
@@ -25,16 +27,15 @@ public class WakaTimeCacheHandler : DelegatingHandler
             return await base.SendAsync(request, cancellationToken);
         }
 
-        CacheMetricsSingleton cacheMetrics = CacheMetricsSingleton.Instance();
         if (_cache.TryGetValue(request.RequestUri.AbsoluteUri, out string? cachedContent))
         {
-            cacheMetrics.CacheHits++;
+            _cacheMetrics.CacheHits++;
             return new HttpResponseMessage(HttpStatusCode.OK)
             {
                 Content = new StringContent(cachedContent!)
             };
         }
-        cacheMetrics.CacheMisses++;
+        _cacheMetrics.CacheMisses++;
 
         var response = await base.SendAsync(request, cancellationToken);
         var entry = JsonConvert.DeserializeObject<RootStat>(await response.Content.ReadAsStringAsync())!;
