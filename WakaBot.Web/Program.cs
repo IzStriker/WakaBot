@@ -29,7 +29,6 @@ app.MapGet("/metrics", () =>
 {
     using var scope = app.Services.CreateScope();
     StringBuilder sb = new StringBuilder();
-    sb.AppendLine("waka_uptime " + stopwatch.Elapsed);
     sb.AppendLine("waka_memory_usage " + Process.GetCurrentProcess().PrivateMemorySize64);
 
     var database = scope.ServiceProvider.GetService<WakaContext>();
