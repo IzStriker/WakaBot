@@ -2,6 +2,7 @@ using System.Net;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Primitives;
 using Newtonsoft.Json;
+using WakaBot.Core.WakaTime;
 using WakaBot.Core.WakaTimeAPI.Stats;
 
 namespace WakaBot.Core.WakaTimeAPI;
@@ -10,8 +11,6 @@ public class WakaTimeCacheHandler : DelegatingHandler
 {
     private readonly IMemoryCache _cache;
     private readonly ILogger<WakaTimeCacheHandler> _logger;
-    public long CacheHits { get; private set; }
-    public long CacheMisses { get; private set; }
 
     public WakaTimeCacheHandler(IMemoryCache cache, ILogger<WakaTimeCacheHandler> logger)
     {
@@ -26,15 +25,16 @@ public class WakaTimeCacheHandler : DelegatingHandler
             return await base.SendAsync(request, cancellationToken);
         }
 
+        CacheMetricsSingleton cacheMetrics = CacheMetricsSingleton.Instance();
         if (_cache.TryGetValue(request.RequestUri.AbsoluteUri, out string? cachedContent))
         {
-            CacheHits++;
+            cacheMetrics.CacheHits++;
             return new HttpResponseMessage(HttpStatusCode.OK)
             {
                 Content = new StringContent(cachedContent!)
             };
         }
-        CacheMisses++;
+        cacheMetrics.CacheMisses++;
 
         var response = await base.SendAsync(request, cancellationToken);
         var entry = JsonConvert.DeserializeObject<RootStat>(await response.Content.ReadAsStringAsync())!;
