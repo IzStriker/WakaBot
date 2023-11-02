@@ -5,7 +5,6 @@ using WakaBot.Core.Data;
 using WakaBot.Core.Extensions;
 using WakaBot.Core.MessageBroker;
 using WakaBot.Core.OAuth2;
-using WakaBot.Core.WakaTimeAPI;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -35,9 +34,9 @@ app.MapGet("/metrics", () =>
     sb.AppendLine("waka_users " + database.WakaUsers.Count());
     sb.AppendLine("waka_guilds " + database.DiscordGuilds.Count());
 
-    var cacheHandler = scope.ServiceProvider.GetService<WakaTimeCacheHandler>();
-    sb.AppendLine("waka_cache_hits " + cacheHandler.CacheHits);
-    sb.AppendLine("waka_cache_misses " + cacheHandler.CacheMisses);
+    CacheMetrics cacheMetrics = app.Services.GetService<CacheMetrics>();
+    sb.AppendLine("waka_cache_hits " + cacheMetrics.CacheHits);
+    sb.AppendLine("waka_cache_misses " + cacheMetrics.CacheMisses);
     return sb.ToString();
 });
 
