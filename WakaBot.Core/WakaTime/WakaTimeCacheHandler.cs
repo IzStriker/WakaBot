@@ -11,9 +11,9 @@ public class WakaTimeCacheHandler : DelegatingHandler
 {
     private readonly IMemoryCache _cache;
     private readonly ILogger<WakaTimeCacheHandler> _logger;
-    private readonly CacheMetrics _cacheMetrics;
+    private readonly Metrics _cacheMetrics;
 
-    public WakaTimeCacheHandler(IMemoryCache cache, ILogger<WakaTimeCacheHandler> logger, CacheMetrics cacheMetrics)
+    public WakaTimeCacheHandler(IMemoryCache cache, ILogger<WakaTimeCacheHandler> logger, Metrics cacheMetrics)
     {
         _cache = cache;
         _logger = logger;

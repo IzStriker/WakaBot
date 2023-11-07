@@ -1,6 +1,7 @@
 using Discord;
 using Discord.Interactions;
 using Discord.WebSocket;
+using WakaBot.Core.Extensions;
 using WakaBot.Core.WakaTimeAPI;
 
 namespace WakaBot.Core.Services;
@@ -13,6 +14,7 @@ public class CommandHandler
     private readonly IConfiguration _configuration;
     private readonly WakaTime _wakaTime;
     private readonly ILogger _logger;
+    private readonly Metrics _metrics;
 
     /// <summary>
     /// Create new instance of <c>CommandHandler</c> service.
@@ -21,8 +23,14 @@ public class CommandHandler
     /// <param name="interaction">Instance of discord interaction service</param>
     /// <param name="services">Dependency injection services</param>
     /// <param name="configuration">Discord bot configuration</param>
-    public CommandHandler(DiscordSocketClient client, InteractionService interaction,
-     IServiceProvider services, IConfiguration configuration, WakaTime wakaTime, ILogger<CommandHandler> logger)
+    public CommandHandler(
+        DiscordSocketClient client,
+        InteractionService interaction,
+        IServiceProvider services,
+        IConfiguration configuration,
+        WakaTime wakaTime,
+        ILogger<CommandHandler> logger
+    )
     {
         _client = client;
         _interaction = interaction;
@@ -30,6 +38,7 @@ public class CommandHandler
         _configuration = configuration;
         _wakaTime = wakaTime;
         _logger = logger;
+        _metrics = services.GetRequiredService<Metrics>();
     }
 
     /// <summary>
@@ -170,7 +179,7 @@ public class CommandHandler
         {
             _logger.LogInformation($"Command: {arg1.Name}, By {arg2.User.Username} In {arg2.Guild.Name} and took {time.TotalMilliseconds}ms");
         }
-
+        _metrics.AverageResponseTime = time;
 
         return Task.CompletedTask;
     }
