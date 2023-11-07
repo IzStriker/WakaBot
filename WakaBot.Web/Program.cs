@@ -37,7 +37,7 @@ app.MapGet("/metrics", () =>
     Metrics cacheMetrics = app.Services.GetService<Metrics>()!;
     sb.AppendLine("waka_cache_hits " + cacheMetrics.CacheHits);
     sb.AppendLine("waka_cache_misses " + cacheMetrics.CacheMisses);
-    sb.AppendLine("waka_average_response_time " + cacheMetrics.AverageResponseTime?.TotalMilliseconds);
+    sb.AppendLine("waka_total_response_time " + cacheMetrics.TotalResponseTime);
     sb.AppendLine("waka_number_of_requests " + cacheMetrics.NumberOfRequests);
     return sb.ToString();
 });
