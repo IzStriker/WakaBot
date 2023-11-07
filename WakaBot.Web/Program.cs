@@ -31,12 +31,14 @@ app.MapGet("/metrics", () =>
     sb.AppendLine("waka_memory_usage " + Process.GetCurrentProcess().PrivateMemorySize64);
 
     var database = scope.ServiceProvider.GetService<WakaContext>();
-    sb.AppendLine("waka_users " + database.WakaUsers.Count());
+    sb.AppendLine("waka_users " + database!.WakaUsers.Count());
     sb.AppendLine("waka_guilds " + database.DiscordGuilds.Count());
 
-    CacheMetrics cacheMetrics = app.Services.GetService<CacheMetrics>();
+    Metrics cacheMetrics = app.Services.GetService<Metrics>()!;
     sb.AppendLine("waka_cache_hits " + cacheMetrics.CacheHits);
     sb.AppendLine("waka_cache_misses " + cacheMetrics.CacheMisses);
+    sb.AppendLine("waka_average_response_time " + cacheMetrics.AverageResponseTime?.TotalMilliseconds);
+    sb.AppendLine("waka_number_of_requests " + cacheMetrics.NumberOfRequests);
     return sb.ToString();
 });
 

@@ -26,7 +26,7 @@ public static class ServiceCollectionExtensions
             .CreateLogger();
 
         // setup services
-        services.AddSingleton<CacheMetrics>();
+        services.AddSingleton<Metrics>();
         services.AddSingleton<DiscordSocketClient>();
         services.AddSingleton(x => new InteractionService(x.GetRequiredService<DiscordSocketClient>()));
         services.AddSingleton(() => new DiscordSocketConfig
