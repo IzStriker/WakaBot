@@ -179,7 +179,7 @@ public class CommandHandler
         {
             _logger.LogInformation($"Command: {arg1.Name}, By {arg2.User.Username} In {arg2.Guild.Name} and took {time.TotalMilliseconds}ms");
         }
-        _metrics.AverageResponseTime = time;
+        _metrics.AddResponseTime(time);
 
         return Task.CompletedTask;
     }
@@ -189,6 +189,7 @@ public class CommandHandler
     /// </summary>
     private async Task HandleInteraction(SocketInteraction arg)
     {
+        var responseTime = DateTime.Now - arg.CreatedAt;
         try
         {
             var ctx = new SocketInteractionContext(_client, arg);
@@ -202,6 +203,10 @@ public class CommandHandler
             {
                 await arg.GetOriginalResponseAsync().ContinueWith(async (msg) => await msg.Result.DeleteAsync());
             }
+        }
+        finally
+        {
+            _metrics.AddResponseTime(responseTime);
         }
     }
 }

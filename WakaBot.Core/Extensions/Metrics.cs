@@ -4,27 +4,18 @@ public class Metrics
     public long CacheHits { get; set; }
     public long CacheMisses { get; set; }
     private readonly List<TimeSpan> _requestTimes = new();
-    public TimeSpan? AverageResponseTime
+    public double? TotalResponseTime
     {
-        get
-        {
-            return _requestTimes.Count > 0 ? TimeSpan.FromMilliseconds(_requestTimes.Average(t => t.TotalMilliseconds)) : null;
-        }
-
-        set
-        {
-            if (value != null)
-            {
-                _requestTimes.Add(value.Value);
-            }
-        }
+        get => _requestTimes.Select(t => t.TotalMilliseconds).Sum();
     }
 
     public long NumberOfRequests
     {
-        get
-        {
-            return _requestTimes.Count;
-        }
+        get => _requestTimes.Count;
+    }
+
+    public void AddResponseTime(TimeSpan time)
+    {
+        _requestTimes.Add(time);
     }
 }
