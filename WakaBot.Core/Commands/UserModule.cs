@@ -35,7 +35,6 @@ public class UserModule : InteractionModuleBase<SocketInteractionContext>
     /// <summary>
     /// Register new server member to Wakabot.
     /// </summary>
-    /// <param name="discordUser">User to be registered.</param>
     /// <param name="wakaUser">WakaTime username of user to be registered.</param>
     [SlashCommand("register", "Register new server member to WakaBot Service")]
     public async Task RegisterUser(String wakaUser)
@@ -49,11 +48,11 @@ public class UserModule : InteractionModuleBase<SocketInteractionContext>
     /// <summary>
     /// Remove user from WakaBot database.
     /// </summary>
-    /// <param name="discordUser">User to be removed.</param>
     /// <returns></returns>
     [SlashCommand("deregister", "Deregister registered wakabot user")]
-    public async Task DeregisterUser(IUser discordUser)
+    public async Task DeregisterUser()
     {
+        var discordUser = Context.User;
         await DeferAsync(ephemeral: true);
         var guild = _wakaContext.DiscordGuilds.Find(Context.Guild.Id);
         var user = guild?.Users.FirstOrDefault(x => x.Id == discordUser.Id);
