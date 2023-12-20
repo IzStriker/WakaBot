@@ -1,6 +1,7 @@
 using Discord;
 using Discord.Interactions;
 using Discord.WebSocket;
+using WakaBot.Core.Commands;
 using WakaBot.Core.Extensions;
 using WakaBot.Core.WakaTimeAPI;
 

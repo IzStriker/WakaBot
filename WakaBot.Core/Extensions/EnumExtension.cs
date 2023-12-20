@@ -14,4 +14,10 @@ public static class EnumExtension
     {
         return property.GetType().GetTypeInfo().GetDeclaredField(property.ToString())?.GetCustomAttribute<ChoiceDisplayAttribute>()?.Name;
     }
+
+    public static (string?, bool) GetRegistrationErrorMessage(this Enum property)
+    {
+        var error = property.GetType().GetTypeInfo().GetDeclaredField(property.ToString())?.GetCustomAttribute<RegistrationErrorMessage>();
+        return (error?.Message, error?.StopOnError ?? false);
+    }
 }
