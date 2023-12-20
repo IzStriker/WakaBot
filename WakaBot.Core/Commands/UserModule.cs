@@ -97,7 +97,6 @@ public class UserModule : InteractionModuleBase<SocketInteractionContext>
         var fields = new List<EmbedFieldBuilder>();
         var users = _wakaContext.DiscordGuilds.Include(x => x.Users).ThenInclude(x => x.WakaUser)
             .FirstOrDefault(x => x.Id == Context.Guild.Id)?.Users.ToList();
-        await Context.Guild.DownloadUsersAsync();
 
         if (users == null || users.Count() == 0)
         {
@@ -113,10 +112,18 @@ public class UserModule : InteractionModuleBase<SocketInteractionContext>
         {
             string name;
             var discordUser = Context.Guild.GetUser(user.Id);
-            if (discordUser.Nickname != null)
+            if (discordUser?.Nickname != null)
+            {
                 name = discordUser.Nickname;
-            else
+            }
+            else if (discordUser?.Username != null)
+            {
                 name = discordUser.Username;
+            }
+            else
+            {
+                name = user?.WakaUser?.Username ?? "Unknown";
+            }
 
             if (user.WakaUser != null)
             {
