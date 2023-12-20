@@ -20,15 +20,6 @@ public class WakaTime : OAuth2Client
     private readonly ILogger _logger;
     private readonly HttpClient _client;
 
-    [Flags]
-    public enum RegistrationErrors
-    {
-        None = 0,
-        UserNotFound = 1,
-        StatsNotFound = 2,
-        TimeNotFound = 4,
-    }
-
     public WakaTime(
         IMemoryCache cache,
         IDbContextFactory<WakaContext> factory,

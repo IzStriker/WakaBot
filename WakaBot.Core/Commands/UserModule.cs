@@ -2,6 +2,7 @@ using Discord;
 using Discord.Interactions;
 using Microsoft.EntityFrameworkCore;
 using WakaBot.Core.Data;
+using WakaBot.Core.Extensions;
 using WakaBot.Core.Models;
 using WakaBot.Core.WakaTimeAPI;
 
@@ -150,28 +151,17 @@ public class UserModule : InteractionModuleBase<SocketInteractionContext>
         var (userId, errors) = await _wakaTime.ValidateRegistration(wakaUser);
         string description = string.Empty;
 
-        if (errors.HasFlag(WakaTime.RegistrationErrors.UserNotFound))
+        foreach (RegistrationErrors error in Enum.GetValues(typeof(RegistrationErrors)))
         {
-            await FollowupAsync(embed: new EmbedBuilder()
+            if (errors.HasFlag(error))
             {
-                Title = "Error",
-                Color = Color.Red,
-                Description = $"Invalid username **{wakaUser}**, ensure your username is correct."
-            }.Build());
-            return;
+                var (message, stop) = error.GetRegistrationErrorMessage();
+                description += $"{message}\n\n";
+                if (stop) break;
+            }
         }
 
-        if (errors.HasFlag(WakaTime.RegistrationErrors.StatsNotFound))
-        {
-            description += "Stats not available, ensure `Display languages, editors, os, categories publicly ` is enabled in profile.\n\n";
-        }
-
-        if (errors.HasFlag(WakaTime.RegistrationErrors.TimeNotFound))
-        {
-            description += "Coding time not available, ensure `Display code time publicly` is enabled in profile.";
-        }
-
-        if (!errors.Equals(WakaTime.RegistrationErrors.None))
+        if (!errors.Equals(RegistrationErrors.None))
         {
             await FollowupAsync(embed: new EmbedBuilder()
             {
@@ -308,7 +298,7 @@ public class UserModule : InteractionModuleBase<SocketInteractionContext>
             // if user is not already registered then create new user
             var (userId, errors) = await _wakaTime.ValidateRegistration(wakaUser);
 
-            if (errors.HasFlag(WakaTime.RegistrationErrors.UserNotFound))
+            if (errors.HasFlag(RegistrationErrors.UserNotFound))
             {
                 await FollowupAsync(embed: new EmbedBuilder()
                 {
