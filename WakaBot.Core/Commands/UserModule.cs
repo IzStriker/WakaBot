@@ -38,20 +38,11 @@ public class UserModule : InteractionModuleBase<SocketInteractionContext>
     /// <param name="discordUser">User to be registered.</param>
     /// <param name="wakaUser">WakaTime username of user to be registered.</param>
     [SlashCommand("register", "Register new server member to WakaBot Service")]
-    public async Task RegisterUser(String wakaUser, bool oAuth = false)
+    public async Task RegisterUser(String wakaUser)
     {
         await DeferAsync(ephemeral: true);
         var discordUser = Context.User;
-
-        if (oAuth)
-        {
-            await RegisterOAuthUser(discordUser, wakaUser);
-        }
-        else
-        {
-            await RegisterStandardUser(discordUser, wakaUser);
-        }
-
+        await RegisterOAuthUser(discordUser, wakaUser);
     }
 
 
@@ -147,86 +138,6 @@ public class UserModule : InteractionModuleBase<SocketInteractionContext>
 
     }
 
-    private async Task RegisterStandardUser(IUser discordUser, String wakaUser)
-    {
-        var (userId, errors) = await _wakaTime.ValidateRegistration(wakaUser);
-        string description = string.Empty;
-
-        foreach (RegistrationErrors error in Enum.GetValues(typeof(RegistrationErrors)))
-        {
-            if (errors.HasFlag(error))
-            {
-                var (message, stop) = error.GetRegistrationErrorMessage();
-                description += $"{message}\n\n";
-                if (stop) break;
-            }
-        }
-
-        if (!errors.Equals(RegistrationErrors.None))
-        {
-            await FollowupAsync(embed: new EmbedBuilder()
-            {
-                Title = "Error",
-                Color = Color.Red,
-                Description = description
-            }.Build());
-            return;
-        }
-
-        // Get users in current guild with matching discordId or WakaId
-        if (_wakaContext.DiscordGuilds.Include(x => x.Users)
-                .FirstOrDefault(x => x.Id == Context.Guild.Id)?
-                .Users.FirstOrDefault(x => x.Id == discordUser.Id) != null)
-        {
-            await FollowupAsync(embed: new EmbedBuilder()
-            {
-                Title = "User already registered",
-                Color = Color.Red,
-                Description = $"User {discordUser.Mention} **{wakaUser}**, already registered"
-            }.Build());
-            return;
-        }
-
-        var user = _wakaContext.DiscordUsers.FirstOrDefault(x => x.Id == discordUser.Id);
-        if (user == null)
-        {
-            user = new DiscordUser()
-            {
-                Id = discordUser.Id,
-                WakaUser = new WakaUser()
-                {
-                    Username = wakaUser,
-                    usingOAuth = false,
-                    Id = userId == null ? await _wakaTime.GetUserIdAsync(wakaUser) : userId
-                }
-            };
-        }
-
-        var guild = _wakaContext.DiscordGuilds.FirstOrDefault(x => x.Id == Context.Guild.Id);
-        if (guild == null)
-        {
-            guild = new DiscordGuild()
-            {
-                Id = Context.Guild.Id,
-            };
-            guild.Users.Add(user);
-            _wakaContext.DiscordGuilds.Add(guild);
-        }
-        else
-        {
-            guild.Users.Add(user);
-        }
-
-        _wakaContext.SaveChanges();
-
-        await FollowupAsync(embed: new EmbedBuilder()
-        {
-            Title = "User registered",
-            Color = Color.Green,
-            Description = $"User {discordUser.Mention} register as {wakaUser}"
-        }.Build()
-        );
-    }
     private async Task RegisterOAuthUser(IUser discordUser, string wakaUser)
     {
         var guild = _wakaContext.DiscordGuilds.Include(x => x.Users).FirstOrDefault(x => x.Id == Context.Guild.Id);
@@ -240,7 +151,7 @@ public class UserModule : InteractionModuleBase<SocketInteractionContext>
             user.WakaUser.ExpiresAt > DateTime.Now
         )
         {
-            // if user already exists and is using OAuth and token is not expired
+            // if user already exists, is using OAuth and token is not expired
             // check if user is already registered in guild else add user to guild
             if (guild != null && guild.Users.FirstOrDefault(x => x.Id == user.Id) != null)
             {
@@ -298,14 +209,29 @@ public class UserModule : InteractionModuleBase<SocketInteractionContext>
         {
             // if user is not already registered then create new user
             var (userId, errors) = await _wakaTime.ValidateRegistration(wakaUser);
+            var fields = new List<EmbedFieldBuilder>();
+            foreach (RegistrationErrors error in Enum.GetValues(typeof(RegistrationErrors)))
+            {
+                if (error != RegistrationErrors.None && errors.HasFlag(error))
+                {
+                    var (message, stop) = error.GetRegistrationErrorMessage();
+                    fields.Add(new EmbedFieldBuilder()
+                    {
+                        Name = "\u200b",
+                        Value = message,
+                        IsInline = false
+                    });
+                    if (stop) break;
+                }
+            }
 
-            if (errors.HasFlag(RegistrationErrors.UserNotFound))
+            if (!errors.Equals(RegistrationErrors.None))
             {
                 await FollowupAsync(embed: new EmbedBuilder()
                 {
                     Title = "Error",
                     Color = Color.Red,
-                    Description = $"Invalid username **{wakaUser}**, ensure your username is correct."
+                    Fields = fields
                 }.Build());
                 return;
             }
@@ -356,13 +282,14 @@ public class UserModule : InteractionModuleBase<SocketInteractionContext>
 
         await FollowupAsync(embed: new EmbedBuilder()
         {
-            Title = "OAuth Registration",
+            Title = "Registration",
             Color = Color.Purple,
-            Description = @$"Please follow the link below to register your account.
+            Description = @$"
+                            Please follow the link below to complete your account Registration.
 
                             [Register]({link})
 
-                            You will be noticed when you have successfully registered."
+                            You will be noticed when you have successfully registered. The link above will expire within a short period of time. If you're unable to complete the registration you'll still be able to use WakaBot, but with reduced functionality. Rerun the command to complete registration."
         }.Build());
     }
 }
