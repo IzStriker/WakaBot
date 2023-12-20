@@ -38,9 +38,10 @@ public class UserModule : InteractionModuleBase<SocketInteractionContext>
     /// <param name="discordUser">User to be registered.</param>
     /// <param name="wakaUser">WakaTime username of user to be registered.</param>
     [SlashCommand("register", "Register new server member to WakaBot Service")]
-    public async Task RegisterUser(IUser discordUser, String wakaUser, bool oAuth = false)
+    public async Task RegisterUser(String wakaUser, bool oAuth = false)
     {
         await DeferAsync(ephemeral: true);
+        var discordUser = Context.User;
 
         if (oAuth)
         {
