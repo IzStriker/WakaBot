@@ -60,6 +60,33 @@ Requires the following permissions
 
 - Read Message History
 
+### Docker
+
+##### Create a `.env` file
+```env-file
+token=my discord token
+runWebServer=true
+ConnectionStrings:PostgreSql=Host=localhost;Port=changeme;Username=waka;Password=changeme;Database=waka
+OAuth2:Name=WakaTime
+OAuth2:ClientId=change me
+OAuth2:ClientSecret=change me
+OAuth2:AuthorizeUrl=https://wakatime.com/oauth/authorize
+OAuth2:RedirectUrl=change me
+OAuth2:TokenUrl=https://wakatime.com/oauth/token
+
+databaseProvider=PostgreSql
+```
+
+##### Using it in Docker 
+
+
+```sh
+docker build -t waka .
+docker run waka
+# Change LOCATION_OF_MY_APP_SETTINGS to the location of your app settings!!
+docker run -p 5000:5000 --volume --env-file .env waka
+```
+
 ### Contributing and Feedback
 
 Contributions are welcome. Feel free to open an issue or submit a pull request. If you have any feedback or suggestions, feel free to open an issue.

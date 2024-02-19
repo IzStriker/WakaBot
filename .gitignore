@@ -379,3 +379,7 @@ replit.nix
 
 database/
 *.csv
+
+out/
+*.env
+.env
