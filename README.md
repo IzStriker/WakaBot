@@ -79,13 +79,14 @@ databaseProvider=PostgreSql
 
 ##### Using it in Docker 
 
-
 ```sh
 docker build -t waka .
 docker run waka
 # Change LOCATION_OF_MY_APP_SETTINGS to the location of your app settings!!
 docker run -p 5000:5000 --volume --env-file .env waka
 ```
+
+You will need to migrate your database with `dotnet ef database update --context WakaBot.Core.Data.PostgreSqlContext`
 
 ### Contributing and Feedback
 
