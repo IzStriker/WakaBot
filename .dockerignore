@@ -1,0 +1,13 @@
+**
+
+!/WakaBot
+!/WakaBot.Core
+!/WakaBot.Web
+!/docker_start.sh
+
+**/*~
+**/*.log
+**/.DS_Store
+**/Thumbs.db
+
+WakaBot.sln
