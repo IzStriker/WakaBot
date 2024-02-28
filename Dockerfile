@@ -28,5 +28,4 @@ COPY --from=build-env /app/out .
 COPY --from=build-env /fonts .local/share/
 
 EXPOSE 5000
-ENV ASPNETCORE_URLS https://0.0.0.0:5000
 ENTRYPOINT [ "sh", "docker_start.sh" ]
