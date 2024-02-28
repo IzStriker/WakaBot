@@ -17,10 +17,12 @@ WORKDIR /app/WakaBot.Web
 RUN dotnet restore
 RUN dotnet publish -c Release -o /app/out
 
-FROM mcr.microsoft.com/dotnet/aspnet:6.0
-RUN mkdir /app
+FROM ubuntu:latest
+RUN apt-get update
+RUN apt-get install -y aspnetcore-runtime-6.0
 
-WORKDIR /app/
+RUN useradd -m app
+WORKDIR /home/app/
 
 RUN chmod -R 600 .
 COPY --from=build-env /app/out .
