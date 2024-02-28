@@ -33,7 +33,6 @@ WORKDIR /app/
 RUN chmod -R 600 .
 COPY --from=build-env /app/out .
 COPY --from=build-env /fonts .local/share/fonts
-COPY appsettings.json .
 
 EXPOSE 5000
 ENTRYPOINT [ "dotnet", "WakaBot.Web.dll" ]
