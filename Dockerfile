@@ -17,17 +17,23 @@ WORKDIR /app/WakaBot.Web
 RUN dotnet restore
 RUN dotnet publish -c Release -o /app/out
 
-FROM ubuntu:latest
+FROM mcr.microsoft.com/dotnet/aspnet:6.0
 RUN apt-get update
-RUN apt-get install -y aspnetcore-runtime-6.0
+RUN apt-get install -y software-properties-common
+RUN add-apt-repository contrib
+RUN add-apt-repository non-free
 
-RUN useradd -m app
-WORKDIR /home/app/
+RUN apt-get update
+RUN apt-get install -y ttf-mscorefonts-installer
+
+RUN mkdir /app
+
+WORKDIR /app/
 
 RUN chmod -R 600 .
 COPY --from=build-env /app/out .
 COPY --from=build-env /fonts .local/share/fonts
+COPY appsettings.json .
 
 EXPOSE 5000
-ENV ASPNETCORE_URLS=http://0.0.0.0:5000/
 ENTRYPOINT [ "dotnet", "WakaBot.Web.dll" ]
