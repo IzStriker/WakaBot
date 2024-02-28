@@ -25,7 +25,7 @@ WORKDIR /app/
 COPY docker_start.sh .
 RUN chmod -R 600 .
 COPY --from=build-env /app/out .
-COPY --from=build-env /fonts .local/share/
+COPY --from=build-env /fonts .local/share/fonts
 
 EXPOSE 5000
 ENTRYPOINT [ "sh", "docker_start.sh" ]
