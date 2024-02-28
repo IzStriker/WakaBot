@@ -28,4 +28,4 @@ COPY --from=build-env /fonts .local/share/fonts
 
 EXPOSE 5000
 ENV ASPNETCORE_URLS=http://0.0.0.0:5000/
-ENTRYPOINT [ "dotnet WakaBot.Web.dll" ]
+ENTRYPOINT [ "dotnet", "WakaBot.Web.dll" ]
