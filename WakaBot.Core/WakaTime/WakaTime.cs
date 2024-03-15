@@ -35,7 +35,7 @@ public class WakaTime : OAuth2Client
     }
 
     /// <summary>
-    /// Check that a given WakaTime user is valid and has all the correct settings to user the system.
+    /// Check that a given WakaTime user is valid and has all the correct settings to use the system.
     /// </summary>
     /// <param name="username">Username of user who wishes to register.</param>
     /// <returns>Enum of bit flags of errors.</returns>
