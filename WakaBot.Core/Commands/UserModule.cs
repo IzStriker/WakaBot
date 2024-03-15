@@ -16,6 +16,7 @@ public class UserModule : InteractionModuleBase<SocketInteractionContext>
 {
     private readonly WakaContext _wakaContext;
     private readonly WakaTime _wakaTime;
+    private readonly ILogger _logger;
 
 
     /// <summary>
@@ -24,12 +25,13 @@ public class UserModule : InteractionModuleBase<SocketInteractionContext>
     /// <param name="context">Database context.</param>
     public UserModule(
         WakaContext context,
-        WakaTime wakaTime
+        WakaTime wakaTime,
+        ILogger logger
     )
     {
         _wakaContext = context;
         _wakaTime = wakaTime;
-
+        _logger = logger;
     }
 
     /// <summary>
@@ -60,6 +62,7 @@ public class UserModule : InteractionModuleBase<SocketInteractionContext>
 
         if (user == null || guild == null)
         {
+            _logger.LogWarning($"User {discordUser.Id} not found in guild {Context.Guild.Id}");
             await FollowupAsync(embed: new EmbedBuilder
             {
                 Color = Color.Red,
@@ -72,6 +75,7 @@ public class UserModule : InteractionModuleBase<SocketInteractionContext>
         guild.Users.Remove(user);
         _wakaContext.SaveChanges();
 
+        _logger.LogInformation($"User {discordUser.Id} deregistered from guild {Context.Guild.Id}");
         await FollowupAsync(embed: new EmbedBuilder()
         {
             Color = Color.Green,
