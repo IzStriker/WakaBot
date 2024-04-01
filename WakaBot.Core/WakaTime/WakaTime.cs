@@ -97,17 +97,17 @@ public class WakaTime : OAuth2Client
             throw new Exception($"User {user.Id} has invalid authentication tokens");
         }
 
-        var response = await _client.GetAsync($"users/{user.Username}/stats/{range.GetValue()}", user.AccessToken);
+        var response = await _client.GetAsync($"users/{user.Id}/stats/{range.GetValue()}", user.AccessToken);
         if (response.StatusCode == System.Net.HttpStatusCode.Forbidden)
         {
-            _logger.LogError($"Invalid Access Token, {user.Username}");
+            _logger.LogError($"Invalid Access Token, {user.Id}");
             _logger.LogError(await response.Content.ReadAsStringAsync());
 
             // Refresh token
             if (user.RefreshToken == null)
             {
-                _logger.LogError($"Refresh token is null for {user.Username}");
-                throw new Exception($"Refresh token is null for {user.Username}");
+                _logger.LogError($"Refresh token is null for {user.Id}");
+                throw new Exception($"Refresh token is null for {user.Id}");
             }
 
             var newToken = await RefreshTokenAsync(user.RefreshToken);
@@ -118,8 +118,8 @@ public class WakaTime : OAuth2Client
                 var dbUser = context.WakaUsers.FirstOrDefault(u => u.Id == user.Id);
                 if (dbUser == null)
                 {
-                    _logger.LogError($"User {user.Username} not found in database");
-                    throw new Exception($"User {user.Username} not found in database");
+                    _logger.LogError($"User {user.Id} not found in database");
+                    throw new Exception($"User {user.Id} not found in database");
                 }
 
                 dbUser.AccessToken = newToken.AccessToken;
@@ -129,7 +129,7 @@ public class WakaTime : OAuth2Client
             }
 
             // Try again
-            response = await _client.GetAsync($"users/{user.Username}/stats/{range.GetValue()}", newToken.AccessToken);
+            response = await _client.GetAsync($"users/{user.Id}/stats/{range.GetValue()}", newToken.AccessToken);
         }
 
         if (response.StatusCode != System.Net.HttpStatusCode.OK)
