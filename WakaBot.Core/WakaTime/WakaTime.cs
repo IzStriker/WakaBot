@@ -34,6 +34,38 @@ public class WakaTime : OAuth2Client
         _client = client;
     }
 
+    public async Task<bool> RefreshToken(WakaUser user)
+    {
+        _logger.LogError($"Invalid Access Token, {user.Id}");
+
+        // Refresh token
+        if (user.RefreshToken == null)
+        {
+            _logger.LogError($"Refresh token is null for {user.Id}");
+            throw new Exception($"Refresh token is null for {user.Id}");
+        }
+
+        var newToken = await RefreshTokenAsync(user.RefreshToken);
+
+        // store new token in db
+        using (var context = await _contextFactory.CreateDbContextAsync())
+        {
+            var dbUser = context.WakaUsers.FirstOrDefault(u => u.Id == user.Id);
+            if (dbUser == null)
+            {
+                _logger.LogError($"User {user.Id} not found in database");
+                throw new Exception($"User {user.Id} not found in database");
+            }
+
+            dbUser.AccessToken = newToken.AccessToken;
+            dbUser.RefreshToken = newToken.RefreshToken;
+            dbUser.ExpiresAt = newToken.ExpiresAt;
+            context.SaveChanges();
+        }
+
+        return (await _client.GetAsync($"users/{user.Id}/stats/{range.GetValue()}", newToken.AccessToken)).IsSuccessStatusCode;
+    }
+
     /// <summary>
     /// Check that a given WakaTime user is valid and has all the correct settings to user the system.
     /// </summary>
@@ -85,8 +117,13 @@ public class WakaTime : OAuth2Client
         return entry;
     }
 
-    public async Task<RootStat> GetStatsAsync(WakaUser user, TimeRange range)
+    public async Task<RootStat> GetStatsAsync(WakaUser user, TimeRange range, int retries = 0)
     {
+        if (retries > 3)
+        {
+           throw new Excpetion("Cannot get the data stats for the user after maximum retries");
+        }
+
         if (!user.usingOAuth)
         {
             throw new ArgumentException("User is not registered with OAuth2");
@@ -100,42 +137,12 @@ public class WakaTime : OAuth2Client
         var response = await _client.GetAsync($"users/{user.Id}/stats/{range.GetValue()}", user.AccessToken);
         if (!response.IsSuccessStatusCode)
         {
-            _logger.LogError($"Invalid Access Token, {user.Id}");
-            _logger.LogError(await response.Content.ReadAsStringAsync());
+          var error = await RefreshToken(user);
+          if (!error) {
+            return await GetStatsAsync(user, range, retries + 1);
+          }
 
-            // Refresh token
-            if (user.RefreshToken == null)
-            {
-                _logger.LogError($"Refresh token is null for {user.Id}");
-                throw new Exception($"Refresh token is null for {user.Id}");
-            }
-
-            var newToken = await RefreshTokenAsync(user.RefreshToken);
-
-            // store new token in db
-            using (var context = await _contextFactory.CreateDbContextAsync())
-            {
-                var dbUser = context.WakaUsers.FirstOrDefault(u => u.Id == user.Id);
-                if (dbUser == null)
-                {
-                    _logger.LogError($"User {user.Id} not found in database");
-                    throw new Exception($"User {user.Id} not found in database");
-                }
-
-                dbUser.AccessToken = newToken.AccessToken;
-                dbUser.RefreshToken = newToken.RefreshToken;
-                dbUser.ExpiresAt = newToken.ExpiresAt;
-                context.SaveChanges();
-            }
-
-            // Try again
-            response = await _client.GetAsync($"users/{user.Id}/stats/{range.GetValue()}", newToken.AccessToken);
-        }
-
-        if (!response.IsSuccessStatusCode)
-        {
-            _logger.LogError("Request failed");
-            _logger.LogError(await response.Content.ReadAsStringAsync());
+          throw new Exception("Cannot refresh the user token");
         }
 
         var stats = JsonConvert.DeserializeObject<RootStat>(await response.Content.ReadAsStringAsync())!;
@@ -154,7 +161,6 @@ public class WakaTime : OAuth2Client
 
         _logger.LogInformation("All users refreshed.");
     }
-
 
     public async Task<string> GetUserIdAsync(string username)
     {
