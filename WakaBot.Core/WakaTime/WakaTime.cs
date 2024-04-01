@@ -98,7 +98,7 @@ public class WakaTime : OAuth2Client
         }
 
         var response = await _client.GetAsync($"users/{user.Id}/stats/{range.GetValue()}", user.AccessToken);
-        if (response.StatusCode == System.Net.HttpStatusCode.Forbidden)
+        if (!response.IsSuccessStatusCode)
         {
             _logger.LogError($"Invalid Access Token, {user.Id}");
             _logger.LogError(await response.Content.ReadAsStringAsync());
@@ -132,7 +132,7 @@ public class WakaTime : OAuth2Client
             response = await _client.GetAsync($"users/{user.Id}/stats/{range.GetValue()}", newToken.AccessToken);
         }
 
-        if (response.StatusCode != System.Net.HttpStatusCode.OK)
+        if (!response.IsSuccessStatusCode)
         {
             _logger.LogError("Request failed");
             _logger.LogError(await response.Content.ReadAsStringAsync());
