@@ -1,15 +1,14 @@
 version: "3.3"
 
 services:
-  wakadb:
-    image: mysql:5.7
-    restart: always
+  database:
+    image: postgres:16-alpine
+    restart: on-failure
     environment:
-      MYSQL_DATABASE: "localdb"
-      MYSQL_USER: "user"
-      MYSQL_PASSWORD: "password"
-      MYSQL_ROOT_PASSWORD: "root"
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=wakadb
     ports:
-      - 3306:3306
+      - "5432:5432"
     volumes:
-      - ./database:/var/lib/mysql
+      - ./database:/var/lib/postgresql/data

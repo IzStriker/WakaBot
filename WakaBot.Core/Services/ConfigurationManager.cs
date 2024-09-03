@@ -31,7 +31,10 @@ public sealed class ConfigManager
             var env = Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT");
             var config = new ConfigurationBuilder();
             config.SetBasePath(AppContext.BaseDirectory);
-            config.AddJsonFile("appsettings.json", optional: false);
+            config.AddJsonFile("appsettings.json", optional: true);
+            config.AddJsonFile("../appsettings.json", optional: true);
+            config.AddJsonFile("WakaBot.Core/appsettings.json", optional: true);
+            config.AddJsonFile("WakaBot.Web/appsettings.json", optional: true);
             config.AddJsonFile("logconfig.json", optional: true);
             config.AddEnvironmentVariables("DOTNET_");
             _configuration = config.Build();
