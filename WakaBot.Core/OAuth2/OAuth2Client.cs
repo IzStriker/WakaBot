@@ -11,7 +11,6 @@ public class OAuth2Client
     private string _authorizeUrl;
     private string _redirectUrl;
     private string _tokenUrl;
-    private string? _tokenRevocationUrl;
 
     private HttpClient _client;
 
@@ -26,7 +25,6 @@ public class OAuth2Client
         _authorizeUrl = section.GetValue<string>("AuthorizeUrl");
         _redirectUrl = section.GetValue<string>("RedirectUrl");
         _tokenUrl = section.GetValue<string>("TokenUrl");
-        _tokenRevocationUrl = section.GetValue<string>("TokenRevocationUrl");
 
         _client = new HttpClient();
         _client.DefaultRequestHeaders.Add("Accept", "application/json");
@@ -59,6 +57,7 @@ public class OAuth2Client
             {"client_id", _clientId},
             {"client_secret", _clientSecret}
         };
+
         var res = await _client.PostAsync(_tokenUrl, new FormUrlEncodedContent(formData));
 
         var tokenData = JsonConvert.DeserializeObject<TokenResponse>(await res.Content.ReadAsStringAsync());
