@@ -57,8 +57,7 @@ public class OAuth2Client
             {"client_id", _clientId},
             {"client_secret", _clientSecret}
         };
-        Console.WriteLine("_tokenUrl {0}", _tokenUrl);
-        Console.WriteLine(_tokenUrl);
+
         var res = await _client.PostAsync(_tokenUrl, new FormUrlEncodedContent(formData));
 
         var tokenData = JsonConvert.DeserializeObject<TokenResponse>(await res.Content.ReadAsStringAsync());
