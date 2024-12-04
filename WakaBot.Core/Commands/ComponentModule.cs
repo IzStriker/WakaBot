@@ -58,7 +58,7 @@ public class ComponentModule : InteractionModuleBase<SocketInteractionContext>
         }
 
         TimeRange? timeRange = null;
-        if (!string.IsNullOrEmpty(rawTimeRange))
+        if (!string.IsNullOrEmpty(rawTimeRange) && rawTimeRange != "none")
         {
             timeRange = Enum.Parse(typeof(TimeRange), rawTimeRange, true) as TimeRange?;
             users = users.Where(user => user.WakaUser != null && user.WakaUser.usingOAuth).ToList();
