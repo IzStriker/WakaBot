@@ -1,5 +1,9 @@
 # Setup
 
+## Dependencies
+For arch you will need to install the following packages:
+- ttf-ms-fonts
+
 Create an `appsettings.json` file inside `WakaBot.Web` directory with the following content (replacing the relevant values):
 
 ```json {"id":"01J6WR4F9CN7WSSW09B59A3YMB"}

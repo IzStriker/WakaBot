@@ -423,12 +423,14 @@ public class WakaModule : InteractionModuleBase<SocketInteractionContext>
         TimeRange? timeRange = null
     )
     {
+
+        string? rawTimeRange = timeRange is null ? "none" : timeRange.ToString();
         return new ComponentBuilder()
         /// operations: (page number), (message id), (timeRange)
-        .WithButton("⏮️", $"rank-first:0,{messageId},{timeRange}", disabled: true)
-        .WithButton("◀️", $"rank-previous:0,{messageId},{timeRange}", disabled: true)
-        .WithButton("▶️", $"rank-next:0,{messageId},{timeRange}", disabled: forwardDisabled)
-        .WithButton("⏭️", $"rank-last:0,{messageId},{timeRange}", disabled: forwardDisabled)
+        .WithButton("⏮️", $"rank-first:0,{messageId},{rawTimeRange}", disabled: true)
+        .WithButton("◀️", $"rank-previous:0,{messageId},{rawTimeRange}", disabled: true)
+        .WithButton("▶️", $"rank-next:0,{messageId},{rawTimeRange}", disabled: forwardDisabled)
+        .WithButton("⏭️", $"rank-last:0,{messageId},{rawTimeRange}", disabled: forwardDisabled)
         .Build();
     }
 
